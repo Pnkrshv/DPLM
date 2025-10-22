@@ -1,0 +1,56 @@
+@font-face {
+  font-family: main;
+  src: url(/Gimnast/src/assets/fonts/Noto_Sans/static/NotoSans-Regular.ttf);
+}
+
+:root {
+  --index: calc(1vh + 1vw);
+}
+
+.navBarCol {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: start;
+  background-color: #006064;
+  max-width: calc(var(--index) * 4);
+  height: 100vh;
+}
+
+.navBarRoute {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: main;
+  transition: all 0.3s ease;
+  font-size: calc(var(--index) * 0.5);
+  background: #006064;
+  cursor: pointer;
+  color: white;
+  padding: calc(var(--index) * 1);
+  border-bottom: solid transparent 1px;
+  border-top: solid transparent 1px;
+  width: calc(var(--index) * 4);
+  & svg {
+    width: calc(var(--index) * 1);
+    height: calc(var(--index) * 1);
+  }
+  &:hover {
+    background: linear-gradient(
+      180deg,
+      rgba(0, 96, 100, 1) 0%,
+      rgba(56, 131, 134, 1) 64%
+    );
+    border-bottom: solid white 1px;
+    border-top: solid white 1px;
+  }
+}
+
+.navBarRoute.power {
+  & svg {
+    width: calc(var(--index) * 0.8);
+    height: calc(var(--index) * 0.8);
+  }
+  margin-top: auto;
+}

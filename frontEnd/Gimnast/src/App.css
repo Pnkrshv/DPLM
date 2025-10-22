@@ -1,0 +1,11 @@
+*{
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+}
+
+@font-face {
+    font-family: main;
+    src: url(assets/fonts/Noto_Sans/static/NotoSans-Regular.ttf);
+}
