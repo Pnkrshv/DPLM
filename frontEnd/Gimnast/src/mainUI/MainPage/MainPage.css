@@ -32,16 +32,16 @@
   border-bottom: solid transparent 1px;
   border-top: solid transparent 1px;
   width: calc(var(--index) * 4);
+
   & svg {
     width: calc(var(--index) * 1);
     height: calc(var(--index) * 1);
   }
+
   &:hover {
-    background: linear-gradient(
-      180deg,
-      rgba(0, 96, 100, 1) 0%,
-      rgba(56, 131, 134, 1) 64%
-    );
+    background: linear-gradient(180deg,
+        rgba(0, 96, 100, 1) 0%,
+        rgba(56, 131, 134, 1) 64%);
     border-bottom: solid white 1px;
     border-top: solid white 1px;
   }
@@ -52,5 +52,6 @@
     width: calc(var(--index) * 0.8);
     height: calc(var(--index) * 0.8);
   }
+
   margin-top: auto;
 }
