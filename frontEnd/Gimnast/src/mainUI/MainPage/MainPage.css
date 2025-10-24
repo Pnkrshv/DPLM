@@ -32,6 +32,7 @@
   border-bottom: solid transparent 1px;
   border-top: solid transparent 1px;
   width: calc(var(--index) * 4);
+  text-decoration: none;
 
   & svg {
     width: calc(var(--index) * 1);
