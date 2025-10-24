@@ -1,14 +1,19 @@
 import "./MainPage.css";
-import { Link } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 
 export default function MainPage() {
+
+  const getNavLinkClass = ({ isActive }) => {
+    return isActive ? "navBarRoute active" : "navBarRoute"
+  }
+
   return (
     <>
       <ul className="navBarCol">
-        <Link to={"/"} style={{ textDecoration: 'none' }}>
-          <li className="navBarRoute survey">
+        <NavLink to={"/"} style={{ textDecoration: 'none' }} className={getNavLinkClass}>
+          <li className="survey">
             <svg
-              xmlns="htta://www.w3.org/2000/svg"
+              xmlns="htts://www.w3.org/2000/svg"
               width="200"
               height="200"
               viewBox="0 0 20 20"
@@ -20,9 +25,9 @@ export default function MainPage() {
             </svg>
             <p className="underRoute">Опросы</p>
           </li>
-        </Link>
-        <Link to={"/questionnaires"} style={{ textDecoration: 'none' }}>
-          <li className="navBarRoute questionnaires">
+        </NavLink>
+        <NavLink to={"/questionnaires"} style={{ textDecoration: 'none' }} className={getNavLinkClass}>
+          <li className="questionnaires">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="200"
@@ -36,9 +41,9 @@ export default function MainPage() {
             </svg>
             <p className="underRoute">Анкеты</p>
           </li>
-        </Link>
-        <Link to={"/selections"} style={{ textDecoration: 'none' }}>
-          <li className="navBarRoute selections">
+        </NavLink>
+        <NavLink to={"/selections"} style={{ textDecoration: 'none' }} className={getNavLinkClass}>
+          <li className="selections">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="200"
@@ -52,9 +57,9 @@ export default function MainPage() {
             </svg>
             <p className="underRoute">Выборки</p>
           </li>
-        </Link>
-        <Link to="/maps" style={{ textDecoration: 'none' }}>
-          <li className="navBarRoute maps">
+        </NavLink>
+        <NavLink to="/maps" style={{ textDecoration: 'none' }} className={getNavLinkClass}>
+          <li className="maps">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="200"
@@ -68,9 +73,9 @@ export default function MainPage() {
             </svg>
             <p className="underRoute">Маршруты</p>
           </li>
-        </Link>
-        <Link to="/statistic" style={{ textDecoration: 'none' }}>
-          <li className="navBarRoute statistic">
+        </NavLink>
+        <NavLink to="/statistic" style={{ textDecoration: 'none' }} className={getNavLinkClass}>
+          <li className="statistic">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="200"
@@ -84,7 +89,7 @@ export default function MainPage() {
             </svg>
             <p className="underRoute">Статистика</p>
           </li>
-        </Link>
+        </NavLink>
         <li className="navBarRoute power">
           <svg
             xmlns="http://www.w3.org/2000/svg"

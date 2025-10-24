@@ -15,6 +15,10 @@
   background-color: #006064;
   max-width: calc(var(--index) * 4);
   height: 100vh;
+
+  & a {
+    text-align: center;
+  }
 }
 
 .navBarRoute {
@@ -55,4 +59,10 @@
   }
 
   margin-top: auto;
+}
+
+.active {
+  background: linear-gradient(180deg,
+      rgba(0, 96, 100, 1) 0%,
+      rgba(56, 131, 134, 1) 64%);
 }
