@@ -1,7 +1,7 @@
 export default function Questionnaires(){
     return(
         <>
-            <h1>ANKJNDOJne</h1>
+            <h1>Анкеты</h1>
         </>
     )
 }

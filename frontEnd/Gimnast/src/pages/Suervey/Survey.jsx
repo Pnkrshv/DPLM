@@ -1,7 +1,7 @@
 export default function Survey(){
     return(
         <>
-            <h1>Suervey</h1>
+            <h1>Опросы</h1>
         </>
     )
 }
