@@ -15,7 +15,7 @@ export default function Auth() {
         setError('');
 
         try {
-            const response = await axios.post('http:/localhost:8080', {
+            const response = await axios.post('http://localhost:8080/login', {
                 login: login,
                 password: password,
             });
@@ -45,7 +45,7 @@ export default function Auth() {
                         value={login}
                         onChange={(e) => {
                             setLogin(e.target.value)
-                        }}n
+                        }}
                         required
                     />
                 </div>
