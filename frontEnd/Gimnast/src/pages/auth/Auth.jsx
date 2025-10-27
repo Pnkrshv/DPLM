@@ -45,7 +45,7 @@ export default function Auth() {
                         value={login}
                         onChange={(e) => {
                             setLogin(e.target.value)
-                        }}
+                        }}n
                         required
                     />
                 </div>
@@ -61,7 +61,7 @@ export default function Auth() {
                         required
                     />
                 </div>
-                <button type="submit">Войти</button>
+                <button type="submit" className='formBtn'>Войти</button>
                 {error && <p className='errorText'>{error}</p>}
             </form>
         </div>
