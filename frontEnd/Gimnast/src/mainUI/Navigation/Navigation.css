@@ -57,7 +57,9 @@
     width: calc(var(--index) * 0.8);
     height: calc(var(--index) * 0.8);
   }
+}
 
+.navLink.power{
   margin-top: auto;
 }
 
