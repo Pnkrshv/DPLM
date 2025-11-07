@@ -60,7 +60,7 @@ func addUser(c echo.Context) error {
 
 	if result.Error != nil {
 		return c.JSON(http.StatusInternalServerError, echo.Map{
-			"error": "Не удалось создать пользоватедя",
+			"error": "Не удалось создать пользователя",
 		})
 	}
 

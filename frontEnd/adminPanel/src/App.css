@@ -1,0 +1,28 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+:root {
+    --index: calc(1vh + 1vw);
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    max-width: calc(var(--index) * 10);
+    border: solid black 1px;
+    padding: calc(var(--index) * 1);
+    margin: calc(var(--index) * 1);
+
+    & h4 {
+        text-align: center;
+        margin-bottom: calc(var(--index) * 1);
+    }
+
+    & button {
+        margin-top: calc(var(--index) * 1);
+        cursor: pointer;
+    }
+}
