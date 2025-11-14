@@ -85,15 +85,31 @@ func getAuth(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, echo.Map{"error": "Invalid request"})
 	}
 
-	if data.Login == "admin" && data.Password == "kaf32" {
-		return c.JSON(http.StatusOK, echo.Map{
-			"access": "confirmed",
+	var user UserData
+	result := db.Where("login = ?", data.Login).First(&user)
+
+	if result.Error != nil {
+		return c.JSON(http.StatusUnauthorized, echo.Map{
+			"error":  "Неверный логин или пароль.",
+			"access": "denied",
 		})
 	}
-	return c.JSON(http.StatusUnauthorized, echo.Map{
-		"access": "denied",
-		"error":  "Invalid login or password!",
+
+	err := bcrypt.CompareHashAndPassword([]byte(user.HashPassword), []byte(data.Password))
+
+	if err != nil {
+		return c.JSON(http.StatusUnauthorized, echo.Map{
+			"access": "denied",
+			"error":  "Неверный логин или пароль.",
+		})
+	}
+	//Успешная авторизация:
+	return c.JSON(http.StatusOK, echo.Map{
+		"access": "confirmed",
+		"id":     user.ID,
+		"login":  user.Login,
 	})
+
 }
 
 func main() {
