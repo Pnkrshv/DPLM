@@ -9,6 +9,7 @@ function App() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [users, setUsers] = useState([]);
+  const [isLoading, setisLoading] = useState(false);
 
   const fetchUsers = async () => {
     try {
@@ -23,10 +24,14 @@ function App() {
     fetchUsers();
   }, [])
 
+  // Обработчик формы
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     setError('');
     setSuccess('');
+
+    setisLoading(true)
     try {
       const response = await axios.post('http://localhost:8080/', {
         login: userLogin,
@@ -35,7 +40,7 @@ function App() {
       setUserLogin('');
       setUserPassword('');
       setSuccess(response.data.message);
-      fetchUsers();
+      await fetchUsers();
       return response.data
     } catch (error) {
       if (axios.isAxiosError) {
@@ -52,24 +57,37 @@ function App() {
         }
       }
       return error
+    } finally {
+      setisLoading(false);
     }
   }
+
+  //Обработчик удаления
 
   const handleDelete = async (id) => {
     if (!window.confirm('Вы уверены, что хотите удалить пользователя?')) {
       return;
     }
 
+    setisLoading(true)
+
     try {
       const response = await axios.delete(`http://localhost:8080/${id}`);
       fetchUsers();
     } catch (error) {
       console.error('Ошибка удаления: ', error)
+    } finally {
+      setisLoading(false)
     }
   }
 
   return (
     <div className='panel'>
+      {isLoading && (
+        <div className="loading-overlay">
+          <div className="spinner"></div>
+        </div>
+      )}
       <form method="post" onSubmit={handleSubmit}>
         <h4>Добавить пользователя</h4>
         <label htmlFor="userLogin"><p>Логин:</p></label>
