@@ -71,6 +71,44 @@ func addUser(c echo.Context) error {
 	})
 }
 
+// Удаление пользователей из админки:
+func deleteUser(c echo.Context) error {
+	id := c.Param("id")
+
+	result := db.Delete(&UserData{}, "id = ?", id)
+
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, echo.Map{
+			"error": "Пользователь не был удален",
+		})
+	}
+	if result.RowsAffected == 0 {
+		return c.JSON(http.StatusOK, echo.Map{
+			"error": "Пользователь не найден",
+		})
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"message": "Пользователь успешно удален",
+	})
+}
+
+// вывод всех пользователей:
+func getAllUsers(c echo.Context) error {
+	var users []UserData
+
+	result := db.Find(&users)
+
+	if result.Error != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{
+			"error": "Ошибка при получении списка пользователей",
+		})
+	}
+
+	return c.JSON(http.StatusOK, users)
+
+}
+
 //Авторизация:
 
 type loginData struct {
@@ -118,5 +156,7 @@ func main() {
 	e.Use(middleware.CORS())
 	e.POST("/login", getAuth)
 	e.POST("/", addUser)
+	e.GET("/", getAllUsers)
+	e.DELETE("/:id", deleteUser)
 	e.Start(":8080")
 }

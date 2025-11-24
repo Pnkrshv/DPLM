@@ -26,3 +26,53 @@ form {
         cursor: pointer;
     }
 }
+
+.success-add {
+    text-align: center;
+    margin-top: calc(var(--index) * 1);
+    color: green;
+    font-size: calc(var(--index) * .5);
+}
+
+.added {
+    text-align: center;
+    margin-top: calc(var(--index) * 1);
+    font-size: calc(var(--index) * .5);
+
+    & .success {
+        color: green;
+    }
+
+    & .error {
+        color: red;
+    }
+}
+
+.panel {
+    display: flex;
+    flex-direction: row;
+    justify-content: left;
+    align-items: flex-start;
+    text-align: center;
+}
+
+.users-table {
+    margin: calc(var(--index) * 1);
+
+    & table {
+        border: solid black 2px;
+        border-collapse: collapse;
+    }
+
+    & td {
+        border: solid black 2px;
+        padding: calc(var(--index) * .3);
+    }
+}
+
+.delete-btn {
+    text-align: center;
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+}
