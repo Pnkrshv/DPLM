@@ -1,4 +1,4 @@
-*{
+* {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
@@ -10,6 +10,10 @@
     src: url(assets/fonts/Noto_Sans/static/NotoSans-Regular.ttf);
 }
 
-.page{
+.page {
     display: flex;
+
+    & main {
+        flex: 1;
+    }
 }
