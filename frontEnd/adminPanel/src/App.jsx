@@ -1,6 +1,6 @@
-import { use, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import './App.css'
-import axios, { isAxiosError } from 'axios';
+import axios from 'axios';
 
 function App() {
 
@@ -74,6 +74,7 @@ function App() {
     try {
       const response = await axios.delete(`http://localhost:8080/${id}`);
       fetchUsers();
+      return response.data
     } catch (error) {
       console.error('Ошибка удаления: ', error)
     } finally {
