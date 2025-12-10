@@ -1,24 +1,34 @@
 import "./Questionnaires.css"
-import { useMemo, useState } from "react"
-import Select from 'react-select'
-import citiesData from './cities.json'
+import { useEffect, useState } from "react"
+import axios from 'axios'
 
 export default function Questionnaires() {
 
     const [scope, setScope] = useState('regions');
     const [isModalopen, setIsModalOpen] = useState(false);
-    const [selectedCities, setSelectedCitied] = useState([]);
 
-    const options = useMemo(() => {
-        return citiesData.map((item, index) => ({
-            value: `${item.city}_${index}`,
-            label: `${item.city},`
-        }))
-    }, [])
+    const [cities, setCities] = useState([]);
+    const [isLoadingCities, setIsLoadingCities] = useState(false)
+    const [selectedCities, setSelectedCities] = useState([]);
 
-    const handleChange = (selectedOptions) => {
-        setSelectedCitied(selectedOptions || []);
+    const fetchCities = async () => {
+        setIsLoadingCities(true);
+        try {
+            const response = await axios.get('http://localhost:8080/cities')
+            setCities(response.data)
+        } catch (error) {
+            console.error("Ошибка выгрузки городов:", error)
+        } finally {
+            setIsLoadingCities(false);
+        }
     }
+
+    useEffect(() => {
+        if (isModalopen && scope === 'cities' && cities.length === 0) {
+            fetchCities();
+        }
+    }, [isModalopen, scope]);
+
     return (
         <>
 
@@ -77,18 +87,9 @@ export default function Questionnaires() {
                                     <div className="region-element"><input type="checkbox" name="" id="" /><p>ПРИВОЛЖСКИЙ</p></div>
                                 </> : ''}
                                 {scope === 'cities' ? <>
-                                    <div className="cities-list">
-                                        <Select
-                                            isMulti
-                                            name="cities"
-                                            options={options}
-                                            value={selectedCities}
-                                            onChange={handleChange}
-                                            placeholder="Начните вводить название..."
-                                            noOptionsMessage={() => "Город не найден"}
-                                            className="basic-multi-select"
-                                            classNamePrefix="select"
-                                        /></div>
+                                    <div className="cities-container">
+                                        //container
+                                    </div>
                                 </> : ''}
                             </div>
 

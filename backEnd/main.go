@@ -28,6 +28,34 @@ func initDB() {
 	}
 }
 
+type City struct {
+	Name   string `json:"city"`
+	Region string `json:"region"`
+}
+
+// Добавление городов в БД(миграция):
+// func seedCities() {
+// 	data, _ := os.ReadFile("./data/cities.json")
+// 	var cities []City
+// 	json.Unmarshal(data, &cities)
+
+// 	db.CreateInBatches(cities, 100)
+// }
+
+// Выгрузка списка городов:
+func getCities(c echo.Context) error {
+	var cities []City
+	result := db.Find(&cities)
+
+	if result.Error != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{
+			"error": "Ошибка получения списка городов",
+		})
+	}
+
+	return c.JSON(http.StatusOK, cities)
+}
+
 //Добавление пользователей из админки:
 
 type UserData struct {
@@ -152,11 +180,13 @@ func getAuth(c echo.Context) error {
 
 func main() {
 	initDB()
+	// seedCities() - миграция
 	e := echo.New()
 	e.Use(middleware.CORS())
 	e.POST("/login", getAuth)
 	e.POST("/", addUser)
 	e.GET("/", getAllUsers)
 	e.DELETE("/:id", deleteUser)
+	e.GET("/cities", getCities)
 	e.Start(":8080")
 }
