@@ -1,8 +1,11 @@
 package main
 
 import (
+	"encoding/json"
+	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -15,7 +18,7 @@ import (
 var db *gorm.DB
 
 func initDB() {
-	dsn := "host=151.241.229.14 user=postgres password=1111 dbname=postgres port=5432 sslmode=disable"
+	dsn := "host=94.156.180.244 user=postgres password=Cergey27249 dbname=postgres port=5432 sslmode=disable"
 	var err error
 
 	db, err = gorm.Open(postgres.Open(dsn))
@@ -31,29 +34,6 @@ func initDB() {
 type City struct {
 	Name   string `json:"city"`
 	Region string `json:"region"`
-}
-
-// Добавление городов в БД(миграция):
-// func seedCities() {
-// 	data, _ := os.ReadFile("./data/cities.json")
-// 	var cities []City
-// 	json.Unmarshal(data, &cities)
-
-// 	db.CreateInBatches(cities, 100)
-// }
-
-// Выгрузка списка городов:
-func getCities(c echo.Context) error {
-	var cities []City
-	result := db.Find(&cities)
-
-	if result.Error != nil {
-		return c.JSON(http.StatusInternalServerError, echo.Map{
-			"error": "Ошибка получения списка городов",
-		})
-	}
-
-	return c.JSON(http.StatusOK, cities)
 }
 
 //Добавление пользователей из админки:
@@ -178,9 +158,51 @@ func getAuth(c echo.Context) error {
 
 }
 
+// Структура для городов
+type Cities struct {
+	Region string `json:"region"`
+	City   string `json:"city`
+}
+
+func loadingCities() ([]Cities, error) {
+	var cities []Cities
+
+	//Читаем json
+	data, err := os.ReadFile("cities.json")
+	if err != nil {
+		log.Printf("Файл не найден!")
+		return getTestCities(), err
+	}
+
+	if err := json.Unmarshal(data, &cities); err != nil {
+		return nil, err
+	}
+
+	return cities, nil
+}
+
+//Тестовый набор городов
+func getTestCities() []Cities {
+	return []Cities{
+		{Region: "Москва и Московская область", City: "Москва"},
+		{Region: "Санкт-Петербург и область", City: "Санкт-Петербург"},
+		{Region: "Орловская область", City: "Орёл"},
+	}
+}
+
+//Выгрузка городов в фронт
+func getCities(c echo.Context) error {
+	cities, err := loadingCities()
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{
+			"error": "Ошибка загрузки городова...",
+		})
+	}
+	 return c.JSON(http.StatusOK, cities)
+}
+
 func main() {
 	initDB()
-	// seedCities() - миграция
 	e := echo.New()
 	e.Use(middleware.CORS())
 	e.POST("/login", getAuth)
