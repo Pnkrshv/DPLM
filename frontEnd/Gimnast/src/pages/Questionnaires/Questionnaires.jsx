@@ -8,6 +8,7 @@ export default function Questionnaires() {
   const [loading, setLoading] = useState(false);
   const [cities, setCities] = useState([]);
   const [error, setError] = useState(null);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const fetchCities = async () => {
     setLoading(true);
@@ -22,7 +23,7 @@ export default function Questionnaires() {
         if (err.response) {
           //Сервер ответил с кодом ошибки
           setError(
-            `Ошибка сервера: ${err.response.status} - ${err.response.data.error}`
+            `Ошибка сервера: ${err.response.status} - ${err.response.data.error}`,
           );
         } else if (err.request) {
           //Запрос сделан, но ответ не получен
@@ -40,10 +41,12 @@ export default function Questionnaires() {
   };
 
   useEffect(() => {
-    if (isModalopen && scope === "cities" && cities.length === 0) {
-      fetchCities();
+    if (isModalopen && scope === "cities") {
+      if(cities.length === 0 && !loading){
+        fetchCities();
+      }
     }
-  }, [isModalopen, scope, cities.length]);
+  }, [isModalopen, scope]);
 
   return (
     <>
@@ -179,35 +182,47 @@ export default function Questionnaires() {
                 {scope === "cities" ? (
                   <>
                     <div className="cities-container">
-                        {loading ? (
-                            <div className="loading">
-                                <div className="spinner"></div>
-                                <p>Загрузка городов...</p>
+                      {loading ? (
+                        <div className="loading">
+                          <div className="spinner"></div>
+                          <p>Загрузка городов...</p>
+                        </div>
+                      ) : error ? (
+                        <div className="error">
+                          <p>{error}</p>
+                          <button
+                            type="button"
+                            onClick={fetchCities}
+                            className="retry-btn"
+                          >
+                            {" "}
+                            Повторить попытку{" "}
+                          </button>
+                        </div>
+                      ) : cities.length > 0 ? (
+                        <div className="cities-grid">
+                          {cities.map((city, index) => (
+                            <div
+                              className="city-checkbox"
+                              key={`${city.city} - ${city.index}`}
+                            >
+                              <input
+                                type="checkbox"
+                                name="city"
+                                id={`city-${index}`}
+                                value={city.name}
+                              />
+                              <label htmlFor={`city-${city.index}`}>
+                                {city.City} ({city.region})
+                              </label>
                             </div>
-                        ) : error ? (
-                            <div className="error">
-                                <p>{error}</p>
-                                <button
-                                    type="button"
-                                    onClick={fetchCities}
-                                    className="retry-btn"
-                                > Повторить попытку </button>
-                            </div>
-                        ) : cities.length >0 ? (
-                            <div className="cities-grid">
-                                {cities.map((city, index) => (
-                                    <div className="city-checkbox" key={`${city.city} - ${city.index}`}>
-                                        <input type="checkbox"
-                                        name="city"
-                                        id={`city-${index}`}
-                                        value={city.name} />
-                                        <label htmlFor={`city-${city.index}`}>{city.city} ({city.region})</label>
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <div className="no-cities"><p>Нет доступных городов</p></div>
-                        )}
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="no-cities">
+                          <p>Нет доступных городов</p>
+                        </div>
+                      )}
                     </div>
                   </>
                 ) : (
@@ -225,12 +240,26 @@ export default function Questionnaires() {
                 >
                   Отменить
                 </button>
-                <button type="submit" className="save-btn">
+                <button
+                  type="submit"
+                  className="save-btn"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setIsModalOpen(false);
+                    setIsSettingsOpen(true);
+                  }}
+                >
                   Сохранить
                 </button>
               </div>
             </form>
           </div>
+        </>
+      )}
+
+      {isSettingsOpen && (
+        <>
+          <div className="settings-window">123</div>
         </>
       )}
 
@@ -253,10 +282,12 @@ export default function Questionnaires() {
       <div className="questionnaires-table">
         <table>
           <thead>
-            <th>Название анкеты</th>
-            <th>Код опроса</th>
-            <th>Дата создания</th>
-            <th> </th>
+            <tr>
+              <th>Название анкеты</th>
+              <th>Код опроса</th>
+              <th>Дата создания</th>
+              <th> </th>
+            </tr>
           </thead>
           <tbody></tbody>
         </table>

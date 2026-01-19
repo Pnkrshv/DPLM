@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -168,9 +167,9 @@ func loadingCities() ([]Cities, error) {
 	var cities []Cities
 
 	//Читаем json
-	data, err := os.ReadFile("cities.json")
+	data, err := os.ReadFile("data/cities.json")
 	if err != nil {
-		log.Printf("Файл не найден!")
+		log.Printf("Файл не найден: %s", err)
 		return getTestCities(), err
 	}
 
@@ -181,7 +180,7 @@ func loadingCities() ([]Cities, error) {
 	return cities, nil
 }
 
-//Тестовый набор городов
+// Тестовый набор городов
 func getTestCities() []Cities {
 	return []Cities{
 		{Region: "Москва и Московская область", City: "Москва"},
@@ -190,15 +189,15 @@ func getTestCities() []Cities {
 	}
 }
 
-//Выгрузка городов в фронт
+// Выгрузка городов в фронт
 func getCities(c echo.Context) error {
 	cities, err := loadingCities()
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, echo.Map{
-			"error": "Ошибка загрузки городова...",
+			"error": "Ошибка загрузки городов...",
 		})
 	}
-	 return c.JSON(http.StatusOK, cities)
+	return c.JSON(http.StatusOK, cities)
 }
 
 func main() {
