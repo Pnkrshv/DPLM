@@ -1,0 +1,95 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+}
+
+:root {
+  --index: calc(1vw + 1vh);
+  --active: #409eff;
+  --hoveractive: #2989ea;
+}
+
+@font-face {
+  font-family: main;
+  src: url(assets/fonts/Noto_Sans/static/NotoSans-Regular.ttf);
+}
+
+.modal-window {
+  position: fixed;
+  z-index: 1000;
+  left: 53%;
+  top: 50%;
+  height: 80%;
+  display: flex;
+  flex-direction: column;
+  border-radius: 4px;
+  overflow: hidden;
+  transform: translate(-50%, -50%);
+  background-color: rgb(255, 255, 255);
+  width: calc(var(--index) * 60);
+  border: solid 1px grey;
+  -webkit-box-shadow: 4px 4px 8px 0px rgba(34, 60, 80, 0.2);
+  -moz-box-shadow: 4px 4px 8px 0px rgba(34, 60, 80, 0.2);
+  box-shadow: 4px 4px 8px 0px rgba(34, 60, 80, 0.2);
+  font-size: 90%;
+}
+
+.window-bg {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+  background-color: rgba(166, 166, 166, 0.274);
+  backdrop-filter: blur(3px);
+}
+
+.close-btn {
+  cursor: pointer;
+}
+
+.window-navigation {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.25% 0.25% 0.25% 1%;
+  border-bottom: solid grey 1px;
+  max-width: 98%;
+  margin-left: 1%;
+}
+.nav-element {
+  cursor: pointer;
+  transition: 0.3s ease-in;
+
+  &:hover {
+    color: rgb(74, 74, 74);
+  }
+
+  &.activeTab {
+    color: var(--active);
+    transition: 0.3s ease-in;
+    position: relative;
+  }
+}
+
+.nav-elements {
+  display: flex;
+  position: relative;
+  gap: 2vw;
+  font-family: main;
+  font-size: 110%;
+  font-weight: 400;
+  color: grey;
+}
+
+.tab-indicator {
+  position: absolute;
+  bottom: -65.5%;
+  left: 0;
+  height: 1.5px;
+  background-color: var(--active);
+  transition: 0.3s ease-in;
+  transform: translateX(0%);
+}

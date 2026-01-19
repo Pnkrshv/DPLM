@@ -44,9 +44,11 @@
   }
 
   &:hover {
-    background: linear-gradient(180deg,
-        rgba(0, 96, 100, 1) 0%,
-        rgba(56, 131, 134, 1) 64%);
+    background: linear-gradient(
+      180deg,
+      rgba(0, 96, 100, 1) 0%,
+      rgba(56, 131, 134, 1) 64%
+    );
     border-bottom: solid white 1px;
     border-top: solid white 1px;
   }
@@ -59,12 +61,14 @@
   }
 }
 
-.navLink.power{
+.navLink.power {
   margin-top: auto;
 }
 
 .active {
-  background: linear-gradient(180deg,
-      rgba(0, 96, 100, 1) 0%,
-      rgba(56, 131, 134, 1) 64%);
+  background: linear-gradient(
+    180deg,
+    rgba(0, 96, 100, 1) 0%,
+    rgba(56, 131, 134, 1) 64%
+  );
 }
