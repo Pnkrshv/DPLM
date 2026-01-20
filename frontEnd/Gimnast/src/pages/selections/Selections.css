@@ -81,14 +81,14 @@
   position: relative;
   gap: 2vw;
   font-family: main;
-  font-size: calc(var(--index) * 0.4);
+  font-size: calc(var(--index) * 0.5);
   font-weight: 400;
   color: grey;
 }
 
 .tab-indicator {
   position: absolute;
-  bottom: calc(var(--index) * -0.4);
+  top: calc(var(--index) * 1.15);
   left: 0;
   height: calc(var(--index) * 0.07);
   background-color: var(--active);
@@ -111,8 +111,8 @@
   align-items: start;
   justify-content: flex-start;
   gap: 5%;
-  height: calc(var(--index) * 23);
-  font-size: calc(var(--index) * 0.4);
+  height: calc(var(--index) * 21);
+  font-size: calc(var(--index) * 0.5);
   width: 50%;
   margin: calc(var(--index) * 1) 0 0 calc(var(--index) * 1);
   border-right: solid grey 1px;
@@ -127,7 +127,7 @@
   & input {
     width: 60%;
     font-family: main;
-    font-size: calc(var(--index) * 0.4);
+    font-size: calc(var(--index) * 0.5);
     padding: 0.5%;
     outline: none;
   }
@@ -146,7 +146,7 @@
 
   & select {
     font-family: main;
-    font-size: calc(var(--index) * 0.4);
+    font-size: calc(var(--index) * 0.5);
     width: calc(var(--index) * 16.55);
     cursor: pointer;
     outline: none;
@@ -156,13 +156,13 @@
 
 .region-list {
   font-family: main;
-  font-size: calc(var(--index) * 0.4);
+  font-size: calc(var(--index) * 0.5);
   height: 100%;
 }
 
 .selection-gr {
   margin-top: 2%;
-  height: calc(var(--index) * 18);
+  height: calc(var(--index) * 15);
 
   &::-webkit-scrollbar {
     display: none;
