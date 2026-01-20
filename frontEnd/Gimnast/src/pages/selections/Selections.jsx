@@ -62,7 +62,7 @@ export default function Selections() {
                     transform:
                       activeTab === "data"
                         ? "translateX(0%)"
-                        : "translateX(186%)",
+                        : "translateX(190%)",
                     width: activeTab === "data" ? "50%" : "35%",
                   }}
                 ></div>
@@ -133,7 +133,9 @@ export default function Selections() {
                 <>
                   <form method="post" className="parameters-form">
                     <div className="form-name">
-                      <label><span>*</span>Название выборки</label>
+                      <label>
+                        <span>*</span>Название выборки
+                      </label>
                       <input type="text" />
                     </div>
                     <div className="form-type">
@@ -147,7 +149,7 @@ export default function Selections() {
                       </select>
                     </div>
 
-                    <div className="region">
+                    <div className="region second">
                       <label>Форма актуальна для</label>
                       <div className="scope-switch">
                         <button
@@ -262,7 +264,51 @@ export default function Selections() {
                     </div>
                   </form>
 
-                  <div className="right-side"></div>
+                  <div className="right-side">
+                    <button className="save-btn sec">Сохранить</button>
+                    <div className="right-nav">
+                      <div className="right-nav-element">Жёсткие квоты</div>
+                      <div className="right-nav-element">+ Мягкие квоты</div>
+                    </div>
+                    <div className="right-select">
+                      <select>
+                        <option disabled selected>
+                          Выбрать
+                        </option>
+                        <option>Option 1</option>
+                        <option>Option 2</option>
+                      </select>
+                    </div>
+                    <div className="row-col">
+                      <div className="row">
+                        <h3 className="row-title">Строки</h3>
+                        <select className="row-select">
+                          <option disabled selected>
+                            Вбырать
+                          </option>
+                          <option>Option</option>
+                          <option>Option</option>
+                          <option>Option</option>
+                        </select>
+                        <hr className="row-line" />
+                        <div className="row-data"></div>
+                      </div>
+
+                      <div className="column">
+                        <h3 className="col-title">Столбцы</h3>
+                        <select className="col-select">
+                          <option selected disabled>
+                            Выбрать
+                          </option>
+                          <option>Option</option>
+                          <option>Option</option>
+                          <option>Option</option>
+                        </select>
+                        <hr className="col-line" />
+                        <div className="col-data"></div>
+                      </div>
+                    </div>
+                  </div>
                 </>
               )}
 
