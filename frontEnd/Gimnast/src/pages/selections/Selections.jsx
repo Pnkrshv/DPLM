@@ -1,9 +1,52 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import axios from "axios";
 import "./Selections.css";
 
 export default function Selections() {
   const [isWindowOpen, setIsWindowOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("parameters");
+  const [scope, setScope] = useState("regions");
+  const [error, setError] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [cities, setCities] = useState([]);
+
+  const fetchCities = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await axios.get("http://localhost:8080/cities");
+      setCities(response.data);
+    } catch (err) {
+      console.error("Ошибка при загрузке городов", err);
+
+      if (axios.isAxiosError(err)) {
+        if (err.response) {
+          //Сервер ответил с кодом ошибки
+          setError(
+            `Ошибка сервера: ${err.response.status} - ${err.response.data.error}`,
+          );
+        } else if (err.request) {
+          //Запрос сделан, но ответ не получен
+          setError(`Ошибка подключения к серверу: ${err.message}`);
+        } else {
+          //Ошибка запроса
+          setError(`Ошибка запроса: ${err.message}`);
+        }
+      } else {
+        setError("Неизвестная ошибка...");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isWindowOpen && scope === "cities") {
+      if (cities.length === 0 && !loading) {
+        fetchCities();
+      }
+    }
+  }, [isWindowOpen, scope, cities.length, loading]);
 
   return (
     <>
@@ -19,7 +62,7 @@ export default function Selections() {
                     transform:
                       activeTab === "data"
                         ? "translateX(0%)"
-                        : "translateX(190%)",
+                        : "translateX(186%)",
                     width: activeTab === "data" ? "50%" : "35%",
                   }}
                 ></div>
@@ -89,15 +132,137 @@ export default function Selections() {
               {activeTab === "parameters" && (
                 <>
                   <form method="post" className="parameters-form">
-                    <label>Название выборки</label>
-                    <input type="text" />
-                    <label>Тип выборки</label>
-                    <select>
-                      <option disabled selected>Выбрать</option>
-                      <option>Выборка 1</option>
-                      <option>Выборка 2</option>
-                    </select>
+                    <div className="form-name">
+                      <label><span>*</span>Название выборки</label>
+                      <input type="text" />
+                    </div>
+                    <div className="form-type">
+                      <label>Тип выборки</label>
+                      <select>
+                        <option disabled selected>
+                          <span>Выбрать</span>
+                        </option>
+                        <option>Выборка 1</option>
+                        <option>Выборка 2</option>
+                      </select>
+                    </div>
+
+                    <div className="region">
+                      <label>Форма актуальна для</label>
+                      <div className="scope-switch">
+                        <button
+                          type="button"
+                          className={`switch-btn ${
+                            scope === "regions" ? "activ" : ""
+                          }`} //if scope === regions{className = 'regions'}
+                          onClick={() => setScope("regions")}
+                        >
+                          Регионов
+                        </button>
+                        <button
+                          type="button"
+                          className={`switch-btn ${
+                            scope === "cities" ? "activ" : ""
+                          }`}
+                          onClick={() => setScope("cities")}
+                        >
+                          Городов
+                        </button>
+                      </div>
+
+                      <div className="region-list">
+                        {scope === "regions" ? (
+                          <>
+                            <div className="region-element">
+                              <input type="checkbox" name="" id="" />
+                              <p>СЕВЕРО-КАВКАЗСКИЙ</p>
+                            </div>
+                            <div className="region-element">
+                              <input type="checkbox" name="" id="" />
+                              <p>ЦЕНТРАЛЬНЫЙ</p>
+                            </div>
+                            <div className="region-element">
+                              <input type="checkbox" name="" id="" />
+                              <p>СИБИРСКИЙ</p>
+                            </div>
+                            <div className="region-element">
+                              <input type="checkbox" name="" id="" />
+                              <p>СЕВЕРО-ЗАПАДНЫЙ</p>
+                            </div>
+                            <div className="region-element">
+                              <input type="checkbox" name="" id="" />
+                              <p>УРАЛЬСКИЙ</p>
+                            </div>
+                            <div className="region-element">
+                              <input type="checkbox" name="" id="" />
+                              <p>ЮЖНЫЙ</p>
+                            </div>
+                            <div className="region-element">
+                              <input type="checkbox" name="" id="" />
+                              <p>ДАЛЬНЕВОСТОЧНЫЙ</p>
+                            </div>
+                            <div className="region-element">
+                              <input type="checkbox" name="" id="" />
+                              <p>ПРИВОЛЖСКИЙ</p>
+                            </div>
+                          </>
+                        ) : (
+                          ""
+                        )}
+                        {scope === "cities" ? (
+                          <>
+                            <div className="cities-container">
+                              {loading ? (
+                                <div className="loading">
+                                  <div className="spinner"></div>
+                                  <p>Загрузка городов...</p>
+                                </div>
+                              ) : error ? (
+                                <div className="error">
+                                  <p>{error}</p>
+                                  <button
+                                    type="button"
+                                    onClick={fetchCities}
+                                    className="retry-btn"
+                                  >
+                                    {" "}
+                                    Повторить попытку{" "}
+                                  </button>
+                                </div>
+                              ) : cities.length > 0 ? (
+                                <div className="cities-grid selection-gr">
+                                  {cities.map((city, index) => (
+                                    <div
+                                      className="city-checkbox"
+                                      key={`${city.city} - ${city.index}`}
+                                    >
+                                      <input
+                                        type="checkbox"
+                                        name="city"
+                                        id={`city-${index}`}
+                                        value={city.name}
+                                      />
+                                      <label htmlFor={`city-${city.index}`}>
+                                        {city.City} ({city.region})
+                                      </label>
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                <div className="no-cities">
+                                  <p>Нет доступных городов</p>
+                                </div>
+                              )}
+                            </div>
+                          </>
+                        ) : (
+                          ""
+                        )}
+                      </div>
+                    </div>
                   </form>
+
+                  <div className="right-side"></div>
                 </>
               )}
 

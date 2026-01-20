@@ -18,6 +18,7 @@
 
 .modal-window {
   position: fixed;
+  font-family: main;
   z-index: 1000;
   left: 53%;
   top: 50%;
@@ -86,10 +87,75 @@
 
 .tab-indicator {
   position: absolute;
-  bottom: -65.5%;
+  bottom: calc(var(--index) * -0.4436);
   left: 0;
-  height: 1.5px;
+  height: calc(var(--index) * 0.07);
   background-color: var(--active);
   transition: 0.3s ease-in;
   transform: translateX(0%);
+}
+
+.window-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.parameters-form {
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  justify-content: flex-start;
+  gap: 5%;
+  height: calc(var(--index) * 23);
+  font-size: 100%;
+  width: 50%;
+  margin: 2%;
+  border-right: solid grey 1px;
+}
+
+.form-name {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 2%;
+
+  & input {
+    width: 60%;
+    font-family: main;
+    font-size: 100%;
+    padding: 0.5%;
+    outline: none;
+  }
+
+  & span {
+    color: red;
+  }
+}
+
+.form-type {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  gap: 2%;
+  align-items: center;
+
+  & select {
+    font-family: main;
+    font-size: 100%;
+    width: 66%;
+    cursor: pointer;
+    outline: none;
+    padding: .5%;
+  }
+}
+
+.region-list {
+  font-family: main;
+  font-size: 100%;
+}
+
+.selection-gr {
+  width: 128.6%;
+  margin-top: 2%;
 }
