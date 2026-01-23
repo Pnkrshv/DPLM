@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import "./Selections.css";
 
@@ -9,6 +9,10 @@ export default function Selections() {
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(false);
   const [cities, setCities] = useState([]);
+  const [indicatorStyle, setIndicatorStyle] = useState({});
+
+  const dataTabRef = useRef(null);
+  const paramsTabRef = useRef(null);
 
   const fetchCities = async () => {
     setLoading(true);
@@ -21,15 +25,12 @@ export default function Selections() {
 
       if (axios.isAxiosError(err)) {
         if (err.response) {
-          //Сервер ответил с кодом ошибки
           setError(
             `Ошибка сервера: ${err.response.status} - ${err.response.data.error}`,
           );
         } else if (err.request) {
-          //Запрос сделан, но ответ не получен
           setError(`Ошибка подключения к серверу: ${err.message}`);
         } else {
-          //Ошибка запроса
           setError(`Ошибка запроса: ${err.message}`);
         }
       } else {
@@ -48,6 +49,39 @@ export default function Selections() {
     }
   }, [isWindowOpen, scope, cities.length, loading]);
 
+  // Обновление позиции индикатора при изменении активной вкладки
+  useEffect(() => {
+    if (isWindowOpen) {
+      updateIndicatorPosition();
+    }
+  }, [activeTab, isWindowOpen]);
+
+  // Обновление при ресайзе окна
+  useEffect(() => {
+    if (isWindowOpen) {
+      const handleResize = () => {
+        updateIndicatorPosition();
+      };
+
+      window.addEventListener("resize", handleResize);
+      return () => window.removeEventListener("resize", handleResize);
+    }
+  }, [isWindowOpen, activeTab]);
+
+  const updateIndicatorPosition = () => {
+    const activeTabElement =
+      activeTab === "data" ? dataTabRef.current : paramsTabRef.current;
+
+    if (activeTabElement) {
+      const { offsetLeft, offsetWidth } = activeTabElement;
+      setIndicatorStyle({
+        transform: `translateX(${offsetLeft}px)`,
+        width: `${offsetWidth}px`,
+        opacity: 1,
+      });
+    }
+  };
+
   return (
     <>
       {isWindowOpen && (
@@ -56,17 +90,10 @@ export default function Selections() {
           <div className="modal-window">
             <div className="window-navigation">
               <div className="nav-elements">
+                {/* Индикатор с динамической позицией */}
+                <div className="tab-indicator" style={indicatorStyle}></div>
                 <div
-                  className="tab-indicator"
-                  style={{
-                    transform:
-                      activeTab === "data"
-                        ? "translateX(0%)"
-                        : "translateX(190%)",
-                    width: activeTab === "data" ? "50%" : "35%",
-                  }}
-                ></div>
-                <div
+                  ref={dataTabRef}
                   className={`nav-element ${activeTab === "data" ? "activeTab" : ""}`}
                   onClick={() => {
                     setActiveTab("data");
@@ -75,6 +102,7 @@ export default function Selections() {
                   Данные выборки
                 </div>
                 <div
+                  ref={paramsTabRef}
                   className={`nav-element ${activeTab === "parameters" ? "activeTab" : ""}`}
                   onClick={() => {
                     setActiveTab("parameters");
@@ -97,36 +125,31 @@ export default function Selections() {
                   fill="none"
                   xmlns="http://www.w3.org/2000/svg"
                 >
-                  <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                  <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
                   <g
                     id="SVGRepo_tracerCarrier"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   ></g>
                   <g id="SVGRepo_iconCarrier">
-                    {" "}
-                    <g clip-path="url(#clip0_429_11083)">
-                      {" "}
+                    <g clipPath="url(#clip0_429_11083)">
                       <path
                         d="M7 7.00006L17 17.0001M7 17.0001L17 7.00006"
                         stroke="#292929"
-                        stroke-width="2.5"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      ></path>{" "}
-                    </g>{" "}
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      ></path>
+                    </g>
                     <defs>
-                      {" "}
                       <clipPath id="clip0_429_11083">
-                        {" "}
-                        <rect width="24" height="24" fill="white"></rect>{" "}
-                      </clipPath>{" "}
-                    </defs>{" "}
+                        <rect width="24" height="24" fill="white"></rect>
+                      </clipPath>
+                    </defs>
                   </g>
-                </svg>{" "}
+                </svg>
               </div>
             </div>
-            <div className="window-settings"></div>
 
             <div className="window-content">
               {activeTab === "parameters" && (

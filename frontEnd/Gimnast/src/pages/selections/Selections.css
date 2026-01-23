@@ -20,21 +20,20 @@
   position: fixed;
   font-family: main;
   z-index: 1000;
-  left: 53%;
+  left: 50%;
   top: 50%;
-  height: 80%;
+  height: 80vh;
   display: flex;
   flex-direction: column;
   border-radius: 4px;
   overflow: hidden;
   transform: translate(-50%, -50%);
   background-color: rgb(255, 255, 255);
-  width: 80%;
+  width: 80vw;
+  min-width: 600px;
+  max-width: 1200px;
   border: solid 1px grey;
-  -webkit-box-shadow: 4px 4px 8px 0px rgba(34, 60, 80, 0.2);
-  -moz-box-shadow: 4px 4px 8px 0px rgba(34, 60, 80, 0.2);
   box-shadow: 4px 4px 8px 0px rgba(34, 60, 80, 0.2);
-  font-size: calc(var(--index) * 0.35);
 }
 
 .window-bg {
@@ -53,17 +52,30 @@
 .window-navigation {
   display: flex;
   flex-direction: row;
+  width: 98%;
+  margin-left: 1%;
   align-items: center;
   justify-content: space-between;
-  padding: calc(var(--index) * 0.15) calc(var(--index) * 0.15)
-    calc(var(--index) * 0.15) 0;
+  padding: 10px 20px;
   border-bottom: solid grey 1px;
-  max-width: 98%;
-  margin-left: 1%;
+  position: relative;
 }
+
+.nav-elements {
+  display: flex;
+  position: relative;
+  gap: 40px;
+  font-family: main;
+  font-size: clamp(14px, 1.2vw, 18px);
+  font-weight: 400;
+  color: grey;
+}
+
 .nav-element {
   cursor: pointer;
-  transition: 0.3s ease-in;
+  padding: 8px 16px;
+  transition: color 0.3s ease-in;
+  white-space: nowrap; /* Предотвращаем перенос текста */
 
   &:hover {
     color: rgb(74, 74, 74);
@@ -71,38 +83,25 @@
 
   &.activeTab {
     color: var(--active);
-    transition: 0.3s ease-in;
-    position: relative;
+    font-weight: 500;
   }
-}
-
-.nav-elements {
-  display: flex;
-  position: relative;
-  gap: 2vw;
-  font-family: main;
-  font-size: calc(var(--index) * 0.5);
-  font-weight: 400;
-  color: grey;
 }
 
 .tab-indicator {
   position: absolute;
-  top: calc(var(--index) * 1.15);
+  bottom: -10px; 
   left: 0;
-  height: calc(var(--index) * 0.07);
+  height: 2px;
   background-color: var(--active);
-  transition: 0.3s ease-in;
-  transform: translateX(0%);
-  -webkit-box-shadow: 0px 3px 4px -1px rgba(34, 60, 80, 0.43);
-  -moz-box-shadow: 0px 3px 4px -1px rgba(34, 60, 80, 0.43);
-  box-shadow: 0px 3px 4px -1px rgba(34, 60, 80, 0.43);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 3px 3px 0 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .window-content {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex: 1;
+  overflow: hidden;
 }
 
 .parameters-form {
@@ -110,26 +109,30 @@
   flex-direction: column;
   align-items: start;
   justify-content: flex-start;
-  gap: 5%;
-  height: calc(var(--index) * 21);
-  font-size: calc(var(--index) * 0.5);
+  gap: 20px;
+  padding: 20px;
+  font-size: clamp(12px, 1vw, 16px);
   width: 50%;
-  margin: calc(var(--index) * 1) 0 0 calc(var(--index) * 1);
   border-right: solid grey 1px;
+  overflow-y: auto;
+  margin: 10px 0;
 }
 
 .form-name {
   display: flex;
   align-items: center;
   width: 100%;
-  gap: 2%;
+  gap: 10px;
 
   & input {
     width: 60%;
     font-family: main;
-    font-size: calc(var(--index) * 0.5);
-    padding: 0.5%;
+    font-size: inherit;
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
     outline: none;
+    min-width: 200px; /* Минимальная ширина */
   }
 
   & span {
@@ -141,31 +144,141 @@
   display: flex;
   flex-direction: row;
   width: 100%;
-  gap: 2%;
+  gap: 10px;
   align-items: center;
 
   & select {
     font-family: main;
-    font-size: calc(var(--index) * 0.5);
-    width: calc(var(--index) * 16.55);
+    font-size: inherit;
+    width: 60%;
+    min-width: 200px;
     cursor: pointer;
     outline: none;
-    padding: 0.5%;
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
   }
 }
 
+.region {
+  width: 100%;
+
+  &.second {
+    margin-top: 20px;
+  }
+}
+
+.scope-switch {
+  display: flex;
+  align-items: center;
+  width: fit-content;
+}
+
+.switch-btn {
+  padding: 8px 20px;
+  border: none;
+  background-color: white;
+  border: solid 1px grey;
+  color: grey;
+  cursor: pointer;
+  transition: all 0.3s ease-in;
+  font-size: clamp(12px, 1vw, 16px);
+  white-space: nowrap;
+}
+
+.switch-btn:first-child {
+  border-radius: 4px 0 0 4px;
+  border-right: none;
+}
+
+.switch-btn:last-child {
+  border-radius: 0 4px 4px 0;
+  border-left: none;
+}
+
+.switch-btn.activ {
+  background-color: #409eff;
+  color: white;
+
+  &:hover {
+    background-color: #2989ea;
+  }
+}
+
+.switch-btn:not(.activ):hover {
+  background-color: rgb(205, 205, 205);
+}
+
 .region-list {
-  font-family: main;
-  font-size: calc(var(--index) * 0.5);
+  margin-top: 15px;
+  font-size: inherit;
   height: 100%;
+  max-height: 300px;
+}
+
+.region-element {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  font-size: inherit;
+
+  & input {
+    cursor: pointer;
+    width: 16px;
+    height: 16px;
+  }
+
+  & p {
+    font-size: inherit;
+  }
+}
+
+.cities-container {
+  margin-top: 15px;
 }
 
 .selection-gr {
-  margin-top: 2%;
-  height: calc(var(--index) * 15);
+  margin-top: 10px;
+  height: 300px;
+  max-height: 50vh;
+  overflow-y: auto;
+  height: 100%;
 
   &::-webkit-scrollbar {
     display: none;
+  }
+
+  scrollbar-width: none;
+}
+
+.cities-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.city-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: #f0f0f0;
+  }
+
+  & input[type="checkbox"] {
+    cursor: pointer;
+    width: 16px;
+    height: 16px;
+  }
+
+  & label {
+    cursor: pointer;
+    font-size: inherit;
   }
 }
 
@@ -174,17 +287,20 @@
   flex-direction: column;
   align-items: start;
   width: 50%;
+  padding: 20px;
+  overflow-y: auto;
 }
 
 .sec {
-  padding: 0.3% 2%;
+  padding: 8px 24px;
   border-radius: 4px;
-  margin-left: 84%;
+  margin-left: auto;
+  margin-right: 20px;
   border: none;
   background-color: #409eff;
   color: white;
   cursor: pointer;
-  font-size: calc(var(--index) * 0.4);
+  font-size: clamp(12px, 1vw, 16px);
   transition: 0.3s all ease-in;
 
   &:hover {
@@ -197,51 +313,239 @@
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  padding: 0 5%;
+  padding: 15px 0;
   font-family: main;
-  font-size: calc(var(--index) * 0.45);
+  font-size: clamp(12px, 1vw, 16px);
   position: relative;
+  margin-top: 20px;
+  border-bottom: solid grey 1px;
 
   &::after {
     content: "";
     position: absolute;
-    width: 11%;
-    height: 15%;
+    width: 27%;
+    height: 2px;
     background-color: #2989ea;
     bottom: 0;
+    left: 0;
+  }
+}
+
+.right-nav-element {
+  cursor: pointer;
+  padding: 8px 16px;
+  transition: color 0.3s;
+
+  &:hover {
+    color: var(--active);
   }
 }
 
 .right-select {
   width: 100%;
+  margin-top: 20px;
+
   & select {
     width: 70%;
     font-family: main;
-    font-size: calc(var(--index) * 0.45);
+    font-size: clamp(12px, 1vw, 16px);
     outline: none;
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    min-width: 200px;
   }
 }
 
 .row-col {
   display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  width: 100%;
+  margin-top: 30px;
+}
+
+.row,
+.column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 45%;
+  min-height: 200px;
+  border: 2px solid #ccc;
+  border-radius: 4px;
+  padding: 15px;
+}
+
+.row-title,
+.col-title {
+  font-size: clamp(14px, 1.1vw, 17px);
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.row-select,
+.col-select {
+  width: 100%;
+  padding: 8px 12px;
+  font-family: main;
+  font-size: clamp(12px, 1vw, 16px);
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-bottom: 15px;
+}
+
+.row-line,
+.col-line {
+  width: 100%;
+  border: none;
+  border-top: 1px solid #eee;
+  margin: 15px 0;
+}
+
+.row-data,
+.col-data {
+  width: 100%;
+  flex: 1;
+  background-color: #f9f9f9;
+  border-radius: 4px;
+}
+
+@media (max-width: 1200px) {
+  .modal-window {
+    width: 90vw;
+    height: 85vh;
+  }
+
+  .nav-elements {
+    gap: 30px;
+  }
+}
+
+@media (max-width: 768px) {
+  .modal-window {
+    width: 95vw;
+    height: 90vh;
+    min-width: unset;
+  }
+
+  .window-content {
+    flex-direction: column;
+  }
+
+  .parameters-form,
+  .right-side {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid grey;
+  }
+
+  .nav-elements {
+    gap: 20px;
+    font-size: 14px;
+  }
+
+  .row-col {
+    flex-direction: column;
+  }
+
+  .row,
+  .column {
+    width: 100%;
+  }
+}
+
+.loading {
+  display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: calc(var(--index) * 2);
-  width: 100%;
+  padding: 40px;
+  color: #666;
 }
 
-.row {
-  border: solid red 2px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: calc(var(--index) * 10);
+.spinner {
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #409eff;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  animation: spin 1s linear infinite;
+  margin-bottom: 10px;
 }
 
-.column {
-  border: solid green 2px;
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.error {
+  padding: 20px;
+  text-align: center;
+  background-color: #ffebee;
+  border-radius: 4px;
+  color: #d32f2f;
+}
+
+.retry-btn {
+  background-color: #409eff;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 10px;
+
+  &:hover {
+    background-color: #2989ea;
+  }
+}
+
+.no-cities {
+  padding: 20px;
+  text-align: center;
+  color: #999;
+}
+
+.buttons {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: calc(var(--index) * 10);
+  gap: 15px;
+  margin: 20px;
+  margin-left: 3%;
+}
+
+.create-btn {
+  padding: 10px 20px;
+  border-radius: 4px;
+  border: none;
+  background-color: #409eff;
+  color: white;
+  cursor: pointer;
+  font-size: 14px;
+  transition: 0.3s all ease-in;
+
+  &:hover {
+    background-color: #2989ea;
+  }
+}
+
+.update-btn {
+  padding: 10px 15px;
+  border-radius: 4px;
+  border: solid 1px grey;
+  cursor: pointer;
+  transition: 0.3s all ease-in;
+
+  &:hover {
+    background-color: rgb(216, 216, 216);
+  }
+
+  & svg {
+    fill: rgb(86, 86, 86);
+  }
 }
