@@ -49,14 +49,12 @@ export default function Selections() {
     }
   }, [isWindowOpen, scope, cities.length, loading]);
 
-  // Обновление позиции индикатора при изменении активной вкладки
   useEffect(() => {
     if (isWindowOpen) {
       updateIndicatorPosition();
     }
   }, [activeTab, isWindowOpen]);
 
-  // Обновление при ресайзе окна
   useEffect(() => {
     if (isWindowOpen) {
       const handleResize = () => {
@@ -90,7 +88,6 @@ export default function Selections() {
           <div className="modal-window">
             <div className="window-navigation">
               <div className="nav-elements">
-                {/* Индикатор с динамической позицией */}
                 <div className="tab-indicator" style={indicatorStyle}></div>
                 <div
                   ref={dataTabRef}
@@ -177,18 +174,16 @@ export default function Selections() {
                       <div className="scope-switch">
                         <button
                           type="button"
-                          className={`switch-btn ${
-                            scope === "regions" ? "activ" : ""
-                          }`} //if scope === regions{className = 'regions'}
+                          className={`switch-btn ${scope === "regions" ? "activ" : ""
+                            }`} //if scope === regions{className = 'regions'}
                           onClick={() => setScope("regions")}
                         >
                           Регионов
                         </button>
                         <button
                           type="button"
-                          className={`switch-btn ${
-                            scope === "cities" ? "activ" : ""
-                          }`}
+                          className={`switch-btn ${scope === "cities" ? "activ" : ""
+                            }`}
                           onClick={() => setScope("cities")}
                         >
                           Городов
@@ -288,7 +283,12 @@ export default function Selections() {
                   </form>
 
                   <div className="right-side">
-                    <button className="save-btn sec">Сохранить</button>
+                    <button
+                      className="save-btn sec"
+                      onClick={() => {
+                        setIsWindowOpen(false);
+                      }}
+                    >Сохранить</button>
                     <div className="right-nav">
                       <div className="right-nav-element">Жёсткие квоты</div>
                       <div className="right-nav-element">+ Мягкие квоты</div>

@@ -9,6 +9,12 @@ export default function Questionnaires() {
   const [cities, setCities] = useState([]);
   const [error, setError] = useState(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [activeBlock, setActiveBlock] = useState('questions');
+  const [indicatorStyle, setIndicatorStyle] = useState({});
+
+  const attrBlockRef = useRef(null);
+  const questionsBlockRef = useRef(null);
+  const settingsBlockRef = useRef(null);
 
   const fetchCities = async () => {
     setLoading(true);
@@ -42,11 +48,36 @@ export default function Questionnaires() {
 
   useEffect(() => {
     if (isModalopen && scope === "cities") {
-      if(cities.length === 0 && !loading){
+      if (cities.length === 0 && !loading) {
         fetchCities();
       }
     }
-  }, [isModalopen, scope]);
+  }, [isModalopen, scope, cities.length, loading]);
+
+  // useEffect(() => {
+  //   if (isWindowOpen) {
+  //     const handleResize = () => {
+  //       updateIndicatorPosition();
+  //     };
+
+  //     window.addEventListener("resize", handleResize);
+  //     return () => window.removeEventListener("resize", handleResize);
+  //   }
+  // }, [isWindowOpen, activeTab]);
+
+  // const updateIndicatorPosition = () => {
+  //   const activeTabElement =
+  //     activeTab === "data" ? dataTabRef.current : paramsTabRef.current;
+
+  //   if (activeTabElement) {
+  //     const { offsetLeft, offsetWidth } = activeTabElement;
+  //     setIndicatorStyle({
+  //       transform: `translateX(${offsetLeft}px)`,
+  //       width: `${offsetWidth}px`,
+  //       opacity: 1,
+  //     });
+  //   }
+  // };
 
   return (
     <>
@@ -121,18 +152,16 @@ export default function Questionnaires() {
                 <div className="scope-switch">
                   <button
                     type="button"
-                    className={`switch-btn ${
-                      scope === "regions" ? "activ" : ""
-                    }`} //if scope === regions{className = 'regions'}
+                    className={`switch-btn ${scope === "regions" ? "activ" : ""
+                      }`} //if scope === regions{className = 'regions'}
                     onClick={() => setScope("regions")}
                   >
                     Регионов
                   </button>
                   <button
                     type="button"
-                    className={`switch-btn ${
-                      scope === "cities" ? "activ" : ""
-                    }`}
+                    className={`switch-btn ${scope === "cities" ? "activ" : ""
+                      }`}
                     onClick={() => setScope("cities")}
                   >
                     Городов
@@ -143,35 +172,35 @@ export default function Questionnaires() {
               <div className="region-list">
                 {scope === "regions" ? (
                   <>
-                    <div className="region-element">
+                    <div className="region-element1">
                       <input type="checkbox" name="" id="" />
                       <p>СЕВЕРО-КАВКАЗСКИЙ</p>
                     </div>
-                    <div className="region-element">
+                    <div className="region-element1">
                       <input type="checkbox" name="" id="" />
                       <p>ЦЕНТРАЛЬНЫЙ</p>
                     </div>
-                    <div className="region-element">
+                    <div className="region-element1">
                       <input type="checkbox" name="" id="" />
                       <p>СИБИРСКИЙ</p>
                     </div>
-                    <div className="region-element">
+                    <div className="region-element1">
                       <input type="checkbox" name="" id="" />
                       <p>СЕВЕРО-ЗАПАДНЫЙ</p>
                     </div>
-                    <div className="region-element">
+                    <div className="region-element1">
                       <input type="checkbox" name="" id="" />
                       <p>УРАЛЬСКИЙ</p>
                     </div>
-                    <div className="region-element">
+                    <div className="region-element1">
                       <input type="checkbox" name="" id="" />
                       <p>ЮЖНЫЙ</p>
                     </div>
-                    <div className="region-element">
+                    <div className="region-element1">
                       <input type="checkbox" name="" id="" />
                       <p>ДАЛЬНЕВОСТОЧНЫЙ</p>
                     </div>
-                    <div className="region-element">
+                    <div className="region-element1">
                       <input type="checkbox" name="" id="" />
                       <p>ПРИВОЛЖСКИЙ</p>
                     </div>
@@ -200,7 +229,7 @@ export default function Questionnaires() {
                           </button>
                         </div>
                       ) : cities.length > 0 ? (
-                        <div className="cities-grid">
+                        <div className="cities-grider">
                           {cities.map((city, index) => (
                             <div
                               className="city-checkbox"
@@ -259,7 +288,48 @@ export default function Questionnaires() {
 
       {isSettingsOpen && (
         <>
-          <div className="settings-window">123</div>
+          <div className="window-bg"></div>
+          <div className="settings-window">
+            <ul className="settings-nav">
+              <li className="nav-element2" onClick={() => {
+                setActiveBlock('attr');
+              }}><p>Атрибуты</p></li>
+              <li className="nav-element2" onClick={() => {
+                setActiveBlock('questions');
+              }}><p>Вопросы</p></li>
+              <li className="nav-element2" onClick={() => {
+                setActiveBlock('settings')
+              }}><p>Настройка</p></li>
+            </ul>
+
+            {activeBlock === 'questions' && (
+              <>
+                <div className="block-2">
+
+                  <div className="buttons-group">
+                    <button className="export-word">Выгрузить в Word</button>
+                    <button className="export-is">Экспорт в ИС Полог</button>
+                    <button className="add-question">+ Вопрос</button>
+                    <button className="add-block">Добавить блок вопросов</button>
+                  </div>
+
+                </div>
+              </>
+            )}
+
+            {activeBlock === 'attr' && (
+              <>
+                <p>attr</p>
+              </>
+            )}
+
+            {activeBlock === 'settings' && (
+              <>
+                <p>settings</p>
+              </>
+            )}
+
+          </div>
         </>
       )}
 

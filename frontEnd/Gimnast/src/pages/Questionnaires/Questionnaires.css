@@ -256,7 +256,7 @@
   margin-bottom: 1%;
 }
 
-.region-element {
+.region-element1 {
   display: flex;
   gap: 1%;
 
@@ -270,8 +270,39 @@
   }
 }
 
-.cities-grid {
+.cities-grider {
   height: 36vh;
   overflow-y: auto;
   overflow-x: hidden;
+}
+
+.settings-window {
+  position: fixed;
+  font-family: main;
+  z-index: 1000;
+  left: 50%;
+  top: 50%;
+  height: 80vh;
+  display: flex;
+  flex-direction: column;
+  border-radius: 4px;
+  overflow: hidden;
+  transform: translate(-50%, -50%);
+  background-color: rgb(255, 255, 255);
+  width: 80vw;
+  min-width: 600px;
+  max-width: 1200px;
+  border: solid 1px grey;
+  box-shadow: 4px 4px 8px 0px rgba(34, 60, 80, 0.2);
+}
+
+.settings-nav {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: left;
+  list-style: none;
+  gap: 5%;
+  padding: .5%;
+  border-bottom: solid grey 1.7px;
 }
