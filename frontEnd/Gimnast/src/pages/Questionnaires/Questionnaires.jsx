@@ -10,11 +10,6 @@ export default function Questionnaires() {
   const [error, setError] = useState(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [activeBlock, setActiveBlock] = useState('questions');
-  const [indicatorStyle, setIndicatorStyle] = useState({});
-
-  const attrBlockRef = useRef(null);
-  const questionsBlockRef = useRef(null);
-  const settingsBlockRef = useRef(null);
 
   const fetchCities = async () => {
     setLoading(true);
@@ -53,31 +48,6 @@ export default function Questionnaires() {
       }
     }
   }, [isModalopen, scope, cities.length, loading]);
-
-  // useEffect(() => {
-  //   if (isWindowOpen) {
-  //     const handleResize = () => {
-  //       updateIndicatorPosition();
-  //     };
-
-  //     window.addEventListener("resize", handleResize);
-  //     return () => window.removeEventListener("resize", handleResize);
-  //   }
-  // }, [isWindowOpen, activeTab]);
-
-  // const updateIndicatorPosition = () => {
-  //   const activeTabElement =
-  //     activeTab === "data" ? dataTabRef.current : paramsTabRef.current;
-
-  //   if (activeTabElement) {
-  //     const { offsetLeft, offsetWidth } = activeTabElement;
-  //     setIndicatorStyle({
-  //       transform: `translateX(${offsetLeft}px)`,
-  //       width: `${offsetWidth}px`,
-  //       opacity: 1,
-  //     });
-  //   }
-  // };
 
   return (
     <>
@@ -305,12 +275,30 @@ export default function Questionnaires() {
             {activeBlock === 'questions' && (
               <>
                 <div className="block-2">
+                  <div className="block-2-left">
 
-                  <div className="buttons-group">
-                    <button className="export-word">Выгрузить в Word</button>
-                    <button className="export-is">Экспорт в ИС Полог</button>
-                    <button className="add-question">+ Вопрос</button>
-                    <button className="add-block">Добавить блок вопросов</button>
+                    <div className="buttons-group">
+
+                      <div className="btn-gr-1">
+                        <button className="export-word">Выгрузить в Word</button>
+                        <button className="export-is">Экспорт в ИС Полог</button>
+                      </div>
+
+                      <div className="btn-gr-2">
+                        <button className="add-question">+ Вопрос</button>
+                        <button className="add-block">Добавить блок вопросов</button>
+                      </div>
+
+                    </div>
+
+                  </div>
+
+                  <div className="block-2-right">
+                    <div className="block-options">
+                      <h4>Свойства блока</h4>
+                      <label>Перемешивать вопросы</label>
+                      <input type="radio"/>
+                    </div>
                   </div>
 
                 </div>

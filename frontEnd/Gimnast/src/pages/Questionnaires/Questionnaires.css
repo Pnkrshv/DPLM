@@ -90,12 +90,12 @@
   overflow: hidden;
   transform: translate(-50%, -50%);
   background-color: rgb(255, 255, 255);
-  width: calc(var(--index) * 35);
+  width: 40vw;
   border: solid 1px grey;
   -webkit-box-shadow: 4px 4px 8px 0px rgba(34, 60, 80, 0.2);
   -moz-box-shadow: 4px 4px 8px 0px rgba(34, 60, 80, 0.2);
   box-shadow: 4px 4px 8px 0px rgba(34, 60, 80, 0.2);
-  font-size: 90%;
+  font-size: clamp(80%, 90%, 110%);
 }
 
 .win-title {
@@ -296,6 +296,30 @@
   box-shadow: 4px 4px 8px 0px rgba(34, 60, 80, 0.2);
 }
 
+.block-2 {
+  display: flex;
+}
+
+.block-2-left {
+  width: 65%;
+  border-right: solid grey 1px;
+  height: 100vh;
+}
+
+.block-2-right {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+
+  & .block-options {
+    margin-top: 2%;
+
+    &>* {
+      border: solid;
+    }
+  }
+}
+
 .settings-nav {
   display: flex;
   flex-direction: row;
@@ -305,4 +329,24 @@
   gap: 5%;
   padding: .5%;
   border-bottom: solid grey 1.7px;
+}
+
+.buttons-group {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 2%;
+  padding: 0 2%;
+}
+
+@media (max-width: 400px) {
+  .create-form {
+    padding: 2%;
+  }
+
+  .create-window {
+    height: 90vh;
+    width: 80vw;
+  }
 }
