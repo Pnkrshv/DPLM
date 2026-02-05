@@ -74,8 +74,8 @@
 .nav-element {
   cursor: pointer;
   padding: 8px 16px;
-  transition: color 0.3s ease-in;
-  white-space: nowrap; /* Предотвращаем перенос текста */
+  transition: color 0.3s ease;
+  white-space: nowrap;
 
   &:hover {
     color: rgb(74, 74, 74);

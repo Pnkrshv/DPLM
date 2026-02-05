@@ -261,15 +261,18 @@ export default function Questionnaires() {
           <div className="window-bg"></div>
           <div className="settings-window">
             <ul className="settings-nav">
-              <li className="nav-element2" onClick={() => {
-                setActiveBlock('attr');
-              }}><p>Атрибуты</p></li>
-              <li className="nav-element2" onClick={() => {
-                setActiveBlock('questions');
-              }}><p>Вопросы</p></li>
-              <li className="nav-element2" onClick={() => {
-                setActiveBlock('settings')
-              }}><p>Настройка</p></li>
+              <li className={`nav-element2 ${activeBlock === 'attr' ? 'activate' : ''}`}
+                onClick={() => {
+                  setActiveBlock('attr');
+                }}><p>Атрибуты</p></li>
+              <li className={`nav-element2 ${activeBlock === 'questions' ? 'activate' : ''}`}
+                onClick={() => {
+                  setActiveBlock('questions');
+                }}><p>Вопросы</p></li>
+              <li className={`nav-element2 ${activeBlock === 'settings' ? 'activate' : ''}`}
+                onClick={() => {
+                  setActiveBlock('settings')
+                }}><p>Настройка</p></li>
             </ul>
 
             {activeBlock === 'questions' && (
@@ -296,8 +299,11 @@ export default function Questionnaires() {
                   <div className="block-2-right">
                     <div className="block-options">
                       <h4>Свойства блока</h4>
-                      <label>Перемешивать вопросы</label>
-                      <input type="radio"/>
+                      <div className="switcher-container">
+                        <p>Перемешивать вопросы</p>
+                        <input type="checkbox" id="checkbox-switcher" className="options-switcher" />
+                        <label htmlFor="checkbox-switcher" className="options-switcher-label"></label>
+                      </div>
                     </div>
                   </div>
 
