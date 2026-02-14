@@ -160,7 +160,7 @@ func getAuth(c echo.Context) error {
 // Структура для городов
 type Cities struct {
 	Region string `json:"region"`
-	City   string `json:"city`
+	City   string `json:"city"`
 }
 
 func loadingCities() ([]Cities, error) {

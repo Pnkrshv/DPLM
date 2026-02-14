@@ -132,7 +132,7 @@ function App() {
             {users.length > 0 ? (
               users.map((user) => (
                 <tr key={user.ID}>
-                  <td>{user.id}</td>
+                  <td>{user.ID}</td>
                   <td>{user.login}</td>
                   <td><button
                     onClick={() => { handleDelete(user.id) }}
