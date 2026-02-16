@@ -137,7 +137,7 @@
     padding: 0.7%;
     outline: none;
     font-family: main;
-    max-width: calc(var(--index) * 25);
+    max-width: 80%;
   }
 
   & textarea {
@@ -150,7 +150,7 @@
     margin-left: calc(var(--index) * 1);
     border-radius: 4px;
     outline: none;
-    max-width: calc(var(--index) * 25);
+    max-width: 80%;
   }
 }
 
@@ -415,7 +415,7 @@
 }
 
 .options-switcher-label:active::after {
-  width: 28px;
+  width: calc(var(--index) * .6);
 }
 
 .buttons-group {
@@ -483,6 +483,84 @@
   &:hover {
     background-color: rgb(61, 165, 61);
   }
+}
+
+.block-nav {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1% 2%;
+}
+
+.nav-buttons {
+  display: flex;
+  padding: 0 2%;
+  gap: 50%;
+  align-items: center;
+}
+
+.posled-button {
+  text-align: center;
+
+  button {
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+  }
+
+  & svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+.dop-button {
+  text-align: center;
+
+  button {
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+  }
+
+  & svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+.block-text-area {
+  height: 20vh;
+  width: 100%;
+  border: none;
+  border-top: solid grey 1px;
+  outline: none;
+  padding: 1% 1%;
+  font-family: main;
+  resize: none;
+}
+
+.create-question-block {
+  display: flex;
+  flex-direction: column;
+  border: solid #006064 1px;
+  margin: 1% 2%;
+  border-radius: 4px;
+  -webkit-box-shadow: 4px 4px 8px 0px rgba(34, 60, 80, 0.2);
+  -moz-box-shadow: 4px 4px 8px 0px rgba(34, 60, 80, 0.2);
+  box-shadow: 4px 4px 8px 0px rgba(34, 60, 80, 0.2);
+}
+
+.passport-block {
+  display: flex;
+  flex-direction: column;
+  border: solid grey 1px;
+  margin: 4% 2% 2% 2%;
+  border-radius: 4px;
+  -webkit-box-shadow: 4px 4px 8px 0px rgba(34, 60, 80, 0.2);
+  -moz-box-shadow: 4px 4px 8px 0px rgba(34, 60, 80, 0.2);
+  box-shadow: 4px 4px 8px 0px rgba(34, 60, 80, 0.2);
 }
 
 @media (max-width: 400px) {

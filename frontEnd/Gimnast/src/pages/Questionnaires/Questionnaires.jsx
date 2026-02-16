@@ -203,7 +203,7 @@ export default function Questionnaires() {
                           {cities.map((city, index) => (
                             <div
                               className="city-checkbox"
-                              key={`${city.city} - ${city.index}`}
+                              key={`${city.City} - ${city.index}`}
                             >
                               <input
                                 type="checkbox"
@@ -212,7 +212,7 @@ export default function Questionnaires() {
                                 value={city.name}
                               />
                               <label htmlFor={`city-${city.index}`}>
-                                {city.City} ({city.region})
+                                {city.city} ({city.region})
                               </label>
                             </div>
                           ))}
@@ -292,6 +292,28 @@ export default function Questionnaires() {
                         <button className="add-block">Добавить блок вопросов</button>
                       </div>
 
+                    </div>
+
+                    <div className="create-question-block">
+                      <div className="block-nav">
+                        <div className="block-title"><h5>Основной блок</h5></div>
+                        <div className="nav-buttons">
+                          <div className="posled-button"><button><svg fill="#000000" width="64px" height="64px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><path d="M7.293,7.707a1,1,0,0,1,0-1.414l4-4a1,1,0,0,1,1.414,0l4,4a1,1,0,1,1-1.414,1.414L12,4.414,8.707,7.707A1,1,0,0,1,7.293,7.707Zm0,10,4,4a1,1,0,0,0,1.414,0l4-4a1,1,0,0,0-1.414-1.414L12,19.586,8.707,16.293a1,1,0,1,0-1.414,1.414Z"></path></g></svg></button></div>
+                          <div className="dop-button"><button><svg width="64px" height="64px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <circle cx="18" cy="12" r="1.5" transform="rotate(90 18 12)" fill="#080341"></circle> <circle cx="12" cy="12" r="1.5" transform="rotate(90 12 12)" fill="#080341"></circle> <circle cx="6" cy="12" r="1.5" transform="rotate(90 6 12)" fill="#080341"></circle> </g></svg></button></div>
+                        </div>
+                      </div>
+                      <textarea className="block-text-area" placeholder="Добавьте вопросы"></textarea>
+                    </div>
+
+                    <div className="passport-block">
+                      <div className="block-nav">
+                        <div className="block-title"><h5>Вопросы о респонденте (паспортичка)</h5></div>
+                        <div className="nav-buttons">
+                          <div className="posled-button"><button><svg fill="#000000" width="64px" height="64px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><path d="M7.293,7.707a1,1,0,0,1,0-1.414l4-4a1,1,0,0,1,1.414,0l4,4a1,1,0,1,1-1.414,1.414L12,4.414,8.707,7.707A1,1,0,0,1,7.293,7.707Zm0,10,4,4a1,1,0,0,0,1.414,0l4-4a1,1,0,0,0-1.414-1.414L12,19.586,8.707,16.293a1,1,0,1,0-1.414,1.414Z"></path></g></svg></button></div>
+                          <div className="dop-button"><button><svg width="64px" height="64px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <circle cx="18" cy="12" r="1.5" transform="rotate(90 18 12)" fill="#080341"></circle> <circle cx="12" cy="12" r="1.5" transform="rotate(90 12 12)" fill="#080341"></circle> <circle cx="6" cy="12" r="1.5" transform="rotate(90 6 12)" fill="#080341"></circle> </g></svg></button></div>
+                        </div>
+                      </div>
+                      <textarea className="block-text-area" placeholder="Добавьте вопросы"></textarea>
                     </div>
 
                   </div>

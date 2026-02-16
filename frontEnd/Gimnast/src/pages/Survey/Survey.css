@@ -1,0 +1,74 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+}
+
+:root {
+    --index: calc(1vw + 1vh);
+    --active: #409eff;
+    --hoveractive: #2989ea;
+}
+
+@font-face {
+    font-family: main;
+    src: url(assets/fonts/Noto_Sans/static/NotoSans-Regular.ttf);
+}
+
+.survey-window {
+    position: fixed;
+    z-index: 1000;
+    left: 50%;
+    top: 50%;
+    height: 50vh;
+    border-radius: 4px;
+    overflow: hidden;
+    transform: translate(-50%, -50%);
+    background-color: rgb(255, 255, 255);
+    width: 60vw;
+    border: solid 1px grey;
+    -webkit-box-shadow: 4px 4px 8px 0px rgba(34, 60, 80, 0.2);
+    -moz-box-shadow: 4px 4px 8px 0px rgba(34, 60, 80, 0.2);
+    box-shadow: 4px 4px 8px 0px rgba(34, 60, 80, 0.2);
+    font-size: clamp(80%, 90%, 110%);
+}
+
+.survey-form {
+    font-family: main;
+    font-size: clamp(1rem, 2rem);
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    padding: 2% 2%;
+}
+
+.survey-input {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    width: 100%;
+    white-space: nowrap;
+    gap: 1vw;
+    margin-bottom: 2vh;
+
+    & input {
+        width: 100%;
+        outline: none;
+        padding: 0.5%;
+    }
+}
+
+.survey-select {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    width: 100%;
+    gap: 1vw;
+
+    & select {
+        width: 100%;
+        outline: none;
+        padding: .5%;
+    }
+}
