@@ -10,7 +10,7 @@ export default function Survey() {
         <>
             {isWindowOpen && (
                 <>
-                    <div className="modal-bg"></div>
+                    <div className="modal-bg" onClick={ () => {setIsWindowOpen(false)}}></div>
                     <div className="survey-window">
                         <form action="#" className="survey-form">
                             <div className="survey-input">
@@ -24,11 +24,46 @@ export default function Survey() {
                             <div className="survey-select">
                                 <label><span>*</span>Ответсвенный</label>
                                 <select>
-                                    <option value="" disabled>Выбрать</option>
+                                    <option value="" disabled selected>Выбрать</option>
                                     <option value="">Option1</option>
                                     <option value="">Option2</option>
                                 </select>
                             </div>
+
+                            <div className="survey-steps">
+                                <div className="survey-date">
+                                    <label>Проведение опроса</label>
+                                    <input type="date" className='survey-date-begin' />-<input type="date" className='survey-date-finish' />
+                                </div>
+                                <div className="survey-adapt">
+                                    <label>Адаптация анкеты</label>
+                                    <input type="checkbox" id="checkbox-switcher1" className="options-switcher" />
+                                    <label htmlFor="checkbox-switcher1" className="options-switcher-label"></label>
+                                    <input type="date" />
+                                </div>
+                                <div className="survey-koir">
+                                    <label>Перенос в КОИР</label>
+                                    <input type="checkbox" id="checkbox-switcher2" className="options-switcher" />
+                                    <label htmlFor="checkbox-switcher2" className="options-switcher-label"></label>
+                                </div>
+                            </div>
+
+                            <div className="survey-exitpoll">
+                                <label>Передача агрегированных данных (exit-poll)</label>
+                                <input type="checkbox" id="checkbox-switcher3" className="options-switcher" />
+                                <label htmlFor="checkbox-switcher3" className="options-switcher-label"></label>
+                            </div>
+
+                            <div className="survey-accept">
+                                <label>Разрешить ручной ввод</label>
+                                <input type="checkbox" id="checkbox-switcher4" className="options-switcher" />
+                                <label htmlFor="checkbox-switcher4" className="options-switcher-label"></label>
+                            </div>
+
+                            <button className="save-btn-survey" type='submit'>
+                                Сохранить
+                            </button>
+
                         </form>
                     </div>
                 </>

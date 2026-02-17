@@ -254,7 +254,7 @@ export default function Selections() {
                                   {cities.map((city, index) => (
                                     <div
                                       className="city-checkbox"
-                                      key={`${city.city} - ${city.index}`}
+                                      key={`${city.City} - ${city.index}`}
                                     >
                                       <input
                                         type="checkbox"
@@ -263,7 +263,7 @@ export default function Selections() {
                                         value={city.name}
                                       />
                                       <label htmlFor={`city-${city.index}`}>
-                                        {city.City} ({city.region})
+                                        {city.city} ({city.region})
                                       </label>
                                     </div>
                                   ))}
