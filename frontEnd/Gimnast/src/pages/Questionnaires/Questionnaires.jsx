@@ -53,7 +53,10 @@ export default function Questionnaires() {
     <>
       {isModalopen && (
         <>
-          <div className="modal-bg"></div>
+          <div
+            className="modal-bg" onClick={() => {
+              setIsModalOpen(false);
+            }}></div>
           <div className="create-window">
             <div className="win-title">
               <h4>Создание анкеты</h4>
@@ -258,7 +261,9 @@ export default function Questionnaires() {
 
       {isSettingsOpen && (
         <>
-          <div className="window-bg"></div>
+          <div className="window-bg" onClick={() => {
+            setIsSettingsOpen(false);
+          }}></div>
           <div className="settings-window">
             <ul className="settings-nav">
               <li className={`nav-element2 ${activeBlock === 'attr' ? 'activate' : ''}`}
