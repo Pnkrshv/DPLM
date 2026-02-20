@@ -163,6 +163,15 @@ type Cities struct {
 	City   string `json:"city"`
 }
 
+// Тестовый набор городов
+func getTestCities() []Cities {
+	return []Cities{
+		{Region: "Москва и Московская область", City: "Москва"},
+		{Region: "Санкт-Петербург и область", City: "Санкт-Петербург"},
+		{Region: "Орловская область", City: "Орёл"},
+	}
+}
+
 func loadingCities() ([]Cities, error) {
 	var cities []Cities
 
@@ -178,15 +187,6 @@ func loadingCities() ([]Cities, error) {
 	}
 
 	return cities, nil
-}
-
-// Тестовый набор городов
-func getTestCities() []Cities {
-	return []Cities{
-		{Region: "Москва и Московская область", City: "Москва"},
-		{Region: "Санкт-Петербург и область", City: "Санкт-Петербург"},
-		{Region: "Орловская область", City: "Орёл"},
-	}
 }
 
 // Выгрузка городов в фронт

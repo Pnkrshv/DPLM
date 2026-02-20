@@ -1,0 +1,30 @@
+.create-map-window {
+    position: fixed;
+    z-index: 1000;
+    left: 53%;
+    top: 50%;
+    height: 80%;
+    display: flex;
+    flex-direction: column;
+    border-radius: 4px;
+    overflow: hidden;
+    transform: translate(-50%, -50%);
+    background-color: rgb(255, 255, 255);
+    width: 40vw;
+    border: solid 1px grey;
+    -webkit-box-shadow: 4px 4px 8px 0px rgba(34, 60, 80, 0.2);
+    -moz-box-shadow: 4px 4px 8px 0px rgba(34, 60, 80, 0.2);
+    box-shadow: 4px 4px 8px 0px rgba(34, 60, 80, 0.2);
+    font-size: clamp(80%, 90%, 110%);
+    font-weight: 500;
+}
+
+.window-map-navigation {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: calc(var(--index) * 0.2);
+    background-color: #e2f0ff;
+    font-family: main;
+    color: rgb(112, 112, 112);
+}

@@ -84,7 +84,7 @@ export default function Selections() {
     <>
       {isWindowOpen && (
         <>
-          <div className="window-bg"></div>
+          <div className="window-bg" onClick={() => { setIsWindowOpen(false) }}></div>
           <div className="modal-window">
             <div className="window-navigation">
               <div className="nav-elements">
