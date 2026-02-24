@@ -30,13 +30,7 @@ func initDB() {
 	}
 }
 
-type City struct {
-	Name   string `json:"city"`
-	Region string `json:"region"`
-}
-
 //Добавление пользователей из админки:
-
 type UserData struct {
 	ID           string `gorm:"primaryKey" json:"id"`
 	Login        string `json:"login"`
@@ -117,7 +111,6 @@ func getAllUsers(c echo.Context) error {
 }
 
 //Авторизация:
-
 type loginData struct {
 	Login    string `json:"login"`
 	Password string `json:"password"`
@@ -157,48 +150,37 @@ func getAuth(c echo.Context) error {
 
 }
 
-// Структура для городов
-type Cities struct {
-	Region string `json:"region"`
-	City   string `json:"city"`
-}
+//Выгрузка ФО и регионов:
+type FederalDistricts map[string]map[string][]string
 
-// Тестовый набор городов
-func getTestCities() []Cities {
-	return []Cities{
-		{Region: "Москва и Московская область", City: "Москва"},
-		{Region: "Санкт-Петербург и область", City: "Санкт-Петербург"},
-		{Region: "Орловская область", City: "Орёл"},
-	}
-}
+func loadingCities() (FederalDistricts, error) {
+	var districts FederalDistricts
 
-func loadingCities() ([]Cities, error) {
-	var cities []Cities
-
-	//Читаем json
 	data, err := os.ReadFile("data/cities.json")
 	if err != nil {
-		log.Printf("Файл не найден: %s", err)
-		return getTestCities(), err
-	}
-
-	if err := json.Unmarshal(data, &cities); err != nil {
+		log.Printf("File is not find: %s", err)
 		return nil, err
 	}
 
-	return cities, nil
+	if err := json.Unmarshal(data, &districts); err != nil {
+		log.Printf("Error of parsing: %s", err)
+		return nil, err
+	}
+
+	return districts, nil
 }
 
-// Выгрузка городов в фронт
 func getCities(c echo.Context) error {
 	cities, err := loadingCities()
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, echo.Map{
-			"error": "Ошибка загрузки городов...",
+			"error": "Ошибка загрузки городов",
 		})
 	}
+
 	return c.JSON(http.StatusOK, cities)
 }
+
 
 func main() {
 	initDB()

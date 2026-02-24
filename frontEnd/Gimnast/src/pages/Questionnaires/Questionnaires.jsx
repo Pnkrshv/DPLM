@@ -1,5 +1,5 @@
 import "./Questionnaires.css";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import axios from "axios";
 
 export default function Questionnaires() {
@@ -10,6 +10,57 @@ export default function Questionnaires() {
   const [error, setError] = useState(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [activeBlock, setActiveBlock] = useState('questions');
+  const [expandedDistricts, setExpandedDistricts] = useState({});
+  const [selectedCities, setSelectedCities] = useState({});
+  const districtRefs = useRef({});
+
+  useEffect(() => {
+    if (cities && Object.keys(cities).length > 0) {
+      setSelectedCities({});
+      setExpandedDistricts({});
+    }
+  }, [cities]);
+
+  useEffect(() => {
+    if (!cities) return;
+    Object.keys(cities).forEach(district => {
+      const citiesList = Object.values(cities[district]).flat();
+      const total = citiesList.length;
+      const selectedCount = citiesList.filter(city => selectedCities[district]?.[city]).length;
+      const checkbox = districtRefs.current[district];
+      if (checkbox) {
+        checkbox.checked = selectedCount > 0 && selectedCount === total;
+        checkbox.indeterminate = selectedCount > 0 && selectedCount < total;
+      }
+    });
+  }, [selectedCities, cities]);
+
+  const handleDistrictChange = (district, checked) => {
+    const citiesList = Object.values(cities[district]).flat();
+    const updateDistrict = {};
+    citiesList.forEach(city => { updateDistrict[city] = checked; });
+    setSelectedCities(prev => ({
+      ...prev,
+      [district]: updateDistrict
+    }))
+  }
+
+  const handleCityChange = (district, city, checked) => {
+    setSelectedCities(prev => ({
+      ...prev,
+      [district]: {
+        ...(prev[district] || {}),
+        [city]: checked
+      }
+    }));
+  };
+
+  const toggleExpand = (district) => {
+    setExpandedDistricts(prev => ({
+      ...prev,
+      [district]: !prev[district]
+    }));
+  };
 
   const fetchCities = async () => {
     setLoading(true);
@@ -115,7 +166,7 @@ export default function Questionnaires() {
               <label>
                 <span>*</span>Название анкеты
               </label>
-              <input type="text" />
+              <input className="input-create" type="text" />
 
               <label>Инструкция по проведению интервью</label>
               <textarea></textarea>
@@ -184,47 +235,48 @@ export default function Questionnaires() {
                 {scope === "cities" ? (
                   <>
                     <div className="cities-container">
-                      {loading ? (
-                        <div className="loading">
-                          <div className="spinner"></div>
-                          <p>Загрузка городов...</p>
-                        </div>
-                      ) : error ? (
-                        <div className="error">
-                          <p>{error}</p>
-                          <button
-                            type="button"
-                            onClick={fetchCities}
-                            className="retry-btn"
-                          >
-                            {" "}
-                            Повторить попытку{" "}
-                          </button>
-                        </div>
-                      ) : cities.length > 0 ? (
-                        <div className="cities-grider">
-                          {cities.map((city, index) => (
-                            <div
-                              className="city-checkbox"
-                              key={`${city.City} - ${city.index}`}
-                            >
+                      {loading && <p>Загрузка городов...</p>}
+                      {error && <p className="error">{error}</p>}
+                      {!loading && !error && cities && Object.keys(cities).map(district => {
+                        const citiesList = Object.values(cities[district]).flat();
+                        const isExpanded = expandedDistricts[district];
+                        const anySelected = citiesList.some(city => selectedCities[district]?.[city]);
+                        const allSelected = citiesList.length > 0 && citiesList.every(city => selectedCities[district]?.[city]);
+
+                        return (
+                          <div key={district} className="district-item">
+                            <div className="district-header">
+                              <p className="expand-icon" onClick={() => toggleExpand(district)}>
+                                {isExpanded ? <svg width="16px" height="16px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path fill-rule="evenodd" clip-rule="evenodd" d="M4.29289 8.29289C4.68342 7.90237 5.31658 7.90237 5.70711 8.29289L12 14.5858L18.2929 8.29289C18.6834 7.90237 19.3166 7.90237 19.7071 8.29289C20.0976 8.68342 20.0976 9.31658 19.7071 9.70711L12.7071 16.7071C12.3166 17.0976 11.6834 17.0976 11.2929 16.7071L4.29289 9.70711C3.90237 9.31658 3.90237 8.68342 4.29289 8.29289Z" fill="#000000"></path> </g></svg> :
+                                  <svg fill="#000000" width="16px" height="16px" viewBox="-8.5 0 32 32" version="1.1" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <title>right</title> <path d="M7.75 16.063l-7.688-7.688 3.719-3.594 11.063 11.094-11.344 11.313-3.5-3.469z"></path> </g></svg>}
+                              </p>
                               <input
                                 type="checkbox"
-                                name="city"
-                                id={`city-${index}`}
-                                value={city.name}
+                                ref={el => districtRefs.current[district] = el}
+                                onChange={(e) => handleDistrictChange(district, e.target.checked)}
+                                checked={allSelected}
                               />
-                              <label htmlFor={`city-${city.index}`}>
-                                {city.city} ({city.region})
-                              </label>
+                              <p className="district-name" onClick={() => toggleExpand(district)}>
+                                {district}
+                              </p>
                             </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="no-cities">
-                          <p>Нет доступных городов</p>
-                        </div>
-                      )}
+                            {isExpanded && (
+                              <div className="cities-list">
+                                {citiesList.map(city => (
+                                  <div key={city} className="city-item">
+                                    <input
+                                      type="checkbox"
+                                      checked={selectedCities[district]?.[city] || false}
+                                      onChange={(e) => handleCityChange(district, city, e.target.checked)}
+                                    />
+                                    <p>{city}</p>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   </>
                 ) : (

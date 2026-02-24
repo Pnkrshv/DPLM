@@ -128,7 +128,7 @@
     margin-left: calc(var(--index) * 1);
   }
 
-  & input {
+  & .input-create {
     margin-bottom: calc(var(--index) * 0.3);
     margin-left: calc(var(--index) * 1);
     border: solid black 1px;
@@ -254,6 +254,46 @@
   gap: 2%;
   flex-grow: 1;
   margin-bottom: 1%;
+  max-height: 400px;
+  overflow-y: auto;
+  margin-bottom: 16px;
+  scrollbar-width: thin;
+}
+
+.district-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+
+  & input {
+    margin-right: 1rem;
+  }
+}
+
+.expand-icon{
+  padding-top: 1%;
+  margin-right: .5vw;
+}
+
+.district-item {
+  display: flex;
+  flex-direction: column;
+  gap: 1vh;
+}
+
+.cities-list {
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  margin-left: 2rem;
+  gap: .5vh;
+}
+
+.city-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 1vw;
 }
 
 .region-element1 {
@@ -270,10 +310,10 @@
   }
 }
 
-.cities-grider {
-  height: 36vh;
-  overflow-y: auto;
-  overflow-x: hidden;
+.cities-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1vh;
 }
 
 .settings-window {
