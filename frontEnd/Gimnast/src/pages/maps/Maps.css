@@ -36,8 +36,9 @@
     padding: 2%;
     gap: 2vh;
     font-family: main;
-    font-size: clamp(.5rem, 1rem);
+    font-size: clamp(0.5rem, 1rem);
     width: 100%;
+    height: 100%;
 }
 
 .name-trace {
@@ -50,7 +51,7 @@
 
     & input {
         border-radius: 4px;
-        padding: .5%;
+        padding: 0.5%;
         width: 100%;
         outline: none;
         border: solid grey 1px;
@@ -94,7 +95,7 @@
     display: flex;
     flex-direction: row;
     align-items: center;
-    gap: .5vw;
+    gap: 0.5vw;
     color: grey;
 }
 
@@ -106,7 +107,7 @@
 .deselect-all {
     cursor: pointer;
     color: var(--active);
-    transition: .2s ease;
+    transition: 0.2s ease;
 
     &:hover {
         color: var(--hoveractive);
@@ -131,10 +132,59 @@
     overflow-y: auto;
     scrollbar-width: thin;
     width: 100%;
-} 
+}
 
 .regions-list {
     display: flex;
     flex-direction: column;
     width: 31vw;
+}
+
+.footer-map {
+    display: flex;
+    position: relative;
+    flex-direction: row;
+    align-items: center;
+    width: 100%;
+    justify-content: end;
+    margin-top: auto;
+    gap: 1vw;
+
+    &::after {
+        content: '';
+        width: 120%;
+        height: 1%;
+        top: -50%;
+        left: -10%;
+        background-color: grey;
+        position: absolute;
+    }
+
+    & button:first-child {
+        color: var(--active);
+        background-color: transparent;
+        border: none;
+        border-radius: 4px;
+        padding: 0.4% 1%;
+        cursor: pointer;
+        transition: 0.2s ease;
+
+        &:hover {
+            color: var(--hoveractive);
+        }
+    }
+
+    & button:last-child {
+        color: white;
+        background-color: var(--active);
+        border: none;
+        border-radius: 4px;
+        padding: 0.4% 1%;
+        cursor: pointer;
+        transition: 0.2s ease;
+
+        &:hover {
+            background-color: var(--hoveractive);
+        }
+    }
 }
