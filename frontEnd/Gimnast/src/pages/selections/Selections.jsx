@@ -221,24 +221,26 @@ export default function Selections() {
                     </div>
 
                     <div className="region second">
-                      <label>Форма актуальна для</label>
-                      <div className="scope-switch">
-                        <button
-                          type="button"
-                          className={`switch-btn ${scope === "regions" ? "activ" : ""
-                            }`} //if scope === regions{className = 'regions'}
-                          onClick={() => setScope("regions")}
-                        >
-                          Регионов
-                        </button>
-                        <button
-                          type="button"
-                          className={`switch-btn ${scope === "cities" ? "activ" : ""
-                            }`}
-                          onClick={() => setScope("cities")}
-                        >
-                          Городов
-                        </button>
+                      <div className="reg-buttons">
+                        <label>Форма актуальна для</label>
+                        <div className="scope-switch">
+                          <button
+                            type="button"
+                            className={`switch-btn ${scope === "regions" ? "activ" : ""
+                              }`} //if scope === regions{className = 'regions'}
+                            onClick={() => setScope("regions")}
+                          >
+                            Регионов
+                          </button>
+                          <button
+                            type="button"
+                            className={`switch-btn ${scope === "cities" ? "activ" : ""
+                              }`}
+                            onClick={() => setScope("cities")}
+                          >
+                            Городов
+                          </button>
+                        </div>
                       </div>
 
                       <div className="region-list">
