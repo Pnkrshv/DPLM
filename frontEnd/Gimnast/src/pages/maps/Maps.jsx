@@ -434,11 +434,32 @@ export default function Maps() {
                                     </div>
                                 ))}
                             </div>
-                            <div className="modal-map-table"></div>
+                            <div className="main-modal-map">
+                                <div className="modal-map-buttons">
+                                    <div className="table-buttons">
+                                        <button>Все</button>
+                                        <button>Выбранные</button>
+                                        <button>Невыбранные</button>
+                                    </div>
+
+                                    <div className="settings-buttons">
+                                        <button className="setting-discard">Отклонить</button>
+                                        <button className="setting-approve">Согласовать</button>
+                                        <button className="add-city">Добавить город</button>
+                                    </div>
+                                </div>
+                                <div className="modal-map-table">
+                                    <table>
+                                    //table
+                                    </table>
+                                </div>
+                            </div>
+
                         </div>
                     </div>
                 </>
-            )}
+            )
+            }
 
             <div className="buttons">
                 <button className="create-btn" onClick={() => {

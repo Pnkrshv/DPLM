@@ -273,3 +273,72 @@
 .all-cities {
     margin-bottom: 1vh;
 }
+
+.main-modal-map {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    padding: 0 2%;
+}
+
+.modal-map-buttons {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.table-buttons {
+    width: 50%;
+
+    & button {
+        padding: 1% 7%;
+        border: solid grey 1px;
+        background-color: transparent;
+        color: grey;
+        cursor: pointer;
+        transition: .2s ease;
+
+        &:hover {
+            color: white;
+            background-color: var(--hoveractive);
+        }
+    }
+}
+
+.settings-buttons {
+    display: flex;
+    align-items: center;
+    gap: 1vw;
+    text-align: center;
+    margin-right: 2vw;
+}
+
+.setting-discard {
+    color: red;
+    background-color: rgba(255, 0, 0, 0.103);
+    border: solid red 1px;
+    padding: 2% 5%;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.setting-approve {
+    color: green;
+    background-color: rgba(0, 128, 0, 0.103);
+    border: solid green 1px;
+    padding: 2% 5%;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.add-city {
+    padding: 2% 5%;
+    background-color: transparent;
+    color: grey;
+    white-space: nowrap;
+    border-radius: 4px;
+    cursor: pointer;
+    border: solid rgba(128, 128, 128, 0.411) 1px;
+}
