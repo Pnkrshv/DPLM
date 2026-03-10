@@ -190,24 +190,86 @@
 }
 
 .map-table {
-  margin-top: calc(var(--index) * 2);
-  background-color: transparent;
-  max-width: 80%;
-  margin-left: 3%;
-
-  & table {
-    width: 100%;
-    border-collapse: collapse;
-    text-align: left;
-    font-family: main;
-    font-size: 85%;
-  }
-
-  & th {
-    padding: calc(var(--index) * 0.5) calc(var(--index) * 0.6);
-    border: solid 1px black;
+    margin-top: calc(var(--index) * 2);
     background-color: transparent;
-    font-weight: 300;
+    max-width: 80%;
+    margin-left: 3%;
+
+    & table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+        font-family: main;
+        font-size: 85%;
+    }
+
+    & th {
+        padding: calc(var(--index) * 0.5) calc(var(--index) * 0.6);
+        border: solid 1px black;
+        background-color: transparent;
+        font-weight: 300;
+        text-transform: uppercase;
+    }
+}
+
+.modal-map {
+    position: fixed;
+    width: 94%;
+    height: 100%;
+    z-index: 999;
+    background-color: white;
+    padding: 2%;
+    font-family: main;
+}
+
+.modal-map-nav {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4vh;
+}
+
+.modal-map-body {
+    display: flex;
+    flex-direction: row;
+    font-size: clamp(0.6rem, 0.8rem, 1rem);
+}
+
+.modal-map-cities {
+    height: 85vh;
+    width: 13vw;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    border-right: solid rgba(165, 165, 165, 0.555) 2px;
+}
+
+.modal-group-title {
     text-transform: uppercase;
-  }
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    cursor: pointer;
+    transition: .1s ease;
+
+    &:hover {
+        background-color: var(--active);
+        color: white;
+    }
+}
+
+.modal-city-item {
+    font-size: clamp(.7rem, .85rem, 1rem);
+    padding-left: 1.5vw;
+    cursor: pointer;
+    transition: .1s ease;
+
+    &:hover {
+        background-color: var(--active);
+        color: white;
+    }
+}
+
+.all-cities {
+    margin-bottom: 1vh;
 }
