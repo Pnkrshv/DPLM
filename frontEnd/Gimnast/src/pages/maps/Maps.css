@@ -188,3 +188,26 @@
         }
     }
 }
+
+.map-table {
+  margin-top: calc(var(--index) * 2);
+  background-color: transparent;
+  max-width: 80%;
+  margin-left: 3%;
+
+  & table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    font-family: main;
+    font-size: 85%;
+  }
+
+  & th {
+    padding: calc(var(--index) * 0.5) calc(var(--index) * 0.6);
+    border: solid 1px black;
+    background-color: transparent;
+    font-weight: 300;
+    text-transform: uppercase;
+  }
+}

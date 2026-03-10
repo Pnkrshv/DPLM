@@ -352,6 +352,21 @@ export default function Maps() {
                     </svg>
                 </button>
             </div>
+
+            <div className="map-table">
+        <table >
+          <thead>
+            <tr>
+              <th>Название маршрута</th>
+              <th>Статус</th>
+              <th>Количество населенных пунктов</th>
+              <th>Дата создания</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
         </>
     );
 }

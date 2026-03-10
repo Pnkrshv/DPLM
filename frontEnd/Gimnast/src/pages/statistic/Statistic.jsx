@@ -7,7 +7,7 @@ export default function Statistic() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [expandedDistricts, setExpandedDistricts] = useState({});
-    const [selectedItem, setSelectedItem] = useState(null); // { type: 'district' | 'city', district: string, city?: string }
+    const [selectedItem, setSelectedItem] = useState(null);
     const districtRefs = useRef({});
 
     // Сброс выбора при загрузке новых городов

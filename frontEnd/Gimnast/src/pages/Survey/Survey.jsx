@@ -76,6 +76,22 @@ export default function Survey() {
                     </svg>
                 </button>
             </div>
+
+            <div className="survey-table">
+        <table >
+          <thead>
+            <tr>
+              <th>Название опроса</th>
+              <th>Код опроса</th>
+              <th>Статус</th>
+              <th>Дата начала</th>
+              <th>Дата завершения</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
         </>
     )
 }

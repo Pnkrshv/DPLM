@@ -13,7 +13,6 @@ export default function Selections() {
   const [expandedDistricts, setExpandedDistricts] = useState({});
   const [selectedCities, setSelectedCities] = useState({});
   const districtRefs = useRef({});
-
   const dataTabRef = useRef(null);
   const paramsTabRef = useRef(null);
 
@@ -93,12 +92,12 @@ export default function Selections() {
   };
 
   useEffect(() => {
-    if (isWindowOpen && scope === "cities") {
+    if (isWindowOpen) {
       if (cities.length === 0 && !loading) {
         fetchCities();
       }
     }
-  }, [isWindowOpen, scope, cities.length, loading]);
+  }, [isWindowOpen, cities.length, loading]);
 
   useEffect(() => {
     if (isWindowOpen) {
@@ -130,6 +129,17 @@ export default function Selections() {
       });
     }
   };
+
+  const data = [
+    { category: 'административный центр субъекта РФ', female: '-', male: '-', total: '-' },
+    { category: 'районный центр субъекта РФ', female: '-', male: '-', total: '-' },
+    { category: 'поселок городского типа', female: '-', male: '-', total: '-' },
+    { category: 'сельский населенный пункт', female: '-', male: '-', total: '-' },
+    { category: 'другое', female: '-', male: '-', total: '-' },
+    { category: 'всего', female: '-', male: '-', total: '-' },
+  ];
+
+
 
   return (
     <>
@@ -391,7 +401,101 @@ export default function Selections() {
 
               {activeTab === "data" && (
                 <>
-                  <p>data</p>
+
+
+
+                  <div className="data-window">
+                    <div className="data-cities-list">
+                      <div className="data-cities-container">
+                        {loading && <p>Загрузка городов...</p>}
+                        {error && <p className="error">{error}</p>}
+                        {!loading && !error && cities && Object.keys(cities).map(district => {
+                          const citiesList = Object.values(cities[district]).flat();
+                          const isExpanded = expandedDistricts[district];
+                          const anySelected = citiesList.some(city => selectedCities[district]?.[city]);
+                          const allSelected = citiesList.length > 0 && citiesList.every(city => selectedCities[district]?.[city]);
+
+                          return (
+                            <div key={district} className="district-item">
+                              <div className="district-header">
+                                <input
+                                  type="checkbox"
+                                  ref={el => districtRefs.current[district] = el}
+                                  onChange={(e) => handleDistrictChange(district, e.target.checked)}
+                                  checked={allSelected}
+                                />
+                                <p className="district-name" onClick={() => toggleExpand(district)}>
+                                  {district}
+                                </p>
+                                <p className="expand-icon" onClick={() => toggleExpand(district)}>
+                                  {isExpanded ? <svg width="16px" height="16px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path fill-rule="evenodd" clip-rule="evenodd" d="M4.29289 8.29289C4.68342 7.90237 5.31658 7.90237 5.70711 8.29289L12 14.5858L18.2929 8.29289C18.6834 7.90237 19.3166 7.90237 19.7071 8.29289C20.0976 8.68342 20.0976 9.31658 19.7071 9.70711L12.7071 16.7071C12.3166 17.0976 11.6834 17.0976 11.2929 16.7071L4.29289 9.70711C3.90237 9.31658 3.90237 8.68342 4.29289 8.29289Z" fill="#000000"></path> </g></svg> :
+                                    <svg fill="#000000" width="16px" height="16px" viewBox="-8.5 0 32 32" version="1.1" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <title>right</title> <path d="M7.75 16.063l-7.688-7.688 3.719-3.594 11.063 11.094-11.344 11.313-3.5-3.469z"></path> </g></svg>}
+                                </p>
+                              </div>
+                              {isExpanded && (
+                                <div className="cities-list">
+                                  {citiesList.map(city => (
+                                    <div key={city} className="city-item">
+                                      <input
+                                        type="checkbox"
+                                        checked={selectedCities[district]?.[city] || false}
+                                        onChange={(e) => handleCityChange(district, city, e.target.checked)}
+                                      />
+                                      <p>{city}</p>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <div className="data-cities-set">
+                      <div className="size-selection">
+                        <label htmlFor="">Размер общей выборки для региона: </label>
+                        <input type="number" />
+                      </div>
+
+                      <div className="data-table">
+                        <h2>Жёсткие квоты</h2>
+                        <table className="data-table">
+                          <thead>
+                            <tr>
+                              <th></th>
+                              <th>Женский</th>
+                              <th>Мужской</th>
+                              <th>Всего</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {data.map((item, index) => (
+                              <tr key={index}>
+                                <td style={{ textAlign: 'left' }}>{item.category}</td>
+                                <td>{item.female}</td>
+                                <td>{item.male}</td>
+                                <td>{item.total}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="data-buttons">
+                    <button className="data-count-btn" onClick={(e) => {
+                      e.preventDefault();
+                    }}>Рассчитать</button>
+                    <button className="data-save-btn" type="submit" onClick={(e) => {
+                      e.preventDefault();
+                      setIsWindowOpen(false)
+                    }}>Сохранить</button>
+                  </div>
+
+
+
                 </>
               )}
             </div>
@@ -413,6 +517,22 @@ export default function Selections() {
             <path d="M19.841 3.24A10.988 10.988 0 0 0 8.54.573l1.266 3.8a7.033 7.033 0 0 1 8.809 9.158L17 11.891v7.092h7l-2.407-2.439A11.049 11.049 0 0 0 19.841 3.24zM1 10.942a11.05 11.05 0 0 0 11.013 11.044 11.114 11.114 0 0 0 3.521-.575l-1.266-3.8a7.035 7.035 0 0 1-8.788-9.22L7 9.891V6.034c.021-.02.038-.044.06-.065L7 5.909V2.982H0l2.482 2.449A10.951 10.951 0 0 0 1 10.942z" />
           </svg>
         </button>
+      </div>
+      <div className="selection-table">
+        <table >
+          <thead>
+            <tr>
+              <th>Название выборки</th>
+              <th>Жесткие квоты</th>
+              <th>Мягкие квоты</th>
+              <th>Количество респондентов</th>
+              <th>Тип выборки</th>
+              <th>Дата изменения</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
       </div>
     </>
   );

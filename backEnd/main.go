@@ -30,7 +30,7 @@ func initDB() {
 	}
 }
 
-//Добавление пользователей из админки:
+// Добавление пользователей из админки:
 type UserData struct {
 	ID           string `gorm:"primaryKey" json:"id"`
 	Login        string `json:"login"`
@@ -110,7 +110,7 @@ func getAllUsers(c echo.Context) error {
 
 }
 
-//Авторизация:
+// Авторизация:
 type loginData struct {
 	Login    string `json:"login"`
 	Password string `json:"password"`
@@ -150,7 +150,7 @@ func getAuth(c echo.Context) error {
 
 }
 
-//Выгрузка ФО и регионов:
+// Выгрузка ФО и регионов:
 type FederalDistricts map[string]map[string][]string
 
 func loadingCities() (FederalDistricts, error) {
@@ -180,7 +180,6 @@ func getCities(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, cities)
 }
-
 
 func main() {
 	initDB()
