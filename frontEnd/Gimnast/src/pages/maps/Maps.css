@@ -229,6 +229,59 @@
     margin-bottom: 4vh;
 }
 
+.modal-map-title {
+    display: flex;
+    align-items: center;
+    gap: .5vw;
+}
+
+.route-info {
+    cursor: pointer;
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.route-description {
+    position: absolute;
+    top: 24px;
+    left: 0;
+    background: #fff;
+    border: solid grey 1px;
+    padding: 8px 10px;
+    border-radius: 4px;
+    width: 20vw;
+    font-size: clamp(.5rem, .7rem, .9rem);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transform: translateY(-5px);
+    overflow-wrap: break-word;
+
+    opacity: 0;
+    visibility: hidden;
+    transition: .2s ease;
+    transition-delay: .1s;
+}
+
+/* При наведении на .route-info стили применяются к .route-description */
+.route-info:hover .route-description {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.modal-map-settings {
+    & svg {
+        transition: 1s ease;
+        cursor: pointer;
+    }
+}
+
+.modal-map-settings:hover {
+    & svg {
+        transform: rotate(120deg);
+    }
+}
+
 .modal-map-body {
     display: flex;
     flex-direction: row;
@@ -341,4 +394,212 @@
     border-radius: 4px;
     cursor: pointer;
     border: solid rgba(128, 128, 128, 0.411) 1px;
+}
+
+.add-window {
+    position: fixed;
+    transform: translate(-50%, -50%);
+    top: 50%;
+    left: 50%;
+    z-index: 1111;
+    width: 70vw;
+    height: max-content;
+    border-radius: 4px;
+    background-color: white;
+    box-shadow: 4px 4px 8px 0px rgba(34, 60, 80, 0.2);
+    font-family: main;
+}
+
+.add-window-title {
+    display: flex;
+    padding: 1%;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #e2f0ff;
+    font-size: clamp(.7rem, .85rem, 1rem);
+    color: grey;
+}
+
+.add-window-main {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    padding: 1%;
+}
+
+.main-find {
+    width: 20%;
+    height: 80vh;
+    padding: 1%;
+    border-right: solid rgba(128, 128, 128, 0.26) 2px;
+}
+
+.main-add-form {
+    width: 30%;
+    padding: 1%;
+    font-size: clamp(.7rem, .85rem, .9rem);
+    display: flex;
+    flex-direction: column;
+    gap: 1vh;
+    border-right: solid rgba(128, 128, 128, 0.26) 2px;
+}
+
+.main-map {
+    width: 50%;
+}
+
+.find-form {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    width: 100%;
+    gap: .5vw;
+
+    & input {
+        width: 100%;
+        border: solid grey 1px;
+        padding: 1%;
+
+        &:focus {
+            outline: none;
+        }
+    }
+
+    & button {
+        border: solid grey 1px;
+        padding: 1% 2%;
+        background-color: transparent;
+        cursor: pointer;
+        transition: .1s ease;
+        color: rgb(59, 59, 59);
+
+        &:hover {
+            background-color: rgba(128, 128, 128, 0.137);
+        }
+    }
+}
+
+.form-short-name {
+    display: flex;
+    flex-direction: column;
+    gap: .5vh;
+
+    & input {
+        border: solid grey 1px;
+        padding: 1%;
+        outline: none;
+    }
+}
+
+.form-full-name {
+    display: flex;
+    flex-direction: column;
+    gap: .5vh;
+
+    & input {
+        border: solid grey 1px;
+        padding: 1%;
+        outline: none;
+    }
+}
+
+.form-region {
+    display: flex;
+    flex-direction: column;
+    gap: .5vh;
+
+    & select {
+        border: solid grey 1px;
+        padding: 1%;
+        outline: none;
+    }
+}
+
+.form-coordination {
+    display: flex;
+    flex-direction: column;
+    gap: .5vh;
+
+    & input {
+        border: solid grey 1px;
+        padding: 1%;
+        outline: none;
+    }
+}
+
+.form-id {
+    display: flex;
+    flex-direction: column;
+    gap: .5vh;
+
+    & input {
+        border: solid grey 1px;
+        padding: 1%;
+        outline: none;
+    }
+}
+
+.form-count {
+    display: flex;
+    flex-direction: column;
+    gap: .5vh;
+
+    & input {
+        border: solid grey 1px;
+        padding: 1%;
+        outline: none;
+    }
+}
+
+.form-charact {
+    display: flex;
+    flex-direction: column;
+    gap: .5vh;
+
+    & select {
+        border: solid grey 1px;
+        padding: 1%;
+        outline: none;
+    }
+}
+
+.form-monotown {
+    display: flex;
+    flex-direction: column;
+    gap: .5vh;
+}
+
+.form-buttons {
+    margin-top: auto;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.cancel-btn {
+    padding: 1% 5%;
+    background-color: transparent;
+    border: solid grey 1px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: .1s ease;
+
+    &:hover {
+        background-color: rgba(128, 128, 128, 0.137);
+    }
+}
+
+.add-btn {
+    padding: 1.5% 5%;
+    background-color: var(--active);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    transition: .1s ease;
+    cursor: pointer;
+
+    &:hover {
+        background-color: var(--hoveractive);
+    }
 }
