@@ -204,15 +204,15 @@ export default function Maps() {
 
                                 <div className="form-short-name">
                                     <label htmlFor="">Короткое название</label>
-                                    <input type="text" name="" id="" />
+                                    <input type="text" name="" id="" required />
                                 </div>
                                 <div className="form-full-name">
                                     <label htmlFor="">Полное название</label>
-                                    <input type="text" name="" id="" />
+                                    <input type="text" name="" id="" required />
                                 </div>
                                 <div className="form-region">
                                     <label htmlFor=""><span>*</span>Регион</label>
-                                    <select name="" id="">
+                                    <select name="" id="" required>
                                         <option value="" disabled selected>Выберите регион</option>
                                         <option value=""></option>
                                         <option value=""></option>
@@ -224,11 +224,11 @@ export default function Maps() {
                                 </div>
                                 <div className="form-id">
                                     <label htmlFor="">ID</label>
-                                    <input type="text" name="" id="" />
+                                    <input type="text" name="" id="" required />
                                 </div>
                                 <div className="form-count">
                                     <label htmlFor="">Численность населения</label>
-                                    <input type="number" name="" id="" />
+                                    <input type="number" name="" id="" required />
                                 </div>
                                 <div className="form-charact">
                                     <label htmlFor="">Характеристики</label>
@@ -249,7 +249,9 @@ export default function Maps() {
                                 </div>
 
                             </form>
-                            <div className="main-map"></div>
+                            <div className="main-map">
+                                //map
+                            </div>
                         </div>
                     </div>
                 </>
@@ -316,6 +318,7 @@ export default function Maps() {
                                 <input
                                     type="text"
                                     value={routeName}
+                                    required
                                     onChange={(e) => {
                                         setRouteName(e.target.value)
                                     }}
@@ -581,7 +584,7 @@ export default function Maps() {
                                 </div>
                                 <div className="modal-map-table">
                                     <table>
-                                    //table
+                                        //table
                                     </table>
                                 </div>
                             </div>
@@ -604,7 +607,7 @@ export default function Maps() {
             </div>
 
             <div className="map-table">
-                <table >
+                <table>
                     <thead>
                         <tr>
                             <th>Название маршрута</th>
