@@ -25,6 +25,8 @@ export default function Maps() {
     const [mapPosition, setMapPosition] = useState(null);
     const [suggestions, setSuggestions] = useState([]);
     const [regions, setRegions] = useState([]);
+    const [selectedRegion, setSelectedRegion] = useState("");
+    const [selectedDistrict, setSelectedDistrict] = useState("");
 
     useEffect(() => {
         const fetchRegions = async () => {
@@ -211,6 +213,26 @@ export default function Maps() {
     const downArrow = <svg width="16px" height="16px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path fill-rule="evenodd" clip-rule="evenodd" d="M4.29289 8.29289C4.68342 7.90237 5.31658 7.90237 5.70711 8.29289L12 14.5858L18.2929 8.29289C18.6834 7.90237 19.3166 7.90237 19.7071 8.29289C20.0976 8.68342 20.0976 9.31658 19.7071 9.70711L12.7071 16.7071C12.3166 17.0976 11.6834 17.0976 11.2929 16.7071L4.29289 9.70711C3.90237 9.31658 3.90237 8.68342 4.29289 8.29289Z" fill="#000000"></path> </g></svg>
     const upArrow = <svg fill="#000000" width="16px" height="16px" viewBox="-8.5 0 32 32" version="1.1" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <title>right</title> <path d="M7.75 16.063l-7.688-7.688 3.719-3.594 11.063 11.094-11.344 11.313-3.5-3.469z"></path> </g></svg>
 
+    const handleAddCitySubmit = (e) => {
+        e.preventDefault();
+        if (!selectedDistrict || !shortName) {
+            alert("Выберите город из списка подсказок");
+            return;
+        }
+        const newCity = {
+            district: selectedDistrict,
+            city: shortName,
+        };
+        setSavedCities((prev) => [...prev, newCity]);
+        setSearchQuery("");
+        setShortName("");
+        setFullName("");
+        setCoords("");
+        setSelectedRegion("");
+        setSelectedDistrict("");
+        setMapPosition([55.753960, 37.620393]);
+        setIsAddWindowOpen(false);
+    };
 
     return (
         <>
@@ -288,7 +310,6 @@ export default function Maps() {
                                             if (e.key === 'Enter') {
                                                 e.preventDefault();
                                                 setSearchQuery(e.target.value);
-                                                handleSearchCity();
                                             }
                                         }}
                                         onBlur={(e) => {
@@ -300,15 +321,17 @@ export default function Maps() {
                                             <li
                                                 key={idx}
                                                 onClick={() => {
-                                                    setSearchQuery(item.display_name);
-                                                    setShortName(item.display_name.split(",")[0]);
-                                                    setFullName(item.display_name);
-                                                    setCoords(`${parseFloat(item.lat)}, ${parseFloat(item.lon)}`);
-                                                    setMapPosition([parseFloat(item.lat), parseFloat(item.lon)]);
+                                                    setSearchQuery(item.city);
+                                                    setShortName(item.city);
+                                                    setFullName(item.city);
+                                                    setSelectedRegion(item.region);
+                                                    setSelectedDistrict(item.district);
+                                                    setCoords("");
+                                                    setMapPosition([55.753960, 37.620393]);
                                                     setSuggestions([]);
                                                 }}
                                             >
-                                                {item.display_name}
+                                                {item.city} ({item.region})
                                             </li>
                                         ))}
                                     </ul>
@@ -318,15 +341,7 @@ export default function Maps() {
                                     >Поиск</button>
                                 </div>
                             </div>
-                            <form onSubmit={(e) => {
-                                e.preventDefault();
-                                setSearchQuery('');
-                                setShortName('');
-                                setFullName('');
-                                setCoords('');
-                                setMapPosition([55.753960, 37.620393]);
-                                savedCities.push(shortName);
-                            }} className="main-add-form">
+                            <form onSubmit={handleAddCitySubmit} className="main-add-form">
 
                                 <div className="form-short-name">
                                     <label>Короткое название</label>
@@ -338,8 +353,13 @@ export default function Maps() {
                                 </div>
                                 <div className="form-region">
                                     <label htmlFor=""><span>*</span>Регион</label>
-                                    <select name="" id="" required>
-                                        <option value="" disabled selected>Выберите регион</option>
+                                    <select
+                                        name="region"
+                                        required
+                                        value={selectedRegion}
+                                        onChange={(e) => setSelectedRegion(e.target.value)}
+                                    >
+                                        <option value="" disabled>Выберите регион</option>
                                         {regions.map((region) => (
                                             <option key={region} value={region}>{region}</option>
                                         ))}
@@ -371,18 +391,11 @@ export default function Maps() {
                                     <label htmlFor="checkbox-switcher" className="options-switcher-label"></label>
                                 </div>
                                 <div className="form-buttons">
-                                    <button className="cancel-btn" type="button" onClick={(e) => {
-                                        e.preventDefault();
-                                        setSearchQuery('');
-                                        setShortName('');
-                                        setFullName('');
-                                        setCoords('');
-                                        setMapPosition([55.753960, 37.620393]);
-                                        setIsAddWindowOpen(false);
-                                    }}>Отмена</button>
+                                    <button className="cancel-btn" type="button" onClick={() => setIsAddWindowOpen(false)}>
+                                        Отмена
+                                    </button>
                                     <button className="add-btn" type="submit">Добавить</button>
                                 </div>
-
                             </form>
                             <div className="main-map">
                                 <MapComponent position={mapPosition} />
