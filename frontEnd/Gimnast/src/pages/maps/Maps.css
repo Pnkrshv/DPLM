@@ -602,3 +602,26 @@
         background-color: var(--hoveractive);
     }
 }
+
+.suggestions-list {
+    position: absolute;
+    background: white;
+    max-height: 40vh;
+    overflow-y: auto;
+    width: 10vw;
+    z-index: 10;
+    top: 12%;
+    padding: 0;
+    list-style: none;
+    left: 2%;
+    font-size: clamp(.6rem, .7rem, .8rem);
+}
+
+.suggestions-list li {
+    padding: 1%;
+    cursor: pointer;
+}
+
+.suggestions-list li:hover {
+    background-color: #f0f0f0;
+}

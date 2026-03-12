@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import "./Maps.css";
 import axios from "axios";
 import MapComponent from "./MapComponent";
+import debounce from "lodash.debounce";
 
 export default function Maps() {
     const [isCreateMapOpen, setIsCreateMapOpen] = useState(false);
@@ -17,6 +18,92 @@ export default function Maps() {
     const [expandedGroups, setExpandedGroups] = useState({});
     const [description, setDescription] = useState('');
     const [isAddWindowOpen, setIsAddWindowOpen] = useState(false);
+    const [shortName, setShortName] = useState("");
+    const [fullName, setFullName] = useState("");
+    const [coords, setCoords] = useState("");
+    const [searchQuery, setSearchQuery] = useState("");
+    const [mapPosition, setMapPosition] = useState(null);
+    const [suggestions, setSuggestions] = useState([]);
+    const [regions, setRegions] = useState([]);
+
+    useEffect(() => {
+        const fetchRegions = async () => {
+            try {
+                const res = await axios.get("http://localhost:8080/cities");
+                const data = res.data;
+
+                // собираем все регионы (второй уровень)
+                const allRegions = [];
+                Object.values(data).forEach((foRegions) => {
+                    allRegions.push(...Object.keys(foRegions));
+                });
+
+                setRegions(allRegions);
+            } catch (err) {
+                console.error("Ошибка при загрузке регионов", err);
+            }
+        };
+
+        fetchRegions();
+    }, []);
+
+    const fetchSuggestions = debounce(async (query) => {
+        if (!query) {
+            setSuggestions([]);
+            return;
+        }
+
+        try {
+            const res = await axios.get("https://nominatim.openstreetmap.org/search", {
+                params: {
+                    q: query,
+                    format: "json",
+                    addressdetails: 1,
+                    limit: 5,
+                },
+            });
+
+            setSuggestions(res.data);
+        } catch (err) {
+            console.error(err);
+            setSuggestions([]);
+        }
+    }, 300);
+
+    const handleSearchCity = async () => {
+        if (!searchQuery) return;
+
+        try {
+            const res = await axios.get(
+                `https://nominatim.openstreetmap.org/search`,
+                {
+                    params: {
+                        q: searchQuery,
+                        format: "json",
+                        limit: 1
+                    }
+                }
+            );
+
+            if (res.data.length === 0) {
+                alert("Город не найден");
+                return;
+            }
+
+            const city = res.data[0];
+
+            const lat = parseFloat(city.lat);
+            const lon = parseFloat(city.lon);
+
+            setShortName(searchQuery);
+            setFullName(city.display_name);
+            setCoords(`${lat}, ${lon}`);
+
+            setMapPosition([lat, lon]); // для карты
+        } catch (err) {
+            console.error(err);
+        }
+    };
 
     useEffect(() => {
         if (cities && Object.keys(cities).length > 0) {
@@ -147,7 +234,13 @@ export default function Maps() {
                 <>
                     <div
                         className="modal-bg"
-                        onClick={() => {
+                        onClick={(e) => {
+                            e.preventDefault();
+                            setSearchQuery('');
+                            setShortName('');
+                            setFullName('');
+                            setCoords('');
+                            setMapPosition([55.753960, 37.620393]);
                             setIsAddWindowOpen(false);
                         }}
                     ></div>
@@ -197,31 +290,77 @@ export default function Maps() {
                         <div className="add-window-main">
                             <div className="main-find">
                                 <div className="find-form">
-                                    <input type="text" />
-                                    <button>Поиск</button>
+                                    <input
+                                        type="text"
+                                        value={searchQuery}
+                                        className="find-input"
+                                        onChange={(e) => {
+                                            setSearchQuery(e.target.value);
+                                            fetchSuggestions(e.target.value);
+                                        }}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter') {
+                                                e.preventDefault();
+                                                setSearchQuery(e.target.value);
+                                                handleSearchCity();
+                                            }
+                                        }}
+                                        onBlur={(e) => {
+                                            setTimeout(() => setSuggestions([]), 100);
+                                        }}
+                                    />
+                                    <ul className="suggestions-list">
+                                        {suggestions.map((item, idx) => (
+                                            <li
+                                                key={idx}
+                                                onClick={() => {
+                                                    setSearchQuery(item.display_name);
+                                                    setShortName(item.display_name.split(",")[0]);
+                                                    setFullName(item.display_name);
+                                                    setCoords(`${parseFloat(item.lat)}, ${parseFloat(item.lon)}`);
+                                                    setMapPosition([parseFloat(item.lat), parseFloat(item.lon)]);
+                                                    setSuggestions([]);
+                                                }}
+                                            >
+                                                {item.display_name}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                    <button
+                                        type="button"
+                                        onClick={handleSearchCity}
+                                    >Поиск</button>
                                 </div>
                             </div>
-                            <form action="" className="main-add-form">
+                            <form onSubmit={(e) => {
+                                e.preventDefault();
+                                setSearchQuery('');
+                                setShortName('');
+                                setFullName('');
+                                setCoords('');
+                                setMapPosition([55.753960, 37.620393]);
+                            }} className="main-add-form">
 
                                 <div className="form-short-name">
-                                    <label htmlFor="">Короткое название</label>
-                                    <input type="text" name="" id="" required />
+                                    <label>Короткое название</label>
+                                    <input type="text" name="" id="" required value={shortName} />
                                 </div>
                                 <div className="form-full-name">
                                     <label htmlFor="">Полное название</label>
-                                    <input type="text" name="" id="" required />
+                                    <input type="text" name="" id="" required value={fullName} />
                                 </div>
                                 <div className="form-region">
                                     <label htmlFor=""><span>*</span>Регион</label>
                                     <select name="" id="" required>
                                         <option value="" disabled selected>Выберите регион</option>
-                                        <option value=""></option>
-                                        <option value=""></option>
+                                        {regions.map((region) => (
+                                            <option key={region} value={region}>{region}</option>
+                                        ))}
                                     </select>
                                 </div>
                                 <div className="form-coordination">
                                     <label htmlFor="">Координаты</label>
-                                    <input type="text" name="" id="" />
+                                    <input type="text" name="" id="" value={coords} />
                                 </div>
                                 <div className="form-id">
                                     <label htmlFor="">ID</label>
@@ -245,13 +384,21 @@ export default function Maps() {
                                     <label htmlFor="checkbox-switcher" className="options-switcher-label"></label>
                                 </div>
                                 <div className="form-buttons">
-                                    <button className="cancel-btn">Отмена</button>
-                                    <button className="add-btn">Добавить</button>
+                                    <button className="cancel-btn" type="button" onClick={(e) => {
+                                        e.preventDefault();
+                                        setSearchQuery('');
+                                        setShortName('');
+                                        setFullName('');
+                                        setCoords('');
+                                        setMapPosition([55.753960, 37.620393]);
+                                        setIsAddWindowOpen(false);
+                                    }}>Отмена</button>
+                                    <button className="add-btn" type="submit">Добавить</button>
                                 </div>
 
                             </form>
                             <div className="main-map">
-                                <MapComponent className="map-component" />
+                                <MapComponent position={mapPosition} />
                             </div>
                         </div>
                     </div>
