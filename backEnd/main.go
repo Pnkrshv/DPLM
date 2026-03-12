@@ -181,6 +181,53 @@ func getCities(c echo.Context) error {
 	return c.JSON(http.StatusOK, cities)
 }
 
+type CityResult struct {
+	City     string `json:"city"`
+	Region   string `json:"region"`
+	District string `json:"district"`
+}
+
+func searchCities(c echo.Context) error {
+
+	query := strings.ToLower(c.QueryParam("q"))
+
+	if query == "" {
+		return c.JSON(http.StatusBadRequest, echo.Map{
+			"error": "query param q is required",
+		})
+	}
+
+	data, err := loadingCities()
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{
+			"error": "Ошибка загрузки городов",
+		})
+	}
+
+	var results []CityResult
+
+	for district, regions := range data {
+		for region, cities := range regions {
+			for _, city := range cities {
+
+				if strings.Contains(strings.ToLower(city), query) {
+					results = append(results, CityResult{
+						City:     city,
+						Region:   region,
+						District: district,
+					})
+				}
+
+				if len(results) >= 10 {
+					return c.JSON(http.StatusOK, results)
+				}
+			}
+		}
+	}
+
+	return c.JSON(http.StatusOK, results)
+}
+
 func main() {
 	initDB()
 	e := echo.New()
@@ -190,5 +237,6 @@ func main() {
 	e.GET("/", getAllUsers)
 	e.DELETE("/:id", deleteUser)
 	e.GET("/cities", getCities)
+	e.GET("/cities/search", searchCities)
 	e.Start(":8080")
 }

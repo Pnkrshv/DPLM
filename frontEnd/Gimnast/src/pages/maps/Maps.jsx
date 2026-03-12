@@ -47,28 +47,13 @@ export default function Maps() {
         fetchRegions();
     }, []);
 
-    const fetchSuggestions = debounce(async (query) => {
-        if (!query) {
-            setSuggestions([]);
-            return;
-        }
+    const fetchSuggestions = async (query) => {
+        const res = await axios.get("http://localhost:8080/cities/search", {
+            params: { q: query }
+        });
 
-        try {
-            const res = await axios.get("https://nominatim.openstreetmap.org/search", {
-                params: {
-                    q: query,
-                    format: "json",
-                    addressdetails: 1,
-                    limit: 5,
-                },
-            });
-
-            setSuggestions(res.data);
-        } catch (err) {
-            console.error(err);
-            setSuggestions([]);
-        }
-    }, 300);
+        setSuggestions(res.data);
+    };
 
     const handleSearchCity = async () => {
         if (!searchQuery) return;
@@ -297,6 +282,7 @@ export default function Maps() {
                                         onChange={(e) => {
                                             setSearchQuery(e.target.value);
                                             fetchSuggestions(e.target.value);
+                                            setShortName(e.target.value);
                                         }}
                                         onKeyDown={(e) => {
                                             if (e.key === 'Enter') {
@@ -306,7 +292,7 @@ export default function Maps() {
                                             }
                                         }}
                                         onBlur={(e) => {
-                                            setTimeout(() => setSuggestions([]), 100);
+                                            setTimeout(() => setSuggestions([]), 1000);
                                         }}
                                     />
                                     <ul className="suggestions-list">
@@ -339,6 +325,7 @@ export default function Maps() {
                                 setFullName('');
                                 setCoords('');
                                 setMapPosition([55.753960, 37.620393]);
+                                savedCities.push(shortName);
                             }} className="main-add-form">
 
                                 <div className="form-short-name">
@@ -732,7 +719,22 @@ export default function Maps() {
                                 </div>
                                 <div className="modal-map-table">
                                     <table>
-                                        {/* table */}
+                                        <thead>
+                                            <tr>
+                                                <th>{savedCities.length}</th>
+                                                <th>Населенный пункт</th>
+                                                <th>Численность населения</th>
+                                                <th>Свойства</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {savedCities.map((item, index) => (
+                                                <tr key={index}>
+                                                    <td>{index + 1}</td>
+                                                    <td>{item.city}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
                                     </table>
                                 </div>
                             </div>
