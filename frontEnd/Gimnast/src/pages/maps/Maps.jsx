@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import "./Maps.css";
 import axios from "axios";
+import MapComponent from "./MapComponent";
 
 export default function Maps() {
     const [isCreateMapOpen, setIsCreateMapOpen] = useState(false);
@@ -250,7 +251,7 @@ export default function Maps() {
 
                             </form>
                             <div className="main-map">
-                                //map
+                                <MapComponent className="map-component" />
                             </div>
                         </div>
                     </div>
@@ -584,7 +585,7 @@ export default function Maps() {
                                 </div>
                                 <div className="modal-map-table">
                                     <table>
-                                        //table
+                                        {/* table */}
                                     </table>
                                 </div>
                             </div>
