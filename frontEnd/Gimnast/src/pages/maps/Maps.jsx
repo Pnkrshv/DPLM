@@ -34,7 +34,6 @@ export default function Maps() {
                 const res = await axios.get("http://localhost:8080/cities");
                 const data = res.data;
 
-                // собираем все регионы (второй уровень)
                 const allRegions = [];
                 Object.values(data).forEach((foRegions) => {
                     allRegions.push(...Object.keys(foRegions));
@@ -50,6 +49,7 @@ export default function Maps() {
     }, []);
 
     const fetchSuggestions = async (query) => {
+        if (!query) return;
         const res = await axios.get("http://localhost:8080/cities/search", {
             params: { q: query }
         });
@@ -57,8 +57,9 @@ export default function Maps() {
         setSuggestions(res.data);
     };
 
-    const handleSearchCity = async () => {
-        if (!searchQuery) return;
+    const handleSearchCity = async (cityName) => {
+        const query = cityName || searchQuery;
+        if (!query) return;
 
         try {
             const res = await axios.get(
@@ -323,7 +324,7 @@ export default function Maps() {
                                                 onClick={() => {
                                                     setSearchQuery(item.city);
                                                     setShortName(item.city);
-                                                    setFullName(item.city);
+                                                    handleSearchCity();
                                                     setSelectedRegion(item.region);
                                                     setSelectedDistrict(item.district);
                                                     setCoords("");
