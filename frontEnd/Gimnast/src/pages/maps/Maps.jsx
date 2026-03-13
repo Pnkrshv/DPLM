@@ -2,7 +2,6 @@ import { useState, useRef, useEffect } from "react";
 import "./Maps.css";
 import axios from "axios";
 import MapComponent from "./MapComponent";
-import debounce from "lodash.debounce";
 
 export default function Maps() {
     const [isCreateMapOpen, setIsCreateMapOpen] = useState(false);
@@ -27,6 +26,7 @@ export default function Maps() {
     const [regions, setRegions] = useState([]);
     const [selectedRegion, setSelectedRegion] = useState("");
     const [selectedDistrict, setSelectedDistrict] = useState("");
+    const [population, setPopulation] = useState("");
 
     useEffect(() => {
         const fetchRegions = async () => {
@@ -66,7 +66,7 @@ export default function Maps() {
                 `https://nominatim.openstreetmap.org/search`,
                 {
                     params: {
-                        q: searchQuery,
+                        q: query,
                         format: "json",
                         limit: 1
                     }
@@ -83,11 +83,11 @@ export default function Maps() {
             const lat = parseFloat(city.lat);
             const lon = parseFloat(city.lon);
 
-            setShortName(searchQuery);
+            setShortName(query);
             setFullName(city.display_name);
             setCoords(`${lat}, ${lon}`);
 
-            setMapPosition([lat, lon]); // для карты
+            setMapPosition([lat, lon]);
         } catch (err) {
             console.error(err);
         }
@@ -223,9 +223,11 @@ export default function Maps() {
         const newCity = {
             district: selectedDistrict,
             city: shortName,
+            population: population,
         };
         setSavedCities((prev) => [...prev, newCity]);
         setSearchQuery("");
+        setPopulation("");
         setShortName("");
         setFullName("");
         setCoords("");
@@ -304,13 +306,12 @@ export default function Maps() {
                                         className="find-input"
                                         onChange={(e) => {
                                             setSearchQuery(e.target.value);
-                                            fetchSuggestions(e.target.value);
                                             setShortName(e.target.value);
+                                            fetchSuggestions(e.target.value);
                                         }}
                                         onKeyDown={(e) => {
                                             if (e.key === 'Enter') {
                                                 e.preventDefault();
-                                                setSearchQuery(e.target.value);
                                             }
                                         }}
                                         onBlur={(e) => {
@@ -324,11 +325,10 @@ export default function Maps() {
                                                 onClick={() => {
                                                     setSearchQuery(item.city);
                                                     setShortName(item.city);
-                                                    handleSearchCity();
+                                                    handleSearchCity(item.city);
                                                     setSelectedRegion(item.region);
                                                     setSelectedDistrict(item.district);
                                                     setCoords("");
-                                                    setMapPosition([55.753960, 37.620393]);
                                                     setSuggestions([]);
                                                 }}
                                             >
@@ -360,34 +360,41 @@ export default function Maps() {
                                         value={selectedRegion}
                                         onChange={(e) => setSelectedRegion(e.target.value)}
                                     >
-                                        <option value="" disabled>Выберите регион</option>
+                                        <option disabled>Выберите регион</option>
                                         {regions.map((region) => (
                                             <option key={region} value={region}>{region}</option>
                                         ))}
                                     </select>
                                 </div>
                                 <div className="form-coordination">
-                                    <label htmlFor="">Координаты</label>
-                                    <input type="text" name="" id="" value={coords} />
+                                    <label>Координаты</label>
+                                    <input type="text" value={coords} />
                                 </div>
                                 <div className="form-id">
-                                    <label htmlFor="">ID</label>
-                                    <input type="text" name="" id="" required />
+                                    <label>ID</label>
+                                    <input type="text" required />
                                 </div>
                                 <div className="form-count">
-                                    <label htmlFor="">Численность населения</label>
-                                    <input type="number" name="" id="" required />
+                                    <label>Численность населения</label>
+                                    <input
+                                        type="number"
+                                        required
+                                        value={population}
+                                        onChange={(e) => {
+                                            setPopulation(e.target.value);
+                                        }}
+                                    />
                                 </div>
                                 <div className="form-charact">
-                                    <label htmlFor="">Характеристики</label>
-                                    <select name="" id="">
-                                        <option value="" disabled selected>Выбрать</option>
-                                        <option value=""></option>
-                                        <option value=""></option>
+                                    <label>Характеристики</label>
+                                    <select>
+                                        <option disabled selected>Выбрать</option>
+                                        <option></option>
+                                        <option></option>
                                     </select>
                                 </div>
                                 <div className="form-monotown">
-                                    <label htmlFor="">Моногород</label>
+                                    <label>Моногород</label>
                                     <input type="checkbox" id="checkbox-switcher" className="options-switcher" />
                                     <label htmlFor="checkbox-switcher" className="options-switcher-label"></label>
                                 </div>
@@ -459,7 +466,15 @@ export default function Maps() {
                             </div>
                         </nav>
 
-                        <form action="" className="create-map-form">
+                        <form className="create-map-form" onSubmit={(e) => {
+                            e.preventDefault();
+                            setIsCreateMapOpen(false);
+                            setSavedCities(getSavedCities())
+                            const route = {
+                                name: routeName,
+                                cities: selectedCities,
+                            }
+                        }}>
                             <div className="name-trace">
                                 <label>
                                     <span style={{ color: "red" }}>*</span>Название маршрута
@@ -467,6 +482,7 @@ export default function Maps() {
                                 <input
                                     type="text"
                                     value={routeName}
+                                    name="routeName"
                                     required
                                     onChange={(e) => {
                                         setRouteName(e.target.value)
@@ -650,19 +666,7 @@ export default function Maps() {
 
                             <div className="footer-map">
                                 <button className="map-cancel" onClick={() => { setIsCreateMapOpen(false) }}>Отменить</button>
-                                <button className="map-submit"
-                                    onClick={(e) => {
-                                        setIsCreateMapOpen(false);
-                                        setIsModalMapOpen(true);
-                                        setSavedCities(getSavedCities())
-                                        e.preventDefault();
-                                        const route = {
-                                            name: routeName,
-                                            cities: selectedCities,
-                                        }
-                                    }}
-                                    type="submit"
-                                >Сохранить</button>
+                                <button className="map-submit" type="submit" onClick={() => { setIsModalMapOpen(true) }}>Сохранить</button>
                             </div>
                         </form>
                     </div>
@@ -746,6 +750,7 @@ export default function Maps() {
                                                 <tr key={index}>
                                                     <td>{index + 1}</td>
                                                     <td>{item.city}</td>
+                                                    <td>{item.population}</td>
                                                 </tr>
                                             ))}
                                         </tbody>
