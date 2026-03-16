@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -26,7 +27,7 @@ func initDB() {
 		log.Fatalf("Ошибка при подключении к БД: %v", err)
 	}
 
-	if err := db.AutoMigrate(&UserData{}); err != nil {
+	if err := db.AutoMigrate(&UserData{}, &SampleData{}); err != nil {
 		log.Fatalf("Ошибка миграции БД: %v", err)
 	}
 }
@@ -37,6 +38,17 @@ type UserData struct {
 	Login        string `json:"login"`
 	Password     string `json:"password,omitempty" gorm:"-"`
 	HashPassword string `json:"-"`
+}
+
+// Модель для выборок:
+type SampleData struct {
+	ID               string    `gorm:"primaryKey" json:"id"`
+	Name             string    `json:"name"`
+	HardQuotas       string    `json:"hard_quotas" gorm:"type:jsonb"`
+	SoftQuotas       string    `json:"soft_quotas" gorm:"type:jsonb"`
+	RespondentsCount int       `json:"respondents_count"`
+	SampleType       string    `json:"sample_type"`
+	UpdatedAt        time.Time `json:"updated_at"`
 }
 
 func addUser(c echo.Context) error {
@@ -229,15 +241,145 @@ func searchCities(c echo.Context) error {
 	return c.JSON(http.StatusOK, results)
 }
 
+// Создание выборки:
+func createSample(c echo.Context) error {
+	sample := new(SampleData)
+
+	if err := c.Bind(sample); err != nil {
+		return c.JSON(http.StatusBadRequest, echo.Map{
+			"error": "Неверный формат данных",
+		})
+	}
+
+	sample.ID = uuid.NewString()
+	sample.UpdatedAt = time.Now()
+
+	result := db.Create(sample)
+
+	if result.Error != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{
+			"error": "Не удалось создать выборку",
+		})
+	}
+
+	return c.JSON(http.StatusCreated, echo.Map{
+		"id":      sample.ID,
+		"name":    sample.Name,
+		"message": "Выборка успешно создана",
+	})
+}
+
+// Получение всех выборок:
+func getAllSamples(c echo.Context) error {
+	var samples []SampleData
+
+	result := db.Order("updated_at DESC").Find(&samples)
+
+	if result.Error != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{
+			"error": "Ошибка при получении списка выборок",
+		})
+	}
+
+	return c.JSON(http.StatusOK, samples)
+}
+
+// Получение выборки по ID:
+func getSampleByID(c echo.Context) error {
+	id := c.Param("id")
+
+	var sample SampleData
+	result := db.Where("id = ?", id).First(&sample)
+
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return c.JSON(http.StatusNotFound, echo.Map{
+				"error": "Выборка не найдена",
+			})
+		}
+		return c.JSON(http.StatusInternalServerError, echo.Map{
+			"error": "Ошибка при получении выборки",
+		})
+	}
+
+	return c.JSON(http.StatusOK, sample)
+}
+
+// Обновление выборки:
+func updateSample(c echo.Context) error {
+	id := c.Param("id")
+	sample := new(SampleData)
+
+	if err := c.Bind(sample); err != nil {
+		return c.JSON(http.StatusBadRequest, echo.Map{
+			"error": "Неверный формат данных",
+		})
+	}
+
+	sample.UpdatedAt = time.Now()
+
+	result := db.Model(&SampleData{}).Where("id = ?", id).Updates(sample)
+
+	if result.Error != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{
+			"error": "Не удалось обновить выборку",
+		})
+	}
+
+	if result.RowsAffected == 0 {
+		return c.JSON(http.StatusNotFound, echo.Map{
+			"error": "Выборка не найдена",
+		})
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"id":      id,
+		"message": "Выборка успешно обновлена",
+	})
+}
+
+// Удаление выборки:
+func deleteSample(c echo.Context) error {
+	id := c.Param("id")
+
+	result := db.Delete(&SampleData{}, "id = ?", id)
+
+	if result.Error != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{
+			"error": "Выборка не была удалена",
+		})
+	}
+
+	if result.RowsAffected == 0 {
+		return c.JSON(http.StatusNotFound, echo.Map{
+			"error": "Выборка не найдена",
+		})
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"message": "Выборка успешно удалена",
+	})
+}
+
 func main() {
 	initDB()
 	e := echo.New()
-	e.Use(middleware.CORS())
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: []string{"*"},
+		AllowMethods: []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete},
+		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
+	}))
 	e.POST("/login", getAuth)
 	e.POST("/", addUser)
 	e.GET("/", getAllUsers)
-	e.DELETE("/:id", deleteUser)
+	e.DELETE("/user/:id", deleteUser)
 	e.GET("/cities", getCities)
 	e.GET("/cities/search", searchCities)
+	// Эндпоинты для выборок:
+	e.POST("/sample", createSample)
+	e.GET("/samples", getAllSamples)
+	e.GET("/sample/:id", getSampleByID)
+	e.PUT("/sample/:id", updateSample)
+	e.DELETE("/sample/:id", deleteSample)
 	e.Start(":8080")
 }

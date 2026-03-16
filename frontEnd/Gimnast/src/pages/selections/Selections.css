@@ -333,42 +333,84 @@
   border-bottom: solid grey 1px;
 }
 
-.right-nav-element {
+.quota-tabs {
   display: flex;
-  gap: 1.5vw;
+  gap: 0;
+}
 
-  & button {
-    cursor: pointer;
-    color: grey;
-    background-color: transparent;
-    border: none;
-    padding: 1%;
-    white-space: nowrap;
-    font-size: clamp(.8rem, .9rem, 1rem);
-    transition: .2s ease;
+.quota-tab-btn {
+  flex: 1;
+  padding: 2% 4%;
+  background-color: transparent;
+  border: solid grey 1px;
+  color: grey;
+  cursor: pointer;
+  font-size: clamp(.8rem, .9rem, 1rem);
+  white-space: nowrap;
+  transition: .2s ease;
+  font-family: main;
+
+  &:first-child {
+    border-radius: 4px 0 0 4px;
+    border-right: none;
+  }
+
+  &:last-child {
+    border-radius: 0 4px 4px 0;
+    border-left: none;
+  }
+
+  &.activ {
+    background-color: #409eff;
+    color: white;
+    border-color: #409eff;
 
     &:hover {
-      color: black;
+      background-color: #2989ea;
     }
+  }
+
+  &:hover:not(.active) {
+    background-color: rgb(205, 205, 205);
+    color: black;
   }
 }
 
-.right-nav-element-soft {
-  & button {
-    background-color: transparent;
-    padding: 2% 4%;
-    white-space: nowrap;
-    border: solid grey 1px;
-    border-radius: 4px;
-    color: grey;
-    cursor: pointer;
-    transition: .2s ease;
+.add-soft-quota-btn {
+  padding: 2% 4%;
+  background-color: transparent;
+  border: solid grey 1px;
+  color: grey;
+  cursor: pointer;
+  font-size: clamp(.8rem, .9rem, 1rem);
+  white-space: nowrap;
+  transition: .2s ease;
+  font-family: main;
+  border-radius: 4px;
+  margin-left: 10px;
 
-    &:hover {
-      color: black;
-    }
+  &:hover {
+    background-color: rgb(205, 205, 205);
+    color: black;
+    border-color: black;
   }
 }
+
+.soft-quota-content {
+  width: 100%;
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  margin-top: 20px;
+  min-height: 150px;
+  background-color: #f9f9f9;
+
+  & p {
+    color: grey;
+    text-align: center;
+  }
+}
+
 
 .right-select {
   width: 100%;
@@ -689,5 +731,27 @@
     background-color: transparent;
     font-weight: 300;
     text-transform: uppercase;
+  }
+
+  & td {
+    padding: calc(var(--index) * 0.4) calc(var(--index) * 0.6);
+    border: solid 1px black;
+  }
+
+  & tbody tr:hover {
+    background-color: rgba(64, 158, 255, 0.1);
+  }
+}
+
+.delete-sample-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 4px;
+  transition: 0.2s ease;
+
+  &:hover {
+    background-color: rgba(211, 47, 47, 0.1);
   }
 }

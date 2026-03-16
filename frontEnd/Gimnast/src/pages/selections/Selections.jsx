@@ -15,7 +15,12 @@ export default function Selections() {
   const districtRefs = useRef({});
   const dataTabRef = useRef(null);
   const paramsTabRef = useRef(null);
-  const [softQuota, setSoftQuota] = useState(false);
+  const [quotaTabs, setQuotaTabs] = useState(["hard"]);
+  const [activeQuotaTab, setActiveQuotaTab] = useState("hard");
+  const [sampleName, setSampleName] = useState("");
+  const [sampleType, setSampleType] = useState("");
+  const [respondentsCount, setRespondentsCount] = useState("");
+  const [samples, setSamples] = useState([]);
 
   useEffect(() => {
     if (cities && Object.keys(cities).length > 0) {
@@ -140,12 +145,55 @@ export default function Selections() {
     { category: 'всего', female: '-', male: '-', total: '-' },
   ];
 
-
   const handleAddSoftQuota = () => {
-    setSoftQuota(true);
-  }
+    if (!quotaTabs.includes("soft")) {
+      setQuotaTabs([...quotaTabs, "soft"]);
+    }
+  };
 
+  const handleSaveSample = async () => {
+    if (!sampleName || !sampleType) {
+      alert("Заполните название и тип выборки");
+      return;
+    }
 
+    const sampleData = {
+      name: sampleName,
+      sample_type: sampleType,
+      respondents_count: parseInt(respondentsCount) || 0,
+      hard_quotas: JSON.stringify({
+        selectedCities: selectedCities,
+        scope: scope,
+      }),
+      soft_quotas: JSON.stringify({
+        enabled: quotaTabs.includes("soft"),
+      }),
+    };
+
+    try {
+      const response = await axios.post("http://localhost:8080/sample", sampleData);
+      if (response.data.message === "Выборка успешно создана") {
+        setIsWindowOpen(false);
+        fetchSamples();
+      }
+    } catch (err) {
+      console.error("Ошибка при сохранении выборки", err);
+      alert("Ошибка при сохранении выборки: " + (err.response?.data?.error || err.message));
+    }
+  };
+
+  const fetchSamples = async () => {
+    try {
+      const response = await axios.get("http://localhost:8080/samples");
+      setSamples(response.data);
+    } catch (err) {
+      console.error("Ошибка при загрузке выборок", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchSamples();
+  }, []);
 
   return (
     <>
@@ -223,12 +271,19 @@ export default function Selections() {
                       <label>
                         <span>*</span>Название выборки
                       </label>
-                      <input type="text" />
+                      <input 
+                        type="text" 
+                        value={sampleName}
+                        onChange={(e) => setSampleName(e.target.value)}
+                      />
                     </div>
                     <div className="form-type">
                       <label>Тип выборки</label>
-                      <select>
-                        <option disabled selected>
+                      <select
+                        value={sampleType}
+                        onChange={(e) => setSampleType(e.target.value)}
+                      >
+                        <option disabled value="">
                           <span>Выбрать</span>
                         </option>
                         <option>Случайная</option>
@@ -362,59 +417,78 @@ export default function Selections() {
                   <div className="right-side">
                     <button
                       className="save-btn sec"
-                      onClick={() => {
-                        setIsWindowOpen(false);
-                      }}
+                      onClick={handleSaveSample}
                     >Сохранить</button>
                     <div className="right-nav">
-                      <div className="right-nav-element">
-                        <button>Жесткие квоты</button>
-                        {softQuota && (
-                          <>
-                            <button>Мягкие квоты</button>
-                          </>
+                      <div className="quota-tabs">
+                        <button
+                          className={`quota-tab-btn ${activeQuotaTab === "hard" ? "activ" : ""}`}
+                          onClick={() => setActiveQuotaTab("hard")}
+                        >
+                          Жесткие квоты
+                        </button>
+                        {quotaTabs.includes("soft") && (
+                          <button
+                            className={`quota-tab-btn ${activeQuotaTab === "soft" ? "activ" : ""}`}
+                            onClick={() => setActiveQuotaTab("soft")}
+                          >
+                            Мягкие квоты
+                          </button>
+                        )}
+                        {!quotaTabs.includes("soft") && (
+                          <button className="add-soft-quota-btn" onClick={handleAddSoftQuota}>
+                            + Мягкие квоты
+                          </button>
                         )}
                       </div>
-                      <div className="right-nav-element-soft"><button onClick={handleAddSoftQuota}>+ Мягкие квоты</button></div>
                     </div>
-                    <div className="right-select">
-                      <select>
-                        <option disabled selected>
-                          Выбрать
-                        </option>
-                        <option>Option 1</option>
-                        <option>Option 2</option>
-                      </select>
-                    </div>
-                    <div className="row-col">
-                      <div className="row">
-                        <h3 className="row-title">Строки</h3>
-                        <select className="row-select">
-                          <option disabled selected>
-                            Вбырать
-                          </option>
-                          <option>Option</option>
-                          <option>Option</option>
-                          <option>Option</option>
-                        </select>
-                        <hr className="row-line" />
-                        <div className="row-data"></div>
-                      </div>
+                    {activeQuotaTab === "hard" && (
+                      <>
+                        <div className="right-select">
+                          <select>
+                            <option disabled selected>
+                              Выбрать
+                            </option>
+                            <option>Option 1</option>
+                            <option>Option 2</option>
+                          </select>
+                        </div>
+                        <div className="row-col">
+                          <div className="row">
+                            <h3 className="row-title">Строки</h3>
+                            <select className="row-select">
+                              <option disabled selected>
+                                Вбырать
+                              </option>
+                              <option>Option</option>
+                              <option>Option</option>
+                              <option>Option</option>
+                            </select>
+                            <hr className="row-line" />
+                            <div className="row-data"></div>
+                          </div>
 
-                      <div className="column">
-                        <h3 className="col-title">Столбцы</h3>
-                        <select className="col-select">
-                          <option selected disabled>
-                            Выбрать
-                          </option>
-                          <option>Option</option>
-                          <option>Option</option>
-                          <option>Option</option>
-                        </select>
-                        <hr className="col-line" />
-                        <div className="col-data"></div>
+                          <div className="column">
+                            <h3 className="col-title">Столбцы</h3>
+                            <select className="col-select">
+                              <option selected disabled>
+                                Выбрать
+                              </option>
+                              <option>Option</option>
+                              <option>Option</option>
+                              <option>Option</option>
+                            </select>
+                            <hr className="col-line" />
+                            <div className="col-data"></div>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                    {activeQuotaTab === "soft" && (
+                      <div className="soft-quota-content">
+                        <p>Содержимое мягких квот</p>
                       </div>
-                    </div>
+                    )}
                   </div>
                 </>
               )}
@@ -475,7 +549,11 @@ export default function Selections() {
                     <div className="data-cities-set">
                       <div className="size-selection">
                         <label htmlFor="">Размер общей выборки для региона: </label>
-                        <input type="number" />
+                        <input 
+                          type="number" 
+                          value={respondentsCount}
+                          onChange={(e) => setRespondentsCount(e.target.value)}
+                        />
                       </div>
 
                       <div className="data-table">
@@ -532,14 +610,14 @@ export default function Selections() {
         >
           <p>Создать выборку</p>
         </button>
-        <button className="update-btn">
+        <button className="update-btn" onClick={fetchSamples}>
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="21.986">
             <path d="M19.841 3.24A10.988 10.988 0 0 0 8.54.573l1.266 3.8a7.033 7.033 0 0 1 8.809 9.158L17 11.891v7.092h7l-2.407-2.439A11.049 11.049 0 0 0 19.841 3.24zM1 10.942a11.05 11.05 0 0 0 11.013 11.044 11.114 11.114 0 0 0 3.521-.575l-1.266-3.8a7.035 7.035 0 0 1-8.788-9.22L7 9.891V6.034c.021-.02.038-.044.06-.065L7 5.909V2.982H0l2.482 2.449A10.951 10.951 0 0 0 1 10.942z" />
           </svg>
         </button>
       </div>
       <div className="selection-table">
-        <table >
+        <table>
           <thead>
             <tr>
               <th>Название выборки</th>
@@ -551,7 +629,57 @@ export default function Selections() {
               <th></th>
             </tr>
           </thead>
-          <tbody></tbody>
+          <tbody>
+            {samples.map((sample) => {
+              let hardQuotasData = {};
+              let softQuotasData = {};
+              try {
+                hardQuotasData = JSON.parse(sample.hard_quotas);
+                softQuotasData = JSON.parse(sample.soft_quotas);
+              } catch (e) {
+                console.error("Ошибка парсинга квот", e);
+              }
+
+              const hardQuotasCount = hardQuotasData.selectedCities
+                ? Object.values(hardQuotasData.selectedCities).reduce(
+                    (acc, district) => acc + Object.keys(district || {}).length,
+                    0
+                  )
+                : 0;
+
+              const softQuotasCount = softQuotasData.enabled ? "Есть" : "Нет";
+
+              return (
+                <tr key={sample.id}>
+                  <td>{sample.name}</td>
+                  <td>{hardQuotasCount}</td>
+                  <td>{softQuotasCount}</td>
+                  <td>{sample.respondents_count}</td>
+                  <td>{sample.sample_type}</td>
+                  <td>{new Date(sample.updated_at).toLocaleDateString()}</td>
+                  <td>
+                    <button
+                      className="delete-sample-btn"
+                      onClick={async () => {
+                        if (confirm("Вы уверены, что хотите удалить эту выборку?")) {
+                          try {
+                            await axios.delete(`http://localhost:8080/sample/${sample.id}`);
+                            fetchSamples();
+                          } catch (err) {
+                            console.error("Ошибка при удалении", err);
+                          }
+                        }
+                      }}
+                    >
+                      <svg width="20px" height="20px" viewBox="0 0 24 24" fill="none">
+                        <path d="M19 7L18.1327 19.1425C18.0579 20.1891 17.187 21 16.1378 21H7.86224C6.81296 21 5.94208 20.1891 5.86732 19.1425L5 7M10 11V17M14 11V17M15 7V4C15 3.44772 14.5523 3 14 3H10C9.44772 3 9 3.44772 9 4V7M4 7H20" stroke="#d32f2f" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
         </table>
       </div>
     </>
