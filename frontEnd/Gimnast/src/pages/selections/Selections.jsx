@@ -15,6 +15,7 @@ export default function Selections() {
   const districtRefs = useRef({});
   const dataTabRef = useRef(null);
   const paramsTabRef = useRef(null);
+  const [softQuota, setSoftQuota] = useState(false);
 
   useEffect(() => {
     if (cities && Object.keys(cities).length > 0) {
@@ -140,6 +141,11 @@ export default function Selections() {
   ];
 
 
+  const handleAddSoftQuota = () => {
+    setSoftQuota(true);
+  }
+
+
 
   return (
     <>
@@ -225,8 +231,15 @@ export default function Selections() {
                         <option disabled selected>
                           <span>Выбрать</span>
                         </option>
-                        <option>Выборка 1</option>
-                        <option>Выборка 2</option>
+                        <option>Случайная</option>
+                        <option>Систематическая</option>
+                        <option>Стратифицированная</option>
+                        <option>Кластерная</option>
+                        <option>Многоступенчатая</option>
+                        <option>Стихийная</option>
+                        <option>Квотная</option>
+                        <option>Экспертная</option>
+                        <option>Выборка «снежным комом»</option>
                       </select>
                     </div>
 
@@ -354,8 +367,15 @@ export default function Selections() {
                       }}
                     >Сохранить</button>
                     <div className="right-nav">
-                      <div className="right-nav-element">Жёсткие квоты</div>
-                      <div className="right-nav-element">+ Мягкие квоты</div>
+                      <div className="right-nav-element">
+                        <button>Жесткие квоты</button>
+                        {softQuota && (
+                          <>
+                            <button>Мягкие квоты</button>
+                          </>
+                        )}
+                      </div>
+                      <div className="right-nav-element-soft"><button onClick={handleAddSoftQuota}>+ Мягкие квоты</button></div>
                     </div>
                     <div className="right-select">
                       <select>

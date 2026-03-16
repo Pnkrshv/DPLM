@@ -331,25 +331,42 @@
   position: relative;
   margin-top: 20px;
   border-bottom: solid grey 1px;
-
-  &::after {
-    content: "";
-    position: absolute;
-    width: 27%;
-    height: 2px;
-    background-color: #2989ea;
-    bottom: 0;
-    left: 0;
-  }
 }
 
 .right-nav-element {
-  cursor: pointer;
-  padding: 8px 16px;
-  transition: color 0.3s;
+  display: flex;
+  gap: 1.5vw;
 
-  &:hover {
-    color: var(--active);
+  & button {
+    cursor: pointer;
+    color: grey;
+    background-color: transparent;
+    border: none;
+    padding: 1%;
+    white-space: nowrap;
+    font-size: clamp(.8rem, .9rem, 1rem);
+    transition: .2s ease;
+
+    &:hover {
+      color: black;
+    }
+  }
+}
+
+.right-nav-element-soft {
+  & button {
+    background-color: transparent;
+    padding: 2% 4%;
+    white-space: nowrap;
+    border: solid grey 1px;
+    border-radius: 4px;
+    color: grey;
+    cursor: pointer;
+    transition: .2s ease;
+
+    &:hover {
+      color: black;
+    }
   }
 }
 

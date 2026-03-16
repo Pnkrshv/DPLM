@@ -1,48 +1,60 @@
 .statistic-grid {
-    display: grid;
-    grid-template-columns: 20vw 1fr;
-    grid-template-rows: auto 1fr;
-    grid-template-areas:
-        "regions top-row"
-        "regions window";
-    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
     gap: 10px;
     margin-top: 5vh;
     font-family: main;
     font-size: clamp(0.6rem, 0.85rem, 1rem);
+    height: 90vh;
+}
+
+.statistic-main-content {
+    display: flex;
+    flex: 1;
+    gap: 10px;
+    min-height: 0;
 }
 
 .statistic-regions {
-    grid-area: regions;
-    height: 90vh;
+    flex: 0 0 250px;
     border: solid red;
     padding: 2%;
     overflow-y: auto;
     scrollbar-width: thin;
     overflow-x: hidden;
+    min-width: 200px;
+    white-space: nowrap;
+}
+
+.statistic-content {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    gap: 10px;
+    min-width: 0;
 }
 
 .statistic-top-row {
-    grid-area: top-row;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+    display: flex;
     gap: 10px;
-    height: 5vh;
+    flex-wrap: wrap;
 }
 
 .statistic-form {
     border: solid green;
-    height: 5vh;
     display: flex;
     align-items: center;
-    justify-content: start;
+    justify-content: flex-start;
     gap: 1vw;
-    width: 52.95vw;
+    flex: 1;
+    min-width: 200px;
     white-space: nowrap;
     padding: 2%;
 
     & select {
-        width: 60%;
+        flex: 1;
+        min-width: 150px;
+        max-width: 300px;
         border-radius: 4px;
         border: solid grey 1px;
         padding: 0.5%;
@@ -51,20 +63,42 @@
 
 .control-date {
     border: solid purple;
-    height: 10vh;
-    width: 20vw;
     display: flex;
-    justify-content: end;
+    align-items: center;
+    justify-content: flex-end;
     padding: 2%;
+    min-width: 150px;
 }
 
 .statistic-window {
-    grid-area: window;
     border: solid orange;
-    height: auto;
-    margin-top: 5vh;
+    flex: 1;
     min-height: 0;
     padding: 2%;
+}
+
+@media (max-width: 768px) {
+    .statistic-main-content {
+        flex-direction: column;
+    }
+
+    .statistic-regions {
+        flex: 0 0 auto;
+        max-height: 300px;
+        min-width: auto;
+    }
+
+    .statistic-top-row {
+        flex-direction: column;
+    }
+
+    .statistic-form {
+        width: auto;
+    }
+
+    .control-date {
+        justify-content: flex-start;
+    }
 }
 
 .error-stat {
