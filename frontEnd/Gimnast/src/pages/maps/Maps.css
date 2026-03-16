@@ -209,6 +209,70 @@
         font-weight: 300;
         text-transform: uppercase;
     }
+
+    & td {
+        padding: calc(var(--index) * 0.4) calc(var(--index) * 0.6);
+        border: solid 1px black;
+    }
+
+    & .route-name-link {
+        color: var(--active);
+        cursor: pointer;
+        text-decoration: underline;
+        transition: color 0.2s ease;
+
+        &:hover {
+            color: var(--hoveractive);
+        }
+    }
+
+    & tbody tr:hover {
+        background-color: rgba(64, 158, 255, 0.1);
+    }
+}
+
+.delete-route-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 4px;
+    transition: 0.2s ease;
+
+    &:hover {
+        background-color: rgba(211, 47, 47, 0.1);
+    }
+}
+
+.remove-city-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 4px;
+    transition: 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+        background-color: rgba(211, 47, 47, 0.1);
+    }
+}
+
+.city-property-label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: clamp(0.6rem, 0.85rem, 1rem);
+    cursor: pointer;
+    white-space: nowrap;
+
+    & .city-property-check {
+        cursor: pointer;
+        width: 16px;
+        height: 16px;
+    }
 }
 
 .modal-map {

@@ -27,7 +27,7 @@ func initDB() {
 		log.Fatalf("Ошибка при подключении к БД: %v", err)
 	}
 
-	if err := db.AutoMigrate(&UserData{}, &SampleData{}); err != nil {
+	if err := db.AutoMigrate(&UserData{}, &SampleData{}, &RouteData{}); err != nil {
 		log.Fatalf("Ошибка миграции БД: %v", err)
 	}
 }
@@ -49,6 +49,18 @@ type SampleData struct {
 	RespondentsCount int       `json:"respondents_count"`
 	SampleType       string    `json:"sample_type"`
 	UpdatedAt        time.Time `json:"updated_at"`
+}
+
+// Модель для маршрутов:
+type RouteData struct {
+	ID          string    `gorm:"primaryKey" json:"id"`
+	Name        string    `json:"name"`
+	Description string    `json:"description" gorm:"type:text"`
+	Status      string    `json:"status" gorm:"default:'черновик'"`
+	CitiesCount int       `json:"cities_count"`
+	CitiesData  string    `json:"cities_data" gorm:"type:jsonb"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
 }
 
 func addUser(c echo.Context) error {
@@ -361,6 +373,139 @@ func deleteSample(c echo.Context) error {
 	})
 }
 
+// Создание маршрута:
+func createRoute(c echo.Context) error {
+	route := new(RouteData)
+
+	if err := c.Bind(route); err != nil {
+		return c.JSON(http.StatusBadRequest, echo.Map{
+			"error": "Неверный формат данных",
+		})
+	}
+
+	route.ID = uuid.NewString()
+	route.CreatedAt = time.Now()
+	route.UpdatedAt = time.Now()
+	route.Status = "черновик"
+
+	// Проверяем, что название передано
+	if route.Name == "" {
+		return c.JSON(http.StatusBadRequest, echo.Map{
+			"error": "Название маршрута обязательно",
+		})
+	}
+
+	result := db.Create(route)
+
+	if result.Error != nil {
+		log.Printf("Ошибка БД: %v", result.Error)
+		return c.JSON(http.StatusInternalServerError, echo.Map{
+			"error": "Не удалось создать маршрут",
+		})
+	}
+
+	log.Printf("Маршрут создан: ID=%s, Name=%s, CitiesCount=%d", route.ID, route.Name, route.CitiesCount)
+
+	return c.JSON(http.StatusCreated, echo.Map{
+		"id":           route.ID,
+		"name":         route.Name,
+		"cities_count": route.CitiesCount,
+		"message":      "Маршрут успешно создан",
+	})
+}
+
+// Получение всех маршрутов:
+func getAllRoutes(c echo.Context) error {
+	var routes []RouteData
+
+	result := db.Order("created_at DESC").Find(&routes)
+
+	if result.Error != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{
+			"error": "Ошибка при получении списка маршрутов",
+		})
+	}
+
+	return c.JSON(http.StatusOK, routes)
+}
+
+// Получение маршрута по ID:
+func getRouteByID(c echo.Context) error {
+	id := c.Param("id")
+
+	var route RouteData
+	result := db.Where("id = ?", id).First(&route)
+
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return c.JSON(http.StatusNotFound, echo.Map{
+				"error": "Маршрут не найден",
+			})
+		}
+		return c.JSON(http.StatusInternalServerError, echo.Map{
+			"error": "Ошибка при получении маршрута",
+		})
+	}
+
+	return c.JSON(http.StatusOK, route)
+}
+
+// Обновление маршрута:
+func updateRoute(c echo.Context) error {
+	id := c.Param("id")
+	route := new(RouteData)
+
+	if err := c.Bind(route); err != nil {
+		return c.JSON(http.StatusBadRequest, echo.Map{
+			"error": "Неверный формат данных",
+		})
+	}
+
+	route.UpdatedAt = time.Now()
+
+	result := db.Model(&RouteData{}).Where("id = ?", id).Updates(route)
+
+	if result.Error != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{
+			"error": "Не удалось обновить маршрут",
+		})
+	}
+
+	if result.RowsAffected == 0 {
+		return c.JSON(http.StatusNotFound, echo.Map{
+			"error": "Маршрут не найден",
+		})
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"id":      id,
+		"message": "Маршрут успешно обновлен",
+	})
+}
+
+// Удаление маршрута:
+func deleteRoute(c echo.Context) error {
+	id := c.Param("id")
+
+	result := db.Delete(&RouteData{}, "id = ?", id)
+
+	if result.Error != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{
+			"error": "Маршрут не был удален",
+		})
+	}
+
+	if result.RowsAffected == 0 {
+		return c.JSON(http.StatusNotFound, echo.Map{
+			"error": "Маршрут не найден",
+		})
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"message": "Маршрут успешно удален",
+	})
+}
+
 func main() {
 	initDB()
 	e := echo.New()
@@ -381,5 +526,11 @@ func main() {
 	e.GET("/sample/:id", getSampleByID)
 	e.PUT("/sample/:id", updateSample)
 	e.DELETE("/sample/:id", deleteSample)
+	// Эндпоинты для маршрутов:
+	e.POST("/route", createRoute)
+	e.GET("/routes", getAllRoutes)
+	e.GET("/route/:id", getRouteByID)
+	e.PUT("/route/:id", updateRoute)
+	e.DELETE("/route/:id", deleteRoute)
 	e.Start(":8080")
 }
