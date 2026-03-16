@@ -886,7 +886,7 @@ export default function Selections() {
                   <td>{sample.respondents_count}</td>
                   <td>{sample.sample_type}</td>
                   <td>{new Date(sample.updated_at).toLocaleDateString()}</td>
-                  <td>
+                  <td className="td-delete">
                     <button
                       className="delete-sample-btn"
                       onClick={async () => {
@@ -900,7 +900,7 @@ export default function Selections() {
                         }
                       }}
                     >
-                      <svg width="20px" height="20px" viewBox="0 0 24 24" fill="none">
+                      <svg width="22px" height="22px" viewBox="0 0 24 24" fill="none">
                         <path d="M19 7L18.1327 19.1425C18.0579 20.1891 17.187 21 16.1378 21H7.86224C6.81296 21 5.94208 20.1891 5.86732 19.1425L5 7M10 11V17M14 11V17M15 7V4C15 3.44772 14.5523 3 14 3H10C9.44772 3 9 3.44772 9 4V7M4 7H20" stroke="#d32f2f" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
                     </button>

@@ -796,7 +796,7 @@
   }
 
   & th {
-    padding: calc(var(--index) * 0.5) calc(var(--index) * 0.6);
+    padding: 1%;
     border: solid 1px black;
     background-color: transparent;
     font-weight: 300;
@@ -804,7 +804,8 @@
   }
 
   & td {
-    padding: calc(var(--index) * 0.4) calc(var(--index) * 0.6);
+    padding: .5% 0;
+    text-align: center;
     border: solid 1px black;
   }
 
@@ -823,7 +824,7 @@
       position: absolute;
       color: grey;
       bottom: 4vh;
-      left: -8vw;
+      left: -7vw;
       background-color: white;
       padding: 1%;
       border-radius: 4px;
@@ -836,15 +837,18 @@
   }
 }
 
-.delete-sample-btn {
+button.delete-sample-btn {
   background: transparent;
   border: none;
   cursor: pointer;
   padding: 5px;
-  border-radius: 4px;
-  transition: 0.2s ease;
+  background-color: transparent;
+}
+
+.td-delete {
+  transition: .2s ease;
 
   &:hover {
-    background-color: rgba(211, 47, 47, 0.1);
+    background-color: rgba(255, 0, 0, 0.178);
   }
 }
