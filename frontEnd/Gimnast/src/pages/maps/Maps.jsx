@@ -953,7 +953,7 @@ export default function Maps() {
                                 <td>{route.status}</td>
                                 <td>{route.cities_count}</td>
                                 <td>{new Date(route.created_at).toLocaleDateString()}</td>
-                                <td>
+                                <td className="td-delete">
                                     <button
                                         className="delete-route-btn"
                                         onClick={() => deleteRoute(route.id)}

@@ -197,7 +197,7 @@
     & table {
         width: 100%;
         border-collapse: collapse;
-        text-align: left;
+        text-align: center;
         font-family: main;
         font-size: 85%;
     }
@@ -211,19 +211,14 @@
     }
 
     & td {
-        padding: calc(var(--index) * 0.4) calc(var(--index) * 0.6);
+        padding: .5% 0;
+        text-align: center;
         border: solid 1px black;
     }
 
     & .route-name-link {
-        color: var(--active);
         cursor: pointer;
-        text-decoration: underline;
         transition: color 0.2s ease;
-
-        &:hover {
-            color: var(--hoveractive);
-        }
     }
 
     & tbody tr:hover {
@@ -238,10 +233,6 @@
     padding: 5px;
     border-radius: 4px;
     transition: 0.2s ease;
-
-    &:hover {
-        background-color: rgba(211, 47, 47, 0.1);
-    }
 }
 
 .remove-city-btn {
@@ -697,13 +688,13 @@
     & table {
         width: 100%;
         border-collapse: collapse;
-        text-align: left;
         font-family: main;
         font-size: 85%;
     }
 
     & th {
         padding: .5%;
+        text-align: center;
         border: solid 1px black;
         background-color: transparent;
         font-weight: 300;
