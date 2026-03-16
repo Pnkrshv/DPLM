@@ -309,11 +309,6 @@ export default function Maps() {
                                             setShortName(e.target.value);
                                             fetchSuggestions(e.target.value);
                                         }}
-                                        onKeyDown={(e) => {
-                                            if (e.key === 'Enter') {
-                                                e.preventDefault();
-                                            }
-                                        }}
                                         onBlur={(e) => {
                                             setTimeout(() => setSuggestions([]), 1000);
                                         }}
