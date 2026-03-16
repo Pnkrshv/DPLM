@@ -21,6 +21,33 @@ export default function Selections() {
   const [sampleType, setSampleType] = useState("");
   const [respondentsCount, setRespondentsCount] = useState("");
   const [samples, setSamples] = useState([]);
+  const [currentSample, setCurrentSample] = useState(null);
+  const [editingSampleId, setEditingSampleId] = useState(null);
+
+  // Состояния для жёстких квот
+  const [hardQuotaRows, setHardQuotaRows] = useState("");
+  const [hardQuotaCols, setHardQuotaCols] = useState("");
+
+  // Состояния для мягких квот
+  const [softQuotaRows, setSoftQuotaRows] = useState("");
+  const [softQuotaCols, setSoftQuotaCols] = useState("");
+  
+  // Данные для выпадающих списков
+  const rowOptions = [
+    "Тип населённого пункта",
+    "Количество населения",
+    "Административный статус",
+    "Географическое положение",
+    "Экономический статус"
+  ];
+  
+  const colOptions = [
+    "Пол",
+    "Возраст",
+    "Образование",
+    "Доход",
+    "Семейное положение"
+  ];
 
   useEffect(() => {
     if (cities && Object.keys(cities).length > 0) {
@@ -164,17 +191,61 @@ export default function Selections() {
       hard_quotas: JSON.stringify({
         selectedCities: selectedCities,
         scope: scope,
+        rows: hardQuotaRows,
+        cols: hardQuotaCols,
       }),
       soft_quotas: JSON.stringify({
         enabled: quotaTabs.includes("soft"),
+        rows: softQuotaRows,
+        cols: softQuotaCols,
       }),
     };
 
     try {
-      const response = await axios.post("http://localhost:8080/sample", sampleData);
-      if (response.data.message === "Выборка успешно создана") {
-        setIsWindowOpen(false);
-        fetchSamples();
+      let response;
+      if (editingSampleId) {
+        // Обновление существующей выборки
+        response = await axios.put(`http://localhost:8080/sample/${editingSampleId}`, sampleData);
+        if (response.data.message === "Выборка успешно обновлена") {
+          alert("Выборка успешно обновлена!");
+          // Очистка всех полей
+          setSampleName("");
+          setSampleType("");
+          setRespondentsCount("");
+          setSelectedCities({});
+          setExpandedDistricts({});
+          setQuotaTabs(["hard"]);
+          setActiveQuotaTab("hard");
+          setScope("regions");
+          setHardQuotaRows("");
+          setHardQuotaCols("");
+          setSoftQuotaRows("");
+          setSoftQuotaCols("");
+          setEditingSampleId(null);
+          setIsWindowOpen(false);
+          fetchSamples();
+        }
+      } else {
+        // Создание новой выборки
+        response = await axios.post("http://localhost:8080/sample", sampleData);
+        if (response.data.message === "Выборка успешно создана") {
+          alert("Выборка успешно сохранена!");
+          // Очистка всех полей
+          setSampleName("");
+          setSampleType("");
+          setRespondentsCount("");
+          setSelectedCities({});
+          setExpandedDistricts({});
+          setQuotaTabs(["hard"]);
+          setActiveQuotaTab("hard");
+          setScope("regions");
+          setHardQuotaRows("");
+          setHardQuotaCols("");
+          setSoftQuotaRows("");
+          setSoftQuotaCols("");
+          setIsWindowOpen(false);
+          fetchSamples();
+        }
       }
     } catch (err) {
       console.error("Ошибка при сохранении выборки", err);
@@ -191,9 +262,69 @@ export default function Selections() {
     }
   };
 
+  const loadCurrentSample = async () => {
+    // Загружаем последнюю созданную выборку
+    if (samples.length > 0) {
+      const latestSample = samples[0];
+      setCurrentSample(latestSample);
+    }
+  };
+
+  const loadSampleForEdit = async (sampleId) => {
+    try {
+      const response = await axios.get(`http://localhost:8080/sample/${sampleId}`);
+      const sample = response.data;
+      setEditingSampleId(sampleId);
+      
+      // Заполняем поля формы данными из выборки
+      setSampleName(sample.name);
+      setSampleType(sample.sample_type);
+      setRespondentsCount(sample.respondents_count.toString());
+      
+      // Парсим данные квот
+      try {
+        const hardQuotas = JSON.parse(sample.hard_quotas);
+        setHardQuotaRows(hardQuotas.rows || "");
+        setHardQuotaCols(hardQuotas.cols || "");
+        if (hardQuotas.selectedCities) {
+          setSelectedCities(hardQuotas.selectedCities);
+        }
+        if (hardQuotas.scope) {
+          setScope(hardQuotas.scope);
+        }
+      } catch (e) {
+        console.error("Ошибка парсинга жёстких квот", e);
+      }
+      
+      try {
+        const softQuotas = JSON.parse(sample.soft_quotas);
+        setSoftQuotaRows(softQuotas.rows || "");
+        setSoftQuotaCols(softQuotas.cols || "");
+        if (softQuotas.enabled && !quotaTabs.includes("soft")) {
+          setQuotaTabs(["hard", "soft"]);
+        }
+      } catch (e) {
+        console.error("Ошибка парсинга мягких квот", e);
+      }
+      
+      // Открываем окно и переключаем на вкладку параметров
+      setIsWindowOpen(true);
+      setActiveTab("parameters");
+    } catch (err) {
+      console.error("Ошибка при загрузке выборки", err);
+      alert("Ошибка при загрузке данных выборки");
+    }
+  };
+
   useEffect(() => {
     fetchSamples();
   }, []);
+
+  useEffect(() => {
+    if (activeTab === "data") {
+      loadCurrentSample();
+    }
+  }, [activeTab, samples]);
 
   return (
     <>
@@ -271,8 +402,8 @@ export default function Selections() {
                       <label>
                         <span>*</span>Название выборки
                       </label>
-                      <input 
-                        type="text" 
+                      <input
+                        type="text"
                         value={sampleName}
                         onChange={(e) => setSampleName(e.target.value)}
                       />
@@ -486,7 +617,44 @@ export default function Selections() {
                     )}
                     {activeQuotaTab === "soft" && (
                       <div className="soft-quota-content">
-                        <p>Содержимое мягких квот</p>
+                        <div className="soft-quota-selectors">
+                          <div className="soft-quota-row">
+                            <label>Строки:</label>
+                            <select
+                              value={softQuotaRows}
+                              onChange={(e) => setSoftQuotaRows(e.target.value)}
+                            >
+                              <option disabled value="">
+                                Выбрать характеристику для строк
+                              </option>
+                              {rowOptions.map((option, index) => (
+                                <option key={index} value={option}>
+                                  {option}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                          <div className="soft-quota-col">
+                            <label>Столбцы:</label>
+                            <select
+                              value={softQuotaCols}
+                              onChange={(e) => setSoftQuotaCols(e.target.value)}
+                            >
+                              <option disabled value="">
+                                Выбрать характеристику для столбцов
+                              </option>
+                              {colOptions.map((option, index) => (
+                                <option key={index} value={option}>
+                                  {option}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                          <div className="soft-quota-preview">
+                            {softQuotaRows && <p><strong>Строки:</strong> {softQuotaRows}</p>}
+                            {softQuotaCols && <p><strong>Столбцы:</strong> {softQuotaCols}</p>}
+                          </div>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -549,8 +717,8 @@ export default function Selections() {
                     <div className="data-cities-set">
                       <div className="size-selection">
                         <label htmlFor="">Размер общей выборки для региона: </label>
-                        <input 
-                          type="number" 
+                        <input
+                          type="number"
                           value={respondentsCount}
                           onChange={(e) => setRespondentsCount(e.target.value)}
                         />
@@ -558,22 +726,73 @@ export default function Selections() {
 
                       <div className="data-table">
                         <h2>Жёсткие квоты</h2>
+                        {currentSample && (
+                          <div className="quota-info">
+                            {(() => {
+                              try {
+                                const hardQuotas = JSON.parse(currentSample.hard_quotas);
+                                return (
+                                  <>
+                                    {hardQuotas.rows && (
+                                      <p className="quota-rows"><strong>Строки:</strong> {hardQuotas.rows}</p>
+                                    )}
+                                    {hardQuotas.cols && (
+                                      <p className="quota-cols"><strong>Столбцы:</strong> {hardQuotas.cols}</p>
+                                    )}
+                                  </>
+                                );
+                              } catch (e) {
+                                return <p>Ошибка загрузки данных квот</p>;
+                              }
+                            })()}
+                          </div>
+                        )}
                         <table className="data-table">
                           <thead>
                             <tr>
                               <th></th>
-                              <th>Женский</th>
-                              <th>Мужской</th>
-                              <th>Всего</th>
+                              {currentSample && (() => {
+                                try {
+                                  const hardQuotas = JSON.parse(currentSample.hard_quotas);
+                                  if (hardQuotas.cols) {
+                                    const cols = hardQuotas.cols.split(',').map((col, i) => col.trim());
+                                    return cols.map((col, index) => (
+                                      <th key={index}>{col}</th>
+                                    ));
+                                  }
+                                } catch (e) {}
+                              })()}
+                              {!currentSample?.hard_quotas && (
+                                <>
+                                  <th>Женский</th>
+                                  <th>Мужской</th>
+                                  <th>Всего</th>
+                                </>
+                              )}
                             </tr>
                           </thead>
                           <tbody>
                             {data.map((item, index) => (
                               <tr key={index}>
                                 <td style={{ textAlign: 'left' }}>{item.category}</td>
-                                <td>{item.female}</td>
-                                <td>{item.male}</td>
-                                <td>{item.total}</td>
+                                {currentSample && (() => {
+                                  try {
+                                    const hardQuotas = JSON.parse(currentSample.hard_quotas);
+                                    if (hardQuotas.cols) {
+                                      const cols = hardQuotas.cols.split(',').map((col, i) => col.trim());
+                                      return cols.map((col, i) => (
+                                        <td key={i}>-</td>
+                                      ));
+                                    }
+                                  } catch (e) {}
+                                })()}
+                                {!currentSample?.hard_quotas && (
+                                  <>
+                                    <td>{item.female}</td>
+                                    <td>{item.male}</td>
+                                    <td>{item.total}</td>
+                                  </>
+                                )}
                               </tr>
                             ))}
                           </tbody>
@@ -586,10 +805,15 @@ export default function Selections() {
                     <button className="data-count-btn" onClick={(e) => {
                       e.preventDefault();
                     }}>Рассчитать</button>
-                    <button className="data-save-btn" type="submit" onClick={(e) => {
-                      e.preventDefault();
-                      setIsWindowOpen(false)
-                    }}>Сохранить</button>
+                    <button 
+                      className="data-save-btn" 
+                      type="button"
+                      onClick={() => {
+                        setActiveTab("parameters");
+                      }}
+                    >
+                      Изменить параметры
+                    </button>
                   </div>
 
 
@@ -642,16 +866,21 @@ export default function Selections() {
 
               const hardQuotasCount = hardQuotasData.selectedCities
                 ? Object.values(hardQuotasData.selectedCities).reduce(
-                    (acc, district) => acc + Object.keys(district || {}).length,
-                    0
-                  )
+                  (acc, district) => acc + Object.keys(district || {}).length,
+                  0
+                )
                 : 0;
 
               const softQuotasCount = softQuotasData.enabled ? "Есть" : "Нет";
 
               return (
                 <tr key={sample.id}>
-                  <td>{sample.name}</td>
+                  <td 
+                    className="sample-name-link"
+                    onClick={() => loadSampleForEdit(sample.id)}
+                  >
+                    {sample.name}
+                  </td>
                   <td>{hardQuotasCount}</td>
                   <td>{softQuotasCount}</td>
                   <td>{sample.respondents_count}</td>
@@ -672,7 +901,7 @@ export default function Selections() {
                       }}
                     >
                       <svg width="20px" height="20px" viewBox="0 0 24 24" fill="none">
-                        <path d="M19 7L18.1327 19.1425C18.0579 20.1891 17.187 21 16.1378 21H7.86224C6.81296 21 5.94208 20.1891 5.86732 19.1425L5 7M10 11V17M14 11V17M15 7V4C15 3.44772 14.5523 3 14 3H10C9.44772 3 9 3.44772 9 4V7M4 7H20" stroke="#d32f2f" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M19 7L18.1327 19.1425C18.0579 20.1891 17.187 21 16.1378 21H7.86224C6.81296 21 5.94208 20.1891 5.86732 19.1425L5 7M10 11V17M14 11V17M15 7V4C15 3.44772 14.5523 3 14 3H10C9.44772 3 9 3.44772 9 4V7M4 7H20" stroke="#d32f2f" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
                     </button>
                   </td>
