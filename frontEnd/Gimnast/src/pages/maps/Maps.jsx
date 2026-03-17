@@ -572,7 +572,7 @@ export default function Maps() {
                     <div
                         className="modal-bg"
                         onClick={() => {
-                            setIsCreateMapOpen(false);
+                            setIsCreateMapOpen(false); 
                             setRouteName("");
                             setDescription("");
                             setSavedCities([]);
