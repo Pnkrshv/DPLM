@@ -31,7 +31,7 @@ export default function Selections() {
   // Состояния для мягких квот
   const [softQuotaRows, setSoftQuotaRows] = useState("");
   const [softQuotaCols, setSoftQuotaCols] = useState("");
-  
+
   // Данные для выпадающих списков
   const rowOptions = [
     "Тип населённого пункта",
@@ -40,7 +40,7 @@ export default function Selections() {
     "Географическое положение",
     "Экономический статус"
   ];
-  
+
   const colOptions = [
     "Пол",
     "Возраст",
@@ -275,12 +275,12 @@ export default function Selections() {
       const response = await axios.get(`http://localhost:8080/sample/${sampleId}`);
       const sample = response.data;
       setEditingSampleId(sampleId);
-      
+
       // Заполняем поля формы данными из выборки
       setSampleName(sample.name);
       setSampleType(sample.sample_type);
       setRespondentsCount(sample.respondents_count.toString());
-      
+
       // Парсим данные квот
       try {
         const hardQuotas = JSON.parse(sample.hard_quotas);
@@ -295,7 +295,7 @@ export default function Selections() {
       } catch (e) {
         console.error("Ошибка парсинга жёстких квот", e);
       }
-      
+
       try {
         const softQuotas = JSON.parse(sample.soft_quotas);
         setSoftQuotaRows(softQuotas.rows || "");
@@ -306,7 +306,7 @@ export default function Selections() {
       } catch (e) {
         console.error("Ошибка парсинга мягких квот", e);
       }
-      
+
       // Открываем окно и переключаем на вкладку параметров
       setIsWindowOpen(true);
       setActiveTab("parameters");
@@ -330,7 +330,12 @@ export default function Selections() {
     <>
       {isWindowOpen && (
         <>
-          <div className="window-bg" onClick={() => { setIsWindowOpen(false) }}></div>
+          <div className="window-bg" onClick={() => {
+            setIsWindowOpen(false);
+            setSampleName('');
+            setSampleType('');
+            selectedCities([]);
+          }}></div>
           <div className="modal-window">
             <div className="window-navigation">
               <div className="nav-elements">
@@ -359,6 +364,9 @@ export default function Selections() {
                 onClick={(e) => {
                   e.preventDefault();
                   setIsWindowOpen(false);
+                  setSampleName('');
+                  setSampleType('');
+                  selectedCities([]);
                 }}
               >
                 <svg
@@ -760,7 +768,7 @@ export default function Selections() {
                                       <th key={index}>{col}</th>
                                     ));
                                   }
-                                } catch (e) {}
+                                } catch (e) { }
                               })()}
                               {!currentSample?.hard_quotas && (
                                 <>
@@ -784,7 +792,7 @@ export default function Selections() {
                                         <td key={i}>-</td>
                                       ));
                                     }
-                                  } catch (e) {}
+                                  } catch (e) { }
                                 })()}
                                 {!currentSample?.hard_quotas && (
                                   <>
@@ -805,8 +813,8 @@ export default function Selections() {
                     <button className="data-count-btn" onClick={(e) => {
                       e.preventDefault();
                     }}>Рассчитать</button>
-                    <button 
-                      className="data-save-btn" 
+                    <button
+                      className="data-save-btn"
                       type="button"
                       onClick={() => {
                         setActiveTab("parameters");
@@ -875,9 +883,10 @@ export default function Selections() {
 
               return (
                 <tr key={sample.id}>
-                  <td 
+                  <td
                     className="sample-name-link"
                     onClick={() => loadSampleForEdit(sample.id)}
+                    title="Изменить"
                   >
                     {sample.name}
                   </td>
@@ -889,6 +898,7 @@ export default function Selections() {
                   <td className="td-delete">
                     <button
                       className="delete-sample-btn"
+                      title="Удалить"
                       onClick={async () => {
                         if (confirm("Вы уверены, что хотите удалить эту выборку?")) {
                           try {
