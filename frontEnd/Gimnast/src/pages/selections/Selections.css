@@ -832,6 +832,7 @@ button.delete-sample-btn {
 
 .td-delete {
   transition: .2s ease;
+  cursor: pointer;
 
   &:hover {
     background-color: rgba(255, 0, 0, 0.178);

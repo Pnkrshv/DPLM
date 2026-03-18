@@ -1,185 +1,185 @@
 * {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-    user-select: none;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: none;
 }
 
 :root {
-    --index: calc(1vw + 1vh);
-    --active: #409eff;
-    --hoveractive: #2989ea;
+  --index: calc(1vw + 1vh);
+  --active: #409eff;
+  --hoveractive: #2989ea;
 }
 
 @font-face {
-    font-family: main;
-    src: url(assets/fonts/Noto_Sans/static/NotoSans-Regular.ttf);
+  font-family: main;
+  src: url(assets/fonts/Noto_Sans/static/NotoSans-Regular.ttf);
 }
 
 .survey-window {
-    position: fixed;
-    z-index: 1000;
-    left: 50%;
-    top: 50%;
-    height: 50vh;
-    border-radius: 4px;
-    overflow: hidden;
-    transform: translate(-50%, -50%);
-    background-color: rgb(255, 255, 255);
-    width: 60vw;
-    border: solid 1px grey;
-    -webkit-box-shadow: 4px 4px 8px 0px rgba(34, 60, 80, 0.2);
-    -moz-box-shadow: 4px 4px 8px 0px rgba(34, 60, 80, 0.2);
-    box-shadow: 4px 4px 8px 0px rgba(34, 60, 80, 0.2);
-    font-size: clamp(80%, 90%, 110%);
+  position: fixed;
+  z-index: 1000;
+  left: 50%;
+  top: 50%;
+  height: 60vh;
+  border-radius: 4px;
+  overflow: hidden;
+  transform: translate(-50%, -50%);
+  background-color: rgb(255, 255, 255);
+  width: 60vw;
+  border: solid 1px grey;
+  -webkit-box-shadow: 4px 4px 8px 0px rgba(34, 60, 80, 0.2);
+  -moz-box-shadow: 4px 4px 8px 0px rgba(34, 60, 80, 0.2);
+  box-shadow: 4px 4px 8px 0px rgba(34, 60, 80, 0.2);
+  font-size: clamp(80%, 90%, 110%);
 }
 
 .survey-form {
-    font-family: main;
-    font-size: clamp(1rem, 2rem);
-    display: flex;
-    flex-direction: column;
-    align-items: start;
-    padding: 2% 2%;
+  font-family: main;
+  font-size: clamp(1rem, 2rem);
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  padding: 2% 2%;
+  height: 93%;
 }
 
 .survey-input {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    width: 100%;
-    white-space: nowrap;
-    gap: 1vw;
-    margin-bottom: 2vh;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  width: 100%;
+  white-space: nowrap;
+  gap: 1vw;
+  margin-bottom: 2vh;
 
-    & input {
-        width: 100%;
-        outline: none;
-        padding: 0.5%;
-        border-radius: 4px;
-        border: solid grey .5px;
-    }
+  & input {
+    width: 100%;
+    outline: none;
+    padding: 0.5%;
+    border-radius: 4px;
+    border: solid grey .5px;
+  }
 }
 
 .survey-select {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    width: 100%;
-    gap: 1vw;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  width: 100%;
+  gap: 1vw;
 
-    & select {
-        width: 100%;
-        outline: none;
-        padding: .5%;
-        border-radius: 4px;
-    }
+  & select {
+    width: 100%;
+    outline: none;
+    padding: .5%;
+    border-radius: 4px;
+  }
 }
 
 option:disabled {
-    color: grey;
-    font-weight: 400;
+  color: grey;
+  font-weight: 400;
 }
 
 .survey-steps {
-    display: flex;
-    flex-direction: column;
-    align-items: start;
-    gap: 2vh;
-    margin-top: 2vh;
-    border: solid grey 1px;
-    width: 100%;
-    border-radius: 4px;
-    padding: 2%;
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  gap: 2vh;
+  margin-top: 2vh;
+  border: solid grey 1px;
+  width: 100%;
+  border-radius: 4px;
+  padding: 2%;
 
-    & input {
-        border-radius: 4px;
-        border: solid grey .5px;
-        padding: .3%;
-        outline: none;
-    }
+  & input {
+    border-radius: 4px;
+    border: solid grey .5px;
+    padding: .3%;
+    outline: none;
+  }
 }
 
 .survey-date {
-    display: flex;
-    gap: 1vw;
-    align-items: center;
-    width: 100%;
-    white-space: nowrap;
+  display: flex;
+  gap: 1vw;
+  align-items: center;
+  width: 100%;
+  white-space: nowrap;
 
-    & input {
-        width: 100%;
-        font-family: main;
-    }
+  & input {
+    width: 100%;
+    font-family: main;
+  }
 }
 
 .survey-adapt {
-    display: flex;
-    flex-direction: row;
-    gap: 1vw;
-    align-items: center;
-    width: 100%;
-    white-space: nowrap;
+  display: flex;
+  flex-direction: row;
+  gap: 1vw;
+  align-items: center;
+  width: 100%;
+  white-space: nowrap;
 
-    & input {
-        width: 80%;
-        font-family: main;
-    }
+  & input {
+    width: 80%;
+    font-family: main;
+  }
 }
 
 .survey-koir {
-    display: flex;
-    flex-direction: row;
-    gap: 1vw;
-    align-items: center;
+  display: flex;
+  flex-direction: row;
+  gap: 1vw;
+  align-items: center;
 }
 
 .survey-exitpoll {
-    display: flex;
-    align-items: center;
-    gap: 1vw;
-    color: #409eff;
-    margin-top: 2vh;
+  display: flex;
+  align-items: center;
+  gap: 1vw;
+  color: #409eff;
+  margin-top: 2vh;
 }
 
 .survey-accept {
-    display: flex;
-    align-items: center;
-    gap: 1vw;
-    margin-top: 2vh;
+  display: flex;
+  align-items: center;
+  gap: 1vw;
+  margin-top: 2vh;
 }
 
 .save-btn-survey {
-    padding: .5% 1%;
-    margin-top: 2vh;
-    background-color: #409eff;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    font-family: main;
-    align-self: flex-end;
-    cursor: pointer;
-    transition: .3s ease;
+  padding: .5% 1%;
+  margin-top: auto;
+  background-color: #409eff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-family: main;
+  align-self: flex-end;
+  cursor: pointer;
+  transition: .3s ease;
 
-    &:hover {
-        background-color: #2989ea;
-    }
+  &:hover {
+    background-color: #2989ea;
+  }
 }
 
 span {
-    color: red;
+  color: red;
 }
 
 .survey-table {
-  margin-top: calc(var(--index) * 2);
-  background-color: transparent;
-  max-width: 80%;
+  margin-top: 2vh;
+  width: 80%;
   margin-left: 3%;
 
   & table {
     width: 100%;
     border-collapse: collapse;
-    text-align: left;
+    text-align: center;
     font-family: main;
     font-size: 85%;
   }
@@ -190,5 +190,66 @@ span {
     background-color: transparent;
     font-weight: 300;
     text-transform: uppercase;
+  }
+
+  & td {
+    padding: .5% 0;
+    text-align: center;
+    border: solid 1px black;
+  }
+
+  & .survey-name-link {
+    cursor: pointer; 
+    transition: color 0.2s ease;
+  }
+
+  & tbody tr:hover {
+    background-color: rgba(64, 158, 255, 0.1);
+  }
+}
+
+.delete-survey-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 4px;
+}
+
+.buttons {
+  display: flex;
+  gap: 15px;
+  margin: 20px;
+  margin-left: 3%;
+}
+
+.create-btn {
+  padding: 10px 20px;
+  border-radius: 4px;
+  border: none;
+  background-color: #409eff;
+  color: white;
+  cursor: pointer;
+  font-size: 14px;
+  transition: 0.3s all ease-in;
+
+  &:hover {
+    background-color: #2989ea;
+  }
+}
+
+.update-btn {
+  padding: 10px 15px;
+  border-radius: 4px;
+  border: solid 1px grey;
+  cursor: pointer;
+  transition: 0.3s all ease-in;
+
+  &:hover {
+    background-color: rgb(216, 216, 216);
+  }
+
+  & svg {
+    fill: rgb(86, 86, 86);
   }
 }

@@ -70,8 +70,20 @@ export default function Maps() {
     };
 
     const handleSearchCity = async (cityName) => {
-        const query = cityName || searchQuery;
-        if (!query) return;
+        // Если cityName передан как объект, берём city свойство
+        let query;
+        if (typeof cityName === 'object' && cityName !== null) {
+            query = cityName.city || '';
+        } else {
+            query = cityName || '';
+        }
+        
+        // Убедимся, что query - строка и не пустая
+        query = String(query).trim();
+        if (!query) {
+            alert("Введите название города");
+            return;
+        }
 
         try {
             const res = await axios.get(
@@ -491,7 +503,7 @@ export default function Maps() {
                                     </ul>
                                     <button
                                         type="button"
-                                        onClick={handleSearchCity}
+                                        onClick={() => handleSearchCity(searchQuery)}
                                     >Поиск</button>
                                 </div>
                             </div>

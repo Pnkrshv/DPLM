@@ -27,7 +27,7 @@ func initDB() {
 		log.Fatalf("Ошибка при подключении к БД: %v", err)
 	}
 
-	if err := db.AutoMigrate(&UserData{}, &SampleData{}, &RouteData{}); err != nil {
+	if err := db.AutoMigrate(&UserData{}, &SampleData{}, &RouteData{}, &SurveyData{}); err != nil {
 		log.Fatalf("Ошибка миграции БД: %v", err)
 	}
 }
@@ -61,6 +61,24 @@ type RouteData struct {
 	CitiesData  string    `json:"cities_data" gorm:"type:jsonb"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
+}
+
+// Модель для опросов:
+type SurveyData struct {
+	ID             string     `gorm:"primaryKey" json:"id"`
+	Name           string     `json:"name"`
+	Code           string     `json:"code"`
+	Responsible    string     `json:"responsible"`
+	StartDate      *time.Time `json:"start_date"`
+	EndDate        *time.Time `json:"end_date"`
+	Adaptation     bool       `json:"adaptation"`
+	AdaptationDate *time.Time `json:"adaptation_date"`
+	Koir           bool       `json:"koir"`
+	ExitPoll       bool       `json:"exit_poll"`
+	ManualInput    bool       `json:"manual_input"`
+	Status         string     `json:"status" gorm:"default:'черновик'"`
+	CreatedAt      time.Time  `json:"created_at"`
+	UpdatedAt      time.Time  `json:"updated_at"`
 }
 
 func addUser(c echo.Context) error {
@@ -506,6 +524,57 @@ func deleteRoute(c echo.Context) error {
 	})
 }
 
+// Создание опроса:
+func createSurvey(c echo.Context) error {
+	survey := new(SurveyData)
+	if err := c.Bind(survey); err != nil {
+		return c.JSON(http.StatusBadRequest, echo.Map{"error": "Неверный формат данных"})
+	}
+	survey.ID = uuid.NewString()
+	survey.CreatedAt = time.Now()
+	survey.UpdatedAt = time.Now()
+	survey.Status = "черновик"
+	if survey.Name == "" {
+		return c.JSON(http.StatusBadRequest, echo.Map{"error": "Название опроса обязательно"})
+	}
+	if err := db.Create(survey).Error; err != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Не удалось создать опрос"})
+	}
+	return c.JSON(http.StatusCreated, echo.Map{"id": survey.ID, "name": survey.Name, "message": "Опрос успешно создан"})
+}
+
+// Получение всех опросов:
+func getAllSurveys(c echo.Context) error {
+	var surveys []SurveyData
+	if err := db.Order("created_at DESC").Find(&surveys).Error; err != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Ошибка при получении опросов"})
+	}
+	return c.JSON(http.StatusOK, surveys)
+}
+
+// Обновление опроса:
+func updateSurvey(c echo.Context) error {
+	id := c.Param("id")
+	survey := new(SurveyData)
+	if err := c.Bind(survey); err != nil {
+		return c.JSON(http.StatusBadRequest, echo.Map{"error": "Неверный формат данных"})
+	}
+	survey.UpdatedAt = time.Now()
+	if err := db.Model(&SurveyData{}).Where("id = ?", id).Updates(survey).Error; err != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Не удалось обновить опрос"})
+	}
+	return c.JSON(http.StatusOK, echo.Map{"id": id, "message": "Опрос успешно обновлен"})
+}
+
+// Удаление опроса:
+func deleteSurvey(c echo.Context) error {
+	id := c.Param("id")
+	if err := db.Delete(&SurveyData{}, "id = ?", id).Error; err != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Не удалось удалить опрос"})
+	}
+	return c.JSON(http.StatusOK, echo.Map{"message": "Опрос успешно удален"})
+}
+
 func main() {
 	initDB()
 	e := echo.New()
@@ -532,5 +601,10 @@ func main() {
 	e.GET("/route/:id", getRouteByID)
 	e.PUT("/route/:id", updateRoute)
 	e.DELETE("/route/:id", deleteRoute)
+	// Эндпоинты для опросов:
+	e.POST("/survey", createSurvey)
+	e.GET("/surveys", getAllSurveys)
+	e.PUT("/survey/:id", updateSurvey)
+	e.DELETE("/survey/:id", deleteSurvey)
 	e.Start(":8080")
 }
