@@ -77,8 +77,7 @@ export default function Maps() {
         } else {
             query = cityName || '';
         }
-        
-        // Убедимся, что query - строка и не пустая
+
         query = String(query).trim();
         if (!query) {
             alert("Введите название города");
@@ -104,7 +103,6 @@ export default function Maps() {
 
             const city = res.data[0];
 
-            // Проверяем наличие необходимых полей
             if (!city.lat || !city.lon || !city.display_name) {
                 alert("Некорректные данные о городе");
                 return;
@@ -113,7 +111,6 @@ export default function Maps() {
             const lat = parseFloat(city.lat);
             const lon = parseFloat(city.lon);
 
-            // Проверяем корректность координат
             if (isNaN(lat) || isNaN(lon)) {
                 alert("Некорректные координаты");
                 return;
@@ -221,7 +218,6 @@ export default function Maps() {
     const getSavedCities = () => {
         const result = [];
 
-        // Добавляем города, выбранные через чекбоксы
         Object.keys(selectedCities).forEach((district) => {
             Object.keys(selectedCities[district]).forEach((city) => {
                 if (selectedCities[district][city]) {
@@ -238,7 +234,6 @@ export default function Maps() {
             });
         });
 
-        // Добавляем города, добавленные вручную
         savedCities.forEach(item => {
             const exists = result.find(r => r.city === item.city && r.district === item.district);
             if (!exists) {
@@ -277,7 +272,6 @@ export default function Maps() {
             population: population,
         };
         setSavedCities((prev) => [...prev, newCity]);
-        // Обновляем currentSavedCities для отображения в модальном окне
         setCurrentSavedCities((prev) => [...prev, newCity]);
         setSearchQuery("");
         setPopulation("");
@@ -313,7 +307,6 @@ export default function Maps() {
         try {
             let response;
             if (editingRouteId) {
-                // Обновление существующего маршрута
                 response = await axios.put(`http://localhost:8080/route/${editingRouteId}`, routeData);
                 if (response.data.message === "Маршрут успешно обновлен") {
                     alert("Маршрут успешно обновлен!");
@@ -371,7 +364,6 @@ export default function Maps() {
                 console.error("Ошибка парсинга данных городов", e);
             }
 
-            // Сбрасываем expandedGroups для корректного отображения
             setExpandedGroups({});
             setIsCreateMapOpen(true);
         } catch (err) {
@@ -393,9 +385,7 @@ export default function Maps() {
     };
 
     const removeCityFromRoute = (index) => {
-        // Удаляем город из currentSavedCities
         setCurrentSavedCities((prev) => prev.filter((_, i) => i !== index));
-        // Также удаляем из savedCities для синхронизации
         setSavedCities((prev) => prev.filter((_, i) => i !== index));
     };
 
@@ -514,11 +504,11 @@ export default function Maps() {
                                     <input type="text" name="shortName" required value={shortName} onChange={(e) => { setShortName(e.target.value) }} />
                                 </div>
                                 <div className="form-full-name">
-                                    <label htmlFor="">Полное название</label>
+                                    <label>Полное название</label>
                                     <input type="text" name="fullName" required value={fullName} onChange={(e) => { setFullName(e.target.value) }} />
                                 </div>
                                 <div className="form-region">
-                                    <label htmlFor=""><span>*</span>Регион</label>
+                                    <label><span>*</span>Регион</label>
                                     <select
                                         name="region"
                                         required
@@ -584,7 +574,7 @@ export default function Maps() {
                     <div
                         className="modal-bg"
                         onClick={() => {
-                            setIsCreateMapOpen(false); 
+                            setIsCreateMapOpen(false);
                             setRouteName("");
                             setDescription("");
                             setSavedCities([]);
