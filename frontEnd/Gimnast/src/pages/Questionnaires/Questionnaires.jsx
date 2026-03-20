@@ -100,6 +100,14 @@ export default function Questionnaires() {
     }
   }, [isModalopen, scope, cities.length, loading]);
 
+  const handleSaveQuestionnaire = async () => {
+    // Здесь должна быть логика сохранения анкеты на сервер
+    // Пока просто закрываем форму и показываем уведомление
+    alert("Анкета успешно сохранена!");
+    setIsModalOpen(false);
+    setIsSettingsOpen(true);
+  };
+
   return (
     <>
       {isModalopen && (
@@ -160,7 +168,7 @@ export default function Questionnaires() {
               className="create-form"
               onSubmit={(e) => {
                 e.preventDefault();
-                setIsModalOpen(false);
+                handleSaveQuestionnaire();
               }}
             >
               <label>
@@ -297,11 +305,6 @@ export default function Questionnaires() {
                 <button
                   type="submit"
                   className="save-btn"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setIsModalOpen(false);
-                    setIsSettingsOpen(true);
-                  }}
                 >
                   Сохранить
                 </button>

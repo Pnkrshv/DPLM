@@ -104,7 +104,6 @@ export default function Survey() {
     // Сохранение опроса (создание или обновление)
     const handleSaveSurvey = async (e) => {
         e.preventDefault();
-        setIsWindowOpen(false);
 
         const surveyData = {
             name: surveyName,
@@ -130,8 +129,9 @@ export default function Survey() {
                 response = await axios.put(`http://localhost:8080/survey/${editingSurveyId}`, surveyData);
                 console.log('Ответ от сервера (update):', response.data);
                 if (response.data.message === 'Опрос успешно обновлен') {
-                    // Загружаем связанные данные и показываем блоки
+                    // Показываем уведомление и закрываем форму
                     alert('Опрос успешно обновлен!')
+                    setIsWindowOpen(false);
                     await fetchRelatedData(editingSurveyId);
                     fetchSurveys();
                 }
@@ -143,6 +143,7 @@ export default function Survey() {
                 if (response.data.message === 'Опрос успешно создан') {
                     // Получаем ID созданного опроса и загружаем связанные данные
                     alert('Опрос успешно создан!')
+                    setIsWindowOpen(false);
                     const surveyId = response.data.id;
                     console.log('Полученный surveyId:', surveyId);
                     if (surveyId) {
@@ -402,6 +403,7 @@ export default function Survey() {
                                                 <button
                                                     className="block-action-btn"
                                                     onClick={() => setIsSampleSelectModalOpen(true)}
+                                                    type='button'
                                                 >
                                                     Добавить выборку
                                                 </button>
@@ -425,6 +427,7 @@ export default function Survey() {
                                                 <button
                                                     className="block-action-btn"
                                                     onClick={() => setIsQuestionnaireSelectModalOpen(true)}
+                                                    type='button'
                                                 >
                                                     Добавить анкету
                                                 </button>
@@ -448,7 +451,7 @@ export default function Survey() {
                                                 <button
                                                     className="block-action-btn"
                                                     onClick={() => setIsRouteSelectModalOpen(true)}
-                                                    title="Выбрать маршрут"
+                                                    type='button'
                                                 >
                                                     Добавить маршрут
                                                 </button>
@@ -534,7 +537,7 @@ export default function Survey() {
                             <button className="cancel-btn" onClick={() => setIsSampleSelectModalOpen(false)}>
                                 Отмена
                             </button>
-                            <button className="save-btn" onClick={() => setIsSampleSelectModalOpen(false)}>
+                            <button className="save-btn" type="button" onClick={() => setIsSampleSelectModalOpen(false)}>
                                 Выбрать
                             </button>
                         </div>
@@ -604,7 +607,7 @@ export default function Survey() {
                             <button className="cancel-btn" onClick={() => setIsQuestionnaireSelectModalOpen(false)}>
                                 Отмена
                             </button>
-                            <button className="save-btn" onClick={() => setIsQuestionnaireSelectModalOpen(false)}>
+                            <button className="save-btn" type="button" onClick={() => setIsQuestionnaireSelectModalOpen(false)}>
                                 Выбрать
                             </button>
                         </div>
@@ -674,7 +677,7 @@ export default function Survey() {
                             <button className="cancel-btn" onClick={() => setIsRouteSelectModalOpen(false)}>
                                 Отмена
                             </button>
-                            <button className="save-btn" onClick={() => setIsRouteSelectModalOpen(false)}>
+                            <button className="save-btn" type="button" onClick={() => setIsRouteSelectModalOpen(false)}>
                                 Выбрать
                             </button>
                         </div>
