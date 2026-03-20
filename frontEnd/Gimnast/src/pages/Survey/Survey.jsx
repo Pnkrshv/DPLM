@@ -19,6 +19,28 @@ export default function Survey() {
     const [manualInput, setManualInput] = useState(false);
     const [editingSurveyId, setEditingSurveyId] = useState(null);
 
+    // Состояния для блоков выборок, анкет и маршрутов
+    const [showRelatedBlocks, setShowRelatedBlocks] = useState(false);
+    const [currentSurveyId, setCurrentSurveyId] = useState(null);
+
+    // Данные для выборок
+    const [samples, setSamples] = useState([]);
+    const [selectedSample, setSelectedSample] = useState('');
+    const [isSampleWindowOpen, setIsSampleWindowOpen] = useState(false);
+    const [isSampleSelectModalOpen, setIsSampleSelectModalOpen] = useState(false);
+
+    // Данные для анкет
+    const [questionnaires, setQuestionnaires] = useState([]);
+    const [selectedQuestionnaire, setSelectedQuestionnaire] = useState('');
+    const [isQuestionnaireWindowOpen, setIsQuestionnaireWindowOpen] = useState(false);
+    const [isQuestionnaireSelectModalOpen, setIsQuestionnaireSelectModalOpen] = useState(false);
+
+    // Данные для маршрутов
+    const [routes, setRoutes] = useState([]);
+    const [selectedRoute, setSelectedRoute] = useState('');
+    const [isRouteWindowOpen, setIsRouteWindowOpen] = useState(false);
+    const [isRouteSelectModalOpen, setIsRouteSelectModalOpen] = useState(false);
+
     // Загрузка опросов из БД
     const fetchSurveys = async () => {
         try {
@@ -30,9 +52,59 @@ export default function Survey() {
         }
     };
 
+    // Загрузка выборок
+    const fetchSamples = async () => {
+        try {
+            const response = await axios.get('http://localhost:8080/samples');
+            setSamples(Array.isArray(response.data) ? response.data : []);
+        } catch (err) {
+            console.error('Ошибка при загрузке выборок:', err);
+            setSamples([]);
+        }
+    };
+
+    // Загрузка анкет
+    const fetchQuestionnaires = async () => {
+        try {
+            const response = await axios.get('http://localhost:8080/questionnaires');
+            setQuestionnaires(Array.isArray(response.data) ? response.data : []);
+        } catch (err) {
+            console.warn('Анкеты не загружены (endpoint недоступен):', err.message);
+            setQuestionnaires([]);
+        }
+    };
+
+    // Загрузка маршрутов
+    const fetchRoutes = async () => {
+        try {
+            const response = await axios.get('http://localhost:8080/routes');
+            setRoutes(Array.isArray(response.data) ? response.data : []);
+        } catch (err) {
+            console.error('Ошибка при загрузке маршрутов:', err);
+            setRoutes([]);
+        }
+    };
+
+    // Загрузка связанных данных для опроса
+    const fetchRelatedData = async (surveyId) => {
+        console.log('=== fetchRelatedData вызван для surveyId:', surveyId);
+        setCurrentSurveyId(surveyId);
+        // Загружаем все данные параллельно, игнорируя ошибки отдельных запросов
+        const results = await Promise.allSettled([fetchSamples(), fetchQuestionnaires(), fetchRoutes()]);
+        console.log('Результаты загрузки:', {
+            samples: results[0],
+            questionnaires: results[1],
+            routes: results[2]
+        });
+        console.log('Устанавливаю showRelatedBlocks = true');
+        setShowRelatedBlocks(true);
+        console.log('showRelatedBlocks установлен в:', true);
+    };
+
     // Сохранение опроса (создание или обновление)
     const handleSaveSurvey = async (e) => {
         e.preventDefault();
+        setIsWindowOpen(false);
 
         const surveyData = {
             name: surveyName,
@@ -45,30 +117,82 @@ export default function Survey() {
             koir: koir,
             exit_poll: exitPoll,
             manual_input: manualInput,
+            sample_id: selectedSample || '',
+            questionnaire_id: selectedQuestionnaire || '',
+            route_id: selectedRoute || '',
         };
 
         try {
             let response;
             if (editingSurveyId) {
                 // Обновление существующего опроса
+                console.log('=== Обновление опроса с ID:', editingSurveyId);
                 response = await axios.put(`http://localhost:8080/survey/${editingSurveyId}`, surveyData);
+                console.log('Ответ от сервера (update):', response.data);
                 if (response.data.message === 'Опрос успешно обновлен') {
-                    alert('Опрос успешно обновлен!');
-                    closeAndReset();
+                    // Загружаем связанные данные и показываем блоки
+                    alert('Опрос успешно обновлен!')
+                    await fetchRelatedData(editingSurveyId);
                     fetchSurveys();
                 }
             } else {
                 // Создание нового опроса
+                console.log('=== Создание нового опроса');
                 response = await axios.post('http://localhost:8080/survey', surveyData);
+                console.log('Ответ от сервера (create):', response.data);
                 if (response.data.message === 'Опрос успешно создан') {
-                    alert('Опрос успешно создан!');
-                    closeAndReset();
+                    // Получаем ID созданного опроса и загружаем связанные данные
+                    alert('Опрос успешно создан!')
+                    const surveyId = response.data.id;
+                    console.log('Полученный surveyId:', surveyId);
+                    if (surveyId) {
+                        await fetchRelatedData(surveyId);
+                    } else {
+                        console.error('Не получен ID созданного опроса!');
+                    }
                     fetchSurveys();
                 }
             }
         } catch (err) {
             console.error('Ошибка при сохранении опроса:', err);
             alert('Ошибка: ' + (err.response?.data?.error || err.message));
+        }
+    };
+
+    // Обработчики для выбора элементов
+    const handleSampleChange = async (sampleId) => {
+        setSelectedSample(sampleId);
+        if (currentSurveyId) {
+            try {
+                await axios.patch(`http://localhost:8080/survey/${currentSurveyId}/sample`, { sample_id: sampleId });
+                console.log('Выборка сохранена:', sampleId);
+            } catch (err) {
+                console.error('Ошибка при сохранении выборки:', err);
+            }
+        }
+    };
+
+    const handleQuestionnaireChange = async (questionnaireId) => {
+        setSelectedQuestionnaire(questionnaireId);
+        if (currentSurveyId) {
+            try {
+                await axios.patch(`http://localhost:8080/survey/${currentSurveyId}/questionnaire`, { questionnaire_id: questionnaireId });
+                console.log('Анкета сохранена:', questionnaireId);
+            } catch (err) {
+                console.error('Ошибка при сохранении анкеты:', err);
+            }
+        }
+    };
+
+    const handleRouteChange = async (routeId) => {
+        setSelectedRoute(routeId);
+        if (currentSurveyId) {
+            try {
+                await axios.patch(`http://localhost:8080/survey/${currentSurveyId}/route`, { route_id: routeId });
+                console.log('Маршрут сохранен:', routeId);
+            } catch (err) {
+                console.error('Ошибка при сохранении маршрута:', err);
+            }
         }
     };
 
@@ -84,7 +208,7 @@ export default function Survey() {
     };
 
     // Редактирование опроса по клику на название
-    const editSurvey = (survey) => {
+    const editSurvey = async (survey) => {
         setEditingSurveyId(survey.id);
         setSurveyName(survey.name || '');
         setSurveyCode(survey.code || '');
@@ -96,7 +220,13 @@ export default function Survey() {
         setKoir(survey.koir || false);
         setExitPoll(survey.exit_poll || false);
         setManualInput(survey.manual_input || false);
+        // Устанавливаем выбранные значения из опроса
+        setSelectedSample(survey.sample_id || '');
+        setSelectedQuestionnaire(survey.questionnaire_id || '');
+        setSelectedRoute(survey.route_id || '');
         setIsWindowOpen(true);
+        // Загружаем связанные данные и показываем блоки
+        await fetchRelatedData(survey.id);
     };
 
     // Закрыть окно и сбросить форму
@@ -113,6 +243,17 @@ export default function Survey() {
         setKoir(false);
         setExitPoll(false);
         setManualInput(false);
+        setShowRelatedBlocks(false);
+        setCurrentSurveyId(null);
+        setSamples([]);
+        setQuestionnaires([]);
+        setRoutes([]);
+        setSelectedSample('');
+        setSelectedQuestionnaire('');
+        setSelectedRoute('');
+        setIsSampleSelectModalOpen(false);
+        setIsQuestionnaireSelectModalOpen(false);
+        setIsRouteSelectModalOpen(false);
     };
 
     useEffect(() => {
@@ -238,10 +379,305 @@ export default function Survey() {
                                 <label htmlFor="checkbox-switcher4" className="options-switcher-label"></label>
                             </div>
 
+                            {/* Блоки выборок, анкет и маршрутов */}
+                            {console.log('Рендер: showRelatedBlocks =', showRelatedBlocks)}
+                            {showRelatedBlocks && (
+                                <div className="related-blocks-container">
+
+                                    <div className="related-blocks">
+                                        {/* Блок Выборки */}
+                                        <div className="related-block-item">
+                                            <div className="block-header">
+                                                <p>Выборки</p>
+                                                {selectedSample && (
+                                                    <div className="selected-item-info">
+                                                        <p className="selected-item-name">
+                                                            {samples.find(s => s.id === selectedSample)?.name || 'Выборка'}
+                                                        </p>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            <div className="block-content">
+                                                <button
+                                                    className="block-action-btn"
+                                                    onClick={() => setIsSampleSelectModalOpen(true)}
+                                                >
+                                                    Добавить выборку
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        {/* Блок Анкеты */}
+                                        <div className="related-block-item">
+                                            <div className="block-header">
+                                                <p>Анкеты</p>
+                                                {selectedQuestionnaire && (
+                                                    <div className="selected-item-info">
+                                                        <p className="selected-item-name">
+                                                            {questionnaires.find(q => q.id === selectedQuestionnaire)?.name || 'Анкета'}
+                                                        </p>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            <div className="block-content">
+                                                <button
+                                                    className="block-action-btn"
+                                                    onClick={() => setIsQuestionnaireSelectModalOpen(true)}
+                                                >
+                                                    Добавить анкету
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        {/* Блок Маршруты */}
+                                        <div className="related-block-item">
+                                            <div className="block-header">
+                                                <p>Маршруты</p>
+                                                {selectedRoute && (
+                                                    <div className="selected-item-info">
+                                                        <p className="selected-item-name">
+                                                            {routes.find(r => r.id === selectedRoute)?.name || 'Маршрут'}
+                                                        </p>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            <div className="block-content">
+                                                <button
+                                                    className="block-action-btn"
+                                                    onClick={() => setIsRouteSelectModalOpen(true)}
+                                                    title="Выбрать маршрут"
+                                                >
+                                                    Добавить маршрут
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
                             <button className="save-btn-survey" type='submit'>
                                 Сохранить
                             </button>
                         </form>
+
+                    </div>
+                </>
+            )}
+
+            {/* Модальное окно выбора выборки */}
+            {isSampleSelectModalOpen && (
+                <>
+                    <div className="modal-bg" onClick={() => setIsSampleSelectModalOpen(false)}></div>
+                    <div className="select-modal-window">
+                        <div className="modal-header">
+                            <h4>Выбрать выборку</h4>
+                            <div className="close-btn" onClick={() => setIsSampleSelectModalOpen(false)}>
+                                <svg width="24px" height="24px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M7 7.00006L17 17.0001M7 17.0001L17 7.00006" stroke="#292929" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                            </div>
+                        </div>
+                        <div className="modal-body">
+                            <div className="select-table">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Название</th>
+                                            <th>Тип</th>
+                                            <th>Кол-во респондентов</th>
+                                            <th>Дата обновления</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {samples.length > 0 ? (
+                                            samples.map(sample => (
+                                                <tr
+                                                    key={sample.id}
+                                                    className={selectedSample === sample.id ? 'selected' : ''}
+                                                    onClick={() => handleSampleChange(sample.id)}
+                                                >
+                                                    <td>{sample.name || 'Без названия'}</td>
+                                                    <td>{sample.sample_type || '-'}</td>
+                                                    <td>{sample.respondents_count || 0}</td>
+                                                    <td>
+                                                        {sample.updated_at
+                                                            ? new Date(sample.updated_at).toLocaleDateString('ru-RU')
+                                                            : '-'
+                                                        }
+                                                    </td>
+                                                    <td>
+                                                        <input
+                                                            type="radio"
+                                                            name="sample-select"
+                                                            checked={selectedSample === sample.id}
+                                                            onChange={() => handleSampleChange(sample.id)}
+                                                        />
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        ) : (
+                                            <tr>
+                                                <td colSpan="5" style={{ textAlign: 'center', padding: '20px', color: '#999' }}>
+                                                    Нет доступных выборок
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div className="modal-footer">
+                            <button className="cancel-btn" onClick={() => setIsSampleSelectModalOpen(false)}>
+                                Отмена
+                            </button>
+                            <button className="save-btn" onClick={() => setIsSampleSelectModalOpen(false)}>
+                                Выбрать
+                            </button>
+                        </div>
+                    </div>
+                </>
+            )}
+
+            {/* Модальное окно выбора анкеты */}
+            {isQuestionnaireSelectModalOpen && (
+                <>
+                    <div className="modal-bg" onClick={() => setIsQuestionnaireSelectModalOpen(false)}></div>
+                    <div className="select-modal-window">
+                        <div className="modal-header">
+                            <h4>Выбрать анкету</h4>
+                            <div className="close-btn" onClick={() => setIsQuestionnaireSelectModalOpen(false)}>
+                                <svg width="24px" height="24px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M7 7.00006L17 17.0001M7 17.0001L17 7.00006" stroke="#292929" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                            </div>
+                        </div>
+                        <div className="modal-body">
+                            <div className="select-table">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Название</th>
+                                            <th>Код</th>
+                                            <th>Область</th>
+                                            <th>Статус</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {questionnaires.length > 0 ? (
+                                            questionnaires.map(q => (
+                                                <tr
+                                                    key={q.id}
+                                                    className={selectedQuestionnaire === q.id ? 'selected' : ''}
+                                                    onClick={() => handleQuestionnaireChange(q.id)}
+                                                >
+                                                    <td>{q.name || 'Без названия'}</td>
+                                                    <td>{q.code || '-'}</td>
+                                                    <td>{q.scope === 'regions' ? 'Регионы' : q.scope === 'cities' ? 'Города' : q.scope || '-'}</td>
+                                                    <td>{q.status || 'черновик'}</td>
+                                                    <td>
+                                                        <input
+                                                            type="radio"
+                                                            name="questionnaire-select"
+                                                            checked={selectedQuestionnaire === q.id}
+                                                            onChange={() => handleQuestionnaireChange(q.id)}
+                                                        />
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        ) : (
+                                            <tr>
+                                                <td colSpan="5" style={{ textAlign: 'center', padding: '20px', color: '#999' }}>
+                                                    Нет доступных анкет
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div className="modal-footer">
+                            <button className="cancel-btn" onClick={() => setIsQuestionnaireSelectModalOpen(false)}>
+                                Отмена
+                            </button>
+                            <button className="save-btn" onClick={() => setIsQuestionnaireSelectModalOpen(false)}>
+                                Выбрать
+                            </button>
+                        </div>
+                    </div>
+                </>
+            )}
+
+            {/* Модальное окно выбора маршрута */}
+            {isRouteSelectModalOpen && (
+                <>
+                    <div className="modal-bg" onClick={() => setIsRouteSelectModalOpen(false)}></div>
+                    <div className="select-modal-window">
+                        <div className="modal-header">
+                            <h4>Выбрать маршрут</h4>
+                            <div className="close-btn" onClick={() => setIsRouteSelectModalOpen(false)}>
+                                <svg width="24px" height="24px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M7 7.00006L17 17.0001M7 17.0001L17 7.00006" stroke="#292929" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                            </div>
+                        </div>
+                        <div className="modal-body">
+                            <div className="select-table">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Название</th>
+                                            <th>Описание</th>
+                                            <th>Кол-во городов</th>
+                                            <th>Статус</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {routes.length > 0 ? (
+                                            routes.map(route => (
+                                                <tr
+                                                    key={route.id}
+                                                    className={selectedRoute === route.id ? 'selected' : ''}
+                                                    onClick={() => handleRouteChange(route.id)}
+                                                >
+                                                    <td>{route.name || 'Без названия'}</td>
+                                                    <td>{route.description || '-'}</td>
+                                                    <td>{route.cities_count || 0}</td>
+                                                    <td>{route.status || 'черновик'}</td>
+                                                    <td>
+                                                        <input
+                                                            type="radio"
+                                                            name="route-select"
+                                                            checked={selectedRoute === route.id}
+                                                            onChange={() => handleRouteChange(route.id)}
+                                                        />
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        ) : (
+                                            <tr>
+                                                <td colSpan="5" style={{ textAlign: 'center', padding: '20px', color: '#999' }}>
+                                                    Нет доступных маршрутов
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div className="modal-footer">
+                            <button className="cancel-btn" onClick={() => setIsRouteSelectModalOpen(false)}>
+                                Отмена
+                            </button>
+                            <button className="save-btn" onClick={() => setIsRouteSelectModalOpen(false)}>
+                                Выбрать
+                            </button>
+                        </div>
                     </div>
                 </>
             )}

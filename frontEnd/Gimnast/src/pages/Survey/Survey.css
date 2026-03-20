@@ -21,12 +21,15 @@
   z-index: 1000;
   left: 50%;
   top: 50%;
-  height: 60vh;
+  height: auto;
+  max-height: 80vh;
   border-radius: 4px;
-  overflow: hidden;
+  overflow: auto;
   transform: translate(-50%, -50%);
   background-color: rgb(255, 255, 255);
   width: 60vw;
+  min-width: 50vw;
+  max-width: 70vw;
   border: solid 1px grey;
   -webkit-box-shadow: 4px 4px 8px 0px rgba(34, 60, 80, 0.2);
   -moz-box-shadow: 4px 4px 8px 0px rgba(34, 60, 80, 0.2);
@@ -41,7 +44,8 @@
   flex-direction: column;
   align-items: start;
   padding: 2% 2%;
-  height: 93%;
+  height: auto;
+  min-height: 50vh;
 }
 
 .survey-input {
@@ -199,7 +203,7 @@ span {
   }
 
   & .survey-name-link {
-    cursor: pointer; 
+    cursor: pointer;
     transition: color 0.2s ease;
   }
 
@@ -251,5 +255,228 @@ span {
 
   & svg {
     fill: rgb(86, 86, 86);
+  }
+}
+
+/* Стили для блоков выборок, анкет и маршрутов */
+.related-blocks-container {
+  width: 100%;
+  padding: 1%;
+}
+
+.related-blocks {
+  display: flex;
+  flex-direction: column;
+  gap: 1vh;
+  width: 100%;
+}
+
+.related-block-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  border: solid 1px #e0e0e0;
+  border-radius: 4px;
+  padding: 1%;
+  background-color: #fafafa;
+  transition: box-shadow 0.2s ease;
+
+  &:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.block-header {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  align-items: start;
+}
+
+.selected-item-name {
+  color: grey;
+  font-size: clamp(.6rem, .8rem, 1rem);
+}
+
+.block-content {
+  display: flex;
+  align-items: center;
+  justify-content: end;
+  gap: 1vw;
+  width: 100%;
+}
+
+.related-select {
+  flex: 1;
+  padding: 0.5%;
+  border-radius: 4px;
+  border: solid grey 0.5px;
+  font-family: main;
+  font-size: 0.9rem;
+  outline: none;
+  cursor: pointer;
+  background-color: white;
+
+  &:focus {
+    border-color: var(--active);
+  }
+}
+
+.block-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: solid 1px #e0e0e0;
+  border-radius: 4px;
+  width: 8vw;
+  font-size: clamp(.6rem, .8rem, 1rem);
+  background-color: white;
+  cursor: pointer;
+  padding: 1%;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: var(--active);
+    border-color: var(--active);
+    color: white;
+  }
+
+  & svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+/* Стили для модальных окон выбора */
+.select-modal-window {
+  position: fixed;
+  z-index: 1001;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  background-color: white;
+  width: 70vw;
+  max-width: 900px;
+  max-height: 70vh;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  border-bottom: 1px solid #e0e0e0;
+  background-color: #f5f5f5;
+
+  & h4 {
+    font-family: main;
+    font-size: 1.1rem;
+    color: #292929;
+    margin: 0;
+  }
+
+  & .close-btn {
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+
+    &:hover {
+      background-color: #e0e0e0;
+    }
+  }
+}
+
+.modal-body {
+  flex: 1;
+  overflow: auto;
+  padding: 20px;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 15px 20px;
+  border-top: 1px solid #e0e0e0;
+  background-color: #f5f5f5;
+
+  & .cancel-btn,
+  & .save-btn {
+    padding: 8px 20px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    font-family: main;
+    font-size: 0.9rem;
+    transition: background-color 0.2s;
+  }
+
+  & .cancel-btn {
+    background-color: #e0e0e0;
+    color: #292929;
+
+    &:hover {
+      background-color: #d0d0d0;
+    }
+  }
+
+  & .save-btn {
+    background-color: var(--active);
+    color: white;
+
+    &:hover {
+      background-color: var(--hoveractive);
+    }
+  }
+}
+
+.select-table {
+  width: 100%;
+
+  & table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: main;
+    font-size: 0.9rem;
+  }
+
+  & th {
+    padding: 12px 15px;
+    text-align: left;
+    background-color: #f5f5f5;
+    border-bottom: 2px solid #e0e0e0;
+    font-weight: 500;
+    color: #292929;
+  }
+
+  & td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #e0e0e0;
+    color: #333;
+  }
+
+  & tbody tr {
+    cursor: pointer;
+    transition: background-color 0.2s;
+
+    &:hover {
+      background-color: #f0f7ff;
+    }
+
+    &.selected {
+      background-color: #e6f0ff;
+    }
+  }
+
+  & input[type="radio"] {
+    cursor: pointer;
   }
 }
