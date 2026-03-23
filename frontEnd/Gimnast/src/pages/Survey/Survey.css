@@ -371,52 +371,45 @@ span {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 15px 20px;
+  padding: .5%;
   border-bottom: 1px solid #e0e0e0;
   background-color: #f5f5f5;
 
   & h4 {
     font-family: main;
-    font-size: 1.1rem;
-    color: #292929;
-    margin: 0;
+    font-size: clamp(.6rem, .8rem, 1rem);
   }
 
   & .close-btn {
     cursor: pointer;
-    padding: 5px;
+    padding: .5%;
     border-radius: 4px;
-    transition: background-color 0.2s;
-
-    &:hover {
-      background-color: #e0e0e0;
-    }
   }
 }
 
 .modal-body {
   flex: 1;
   overflow: auto;
-  padding: 20px;
+  padding: 1%;
 }
 
 .modal-footer {
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
-  padding: 15px 20px;
+  gap: 1vw;
+  padding: 1%;
   border-top: 1px solid #e0e0e0;
   background-color: #f5f5f5;
 
   & .cancel-btn,
   & .save-btn {
-    padding: 8px 20px;
+    padding: .5% 2%;
     border-radius: 4px;
     border: none;
     cursor: pointer;
     font-family: main;
-    font-size: 0.9rem;
-    transition: background-color 0.2s;
+    font-size: clamp(.6rem, .8rem, 1rem);
+    transition: background-color 0.2s ease;
   }
 
   & .cancel-btn {

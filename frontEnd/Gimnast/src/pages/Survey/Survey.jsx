@@ -478,7 +478,7 @@ export default function Survey() {
                         <div className="modal-header">
                             <h4>Выбрать выборку</h4>
                             <div className="close-btn" onClick={() => setIsSampleSelectModalOpen(false)}>
-                                <svg width="24px" height="24px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <svg width="16px" height="16px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M7 7.00006L17 17.0001M7 17.0001L17 7.00006" stroke="#292929" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                                 </svg>
                             </div>
