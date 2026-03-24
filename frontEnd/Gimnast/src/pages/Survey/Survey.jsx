@@ -38,7 +38,6 @@ export default function Survey() {
     // Данные для маршрутов
     const [routes, setRoutes] = useState([]);
     const [selectedRoute, setSelectedRoute] = useState('');
-    const [isRouteWindowOpen, setIsRouteWindowOpen] = useState(false);
     const [isRouteSelectModalOpen, setIsRouteSelectModalOpen] = useState(false);
 
     // Загрузка опросов из БД
@@ -87,18 +86,9 @@ export default function Survey() {
 
     // Загрузка связанных данных для опроса
     const fetchRelatedData = async (surveyId) => {
-        console.log('=== fetchRelatedData вызван для surveyId:', surveyId);
         setCurrentSurveyId(surveyId);
-        // Загружаем все данные параллельно, игнорируя ошибки отдельных запросов
         const results = await Promise.allSettled([fetchSamples(), fetchQuestionnaires(), fetchRoutes()]);
-        console.log('Результаты загрузки:', {
-            samples: results[0],
-            questionnaires: results[1],
-            routes: results[2]
-        });
-        console.log('Устанавливаю showRelatedBlocks = true');
         setShowRelatedBlocks(true);
-        console.log('showRelatedBlocks установлен в:', true);
     };
 
     // Сохранение опроса (создание или обновление)
@@ -125,9 +115,7 @@ export default function Survey() {
             let response;
             if (editingSurveyId) {
                 // Обновление существующего опроса
-                console.log('=== Обновление опроса с ID:', editingSurveyId);
                 response = await axios.put(`http://localhost:8080/survey/${editingSurveyId}`, surveyData);
-                console.log('Ответ от сервера (update):', response.data);
                 if (response.data.message === 'Опрос успешно обновлен') {
                     // Показываем уведомление и закрываем форму
                     alert('Опрос успешно обновлен!')
@@ -137,15 +125,12 @@ export default function Survey() {
                 }
             } else {
                 // Создание нового опроса
-                console.log('=== Создание нового опроса');
                 response = await axios.post('http://localhost:8080/survey', surveyData);
-                console.log('Ответ от сервера (create):', response.data);
                 if (response.data.message === 'Опрос успешно создан') {
                     // Получаем ID созданного опроса и загружаем связанные данные
                     alert('Опрос успешно создан!')
                     setIsWindowOpen(false);
                     const surveyId = response.data.id;
-                    console.log('Полученный surveyId:', surveyId);
                     if (surveyId) {
                         await fetchRelatedData(surveyId);
                     } else {
@@ -166,7 +151,6 @@ export default function Survey() {
         if (currentSurveyId) {
             try {
                 await axios.patch(`http://localhost:8080/survey/${currentSurveyId}/sample`, { sample_id: sampleId });
-                console.log('Выборка сохранена:', sampleId);
             } catch (err) {
                 console.error('Ошибка при сохранении выборки:', err);
             }
@@ -178,7 +162,6 @@ export default function Survey() {
         if (currentSurveyId) {
             try {
                 await axios.patch(`http://localhost:8080/survey/${currentSurveyId}/questionnaire`, { questionnaire_id: questionnaireId });
-                console.log('Анкета сохранена:', questionnaireId);
             } catch (err) {
                 console.error('Ошибка при сохранении анкеты:', err);
             }
@@ -190,7 +173,6 @@ export default function Survey() {
         if (currentSurveyId) {
             try {
                 await axios.patch(`http://localhost:8080/survey/${currentSurveyId}/route`, { route_id: routeId });
-                console.log('Маршрут сохранен:', routeId);
             } catch (err) {
                 console.error('Ошибка при сохранении маршрута:', err);
             }
@@ -381,7 +363,6 @@ export default function Survey() {
                             </div>
 
                             {/* Блоки выборок, анкет и маршрутов */}
-                            {console.log('Рендер: showRelatedBlocks =', showRelatedBlocks)}
                             {showRelatedBlocks && (
                                 <div className="related-blocks-container">
 

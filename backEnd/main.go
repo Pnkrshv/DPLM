@@ -178,7 +178,9 @@ func getAuth(c echo.Context) error {
 	data := new(loginData)
 
 	if err := c.Bind(data); err != nil {
-		return c.JSON(http.StatusBadRequest, echo.Map{"error": "Invalid request"})
+		return c.JSON(http.StatusBadRequest, echo.Map{
+			"error": "Invalid request",
+		})
 	}
 
 	var user UserData
@@ -543,26 +545,38 @@ func deleteRoute(c echo.Context) error {
 func createSurvey(c echo.Context) error {
 	survey := new(SurveyData)
 	if err := c.Bind(survey); err != nil {
-		return c.JSON(http.StatusBadRequest, echo.Map{"error": "Неверный формат данных"})
+		return c.JSON(http.StatusBadRequest, echo.Map{
+			"error": "Неверный формат данных",
+		})
 	}
 	survey.ID = uuid.NewString()
 	survey.CreatedAt = time.Now()
 	survey.UpdatedAt = time.Now()
 	survey.Status = "черновик"
 	if survey.Name == "" {
-		return c.JSON(http.StatusBadRequest, echo.Map{"error": "Название опроса обязательно"})
+		return c.JSON(http.StatusBadRequest, echo.Map{
+			"error": "Название опроса обязательно",
+		})
 	}
 	if err := db.Create(survey).Error; err != nil {
-		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Не удалось создать опрос"})
+		return c.JSON(http.StatusInternalServerError, echo.Map{
+			"error": "Не удалось создать опрос",
+		})
 	}
-	return c.JSON(http.StatusCreated, echo.Map{"id": survey.ID, "name": survey.Name, "message": "Опрос успешно создан"})
+	return c.JSON(http.StatusCreated, echo.Map{
+		"id":      survey.ID,
+		"name":    survey.Name,
+		"message": "Опрос успешно создан",
+	})
 }
 
 // Получение всех опросов:
 func getAllSurveys(c echo.Context) error {
 	var surveys []SurveyData
 	if err := db.Order("created_at DESC").Find(&surveys).Error; err != nil {
-		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Ошибка при получении опросов"})
+		return c.JSON(http.StatusInternalServerError, echo.Map{
+			"error": "Ошибка при получении опросов",
+		})
 	}
 	return c.JSON(http.StatusOK, surveys)
 }
@@ -572,22 +586,33 @@ func updateSurvey(c echo.Context) error {
 	id := c.Param("id")
 	survey := new(SurveyData)
 	if err := c.Bind(survey); err != nil {
-		return c.JSON(http.StatusBadRequest, echo.Map{"error": "Неверный формат данных"})
+		return c.JSON(http.StatusBadRequest, echo.Map{
+			"error": "Неверный формат данных",
+		})
 	}
 	survey.UpdatedAt = time.Now()
 	if err := db.Model(&SurveyData{}).Where("id = ?", id).Updates(survey).Error; err != nil {
-		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Не удалось обновить опрос"})
+		return c.JSON(http.StatusInternalServerError, echo.Map{
+			"error": "Не удалось обновить опрос",
+		})
 	}
-	return c.JSON(http.StatusOK, echo.Map{"id": id, "message": "Опрос успешно обновлен"})
+	return c.JSON(http.StatusOK, echo.Map{
+		"id":      id,
+		"message": "Опрос успешно обновлен",
+	})
 }
 
 // Удаление опроса:
 func deleteSurvey(c echo.Context) error {
 	id := c.Param("id")
 	if err := db.Delete(&SurveyData{}, "id = ?", id).Error; err != nil {
-		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Не удалось удалить опрос"})
+		return c.JSON(http.StatusInternalServerError, echo.Map{
+			"error": "Не удалось удалить опрос",
+		})
 	}
-	return c.JSON(http.StatusOK, echo.Map{"message": "Опрос успешно удален"})
+	return c.JSON(http.StatusOK, echo.Map{
+		"message": "Опрос успешно удален",
+	})
 }
 
 // Обновление выборки в опросе:
@@ -597,12 +622,20 @@ func updateSurveySample(c echo.Context) error {
 		SampleID string `json:"sample_id"`
 	})
 	if err := c.Bind(data); err != nil {
-		return c.JSON(http.StatusBadRequest, echo.Map{"error": "Неверный формат данных"})
+		return c.JSON(http.StatusBadRequest, echo.Map{
+			"error": "Неверный формат данных",
+		})
 	}
 	if err := db.Model(&SurveyData{}).Where("id = ?", id).Update("sample_id", data.SampleID).Error; err != nil {
-		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Не удалось обновить выборку"})
+		return c.JSON(http.StatusInternalServerError, echo.Map{
+			"error": "Не удалось обновить выборку",
+		})
 	}
-	return c.JSON(http.StatusOK, echo.Map{"id": id, "sample_id": data.SampleID, "message": "Выборка обновлена"})
+	return c.JSON(http.StatusOK, echo.Map{
+		"id":        id,
+		"sample_id": data.SampleID,
+		"message":   "Выборка обновлена",
+	})
 }
 
 // Обновление анкеты в опросе:
@@ -612,12 +645,20 @@ func updateSurveyQuestionnaire(c echo.Context) error {
 		QuestionnaireID string `json:"questionnaire_id"`
 	})
 	if err := c.Bind(data); err != nil {
-		return c.JSON(http.StatusBadRequest, echo.Map{"error": "Неверный формат данных"})
+		return c.JSON(http.StatusBadRequest, echo.Map{
+			"error": "Неверный формат данных",
+		})
 	}
 	if err := db.Model(&SurveyData{}).Where("id = ?", id).Update("questionnaire_id", data.QuestionnaireID).Error; err != nil {
-		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Не удалось обновить анкету"})
+		return c.JSON(http.StatusInternalServerError, echo.Map{
+			"error": "Не удалось обновить анкету",
+		})
 	}
-	return c.JSON(http.StatusOK, echo.Map{"id": id, "questionnaire_id": data.QuestionnaireID, "message": "Анкета обновлена"})
+	return c.JSON(http.StatusOK, echo.Map{
+		"id":               id,
+		"questionnaire_id": data.QuestionnaireID,
+		"message":          "Анкета обновлена",
+	})
 }
 
 // Обновление маршрута в опросе:
@@ -627,38 +668,58 @@ func updateSurveyRoute(c echo.Context) error {
 		RouteID string `json:"route_id"`
 	})
 	if err := c.Bind(data); err != nil {
-		return c.JSON(http.StatusBadRequest, echo.Map{"error": "Неверный формат данных"})
+		return c.JSON(http.StatusBadRequest, echo.Map{
+			"error": "Неверный формат данных",
+		})
 	}
 	if err := db.Model(&SurveyData{}).Where("id = ?", id).Update("route_id", data.RouteID).Error; err != nil {
-		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Не удалось обновить маршрут"})
+		return c.JSON(http.StatusInternalServerError, echo.Map{
+			"error": "Не удалось обновить маршрут",
+		})
 	}
-	return c.JSON(http.StatusOK, echo.Map{"id": id, "route_id": data.RouteID, "message": "Маршрут обновлен"})
+	return c.JSON(http.StatusOK, echo.Map{
+		"id":       id,
+		"route_id": data.RouteID,
+		"message":  "Маршрут обновлен",
+	})
 }
 
 // Создание анкеты:
 func createQuestionnaire(c echo.Context) error {
 	q := new(QuestionnaireData)
 	if err := c.Bind(q); err != nil {
-		return c.JSON(http.StatusBadRequest, echo.Map{"error": "Неверный формат данных"})
+		return c.JSON(http.StatusBadRequest, echo.Map{
+			"error": "Неверный формат данных",
+		})
 	}
 	q.ID = uuid.NewString()
 	q.CreatedAt = time.Now()
 	q.UpdatedAt = time.Now()
 	q.Status = "черновик"
 	if q.Name == "" {
-		return c.JSON(http.StatusBadRequest, echo.Map{"error": "Название анкеты обязательно"})
+		return c.JSON(http.StatusBadRequest, echo.Map{
+			"error": "Название анкеты обязательно",
+		})
 	}
 	if err := db.Create(q).Error; err != nil {
-		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Не удалось создать анкету"})
+		return c.JSON(http.StatusInternalServerError, echo.Map{
+			"error": "Не удалось создать анкету",
+		})
 	}
-	return c.JSON(http.StatusCreated, echo.Map{"id": q.ID, "name": q.Name, "message": "Анкета успешно создана"})
+	return c.JSON(http.StatusCreated, echo.Map{
+		"id":      q.ID,
+		"name":    q.Name,
+		"message": "Анкета успешно создана",
+	})
 }
 
 // Получение всех анкет:
 func getAllQuestionnaires(c echo.Context) error {
 	var questionnaires []QuestionnaireData
 	if err := db.Order("updated_at DESC").Find(&questionnaires).Error; err != nil {
-		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Ошибка при получении анкет"})
+		return c.JSON(http.StatusInternalServerError, echo.Map{
+			"error": "Ошибка при получении анкет",
+		})
 	}
 	return c.JSON(http.StatusOK, questionnaires)
 }
@@ -668,22 +729,33 @@ func updateQuestionnaire(c echo.Context) error {
 	id := c.Param("id")
 	q := new(QuestionnaireData)
 	if err := c.Bind(q); err != nil {
-		return c.JSON(http.StatusBadRequest, echo.Map{"error": "Неверный формат данных"})
+		return c.JSON(http.StatusBadRequest, echo.Map{
+			"error": "Неверный формат данных",
+		})
 	}
 	q.UpdatedAt = time.Now()
 	if err := db.Model(&QuestionnaireData{}).Where("id = ?", id).Updates(q).Error; err != nil {
-		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Не удалось обновить анкету"})
+		return c.JSON(http.StatusInternalServerError, echo.Map{
+			"error": "Не удалось обновить анкету",
+		})
 	}
-	return c.JSON(http.StatusOK, echo.Map{"id": id, "message": "Анкета успешно обновлена"})
+	return c.JSON(http.StatusOK, echo.Map{
+		"id":      id,
+		"message": "Анкета успешно обновлена",
+	})
 }
 
 // Удаление анкеты:
 func deleteQuestionnaire(c echo.Context) error {
 	id := c.Param("id")
 	if err := db.Delete(&QuestionnaireData{}, "id = ?", id).Error; err != nil {
-		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Не удалось удалить анкету"})
+		return c.JSON(http.StatusInternalServerError, echo.Map{
+			"error": "Не удалось удалить анкету",
+		})
 	}
-	return c.JSON(http.StatusOK, echo.Map{"message": "Анкета успешно удалена"})
+	return c.JSON(http.StatusOK, echo.Map{
+		"message": "Анкета успешно удалена",
+	})
 }
 
 func main() {
