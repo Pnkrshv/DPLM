@@ -19,6 +19,13 @@ export default function Survey() {
     const [manualInput, setManualInput] = useState(false);
     const [editingSurveyId, setEditingSurveyId] = useState(null);
 
+    // Пагинация
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 15; // количество опросов на странице
+    const totalPages = Math.ceil(surveys.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const currentSurveys = surveys.slice(startIndex, startIndex + itemsPerPage);
+
     // Состояния для блоков выборок, анкет и маршрутов
     const [showRelatedBlocks, setShowRelatedBlocks] = useState(false);
     const [currentSurveyId, setCurrentSurveyId] = useState(null);
@@ -26,13 +33,11 @@ export default function Survey() {
     // Данные для выборок
     const [samples, setSamples] = useState([]);
     const [selectedSample, setSelectedSample] = useState('');
-    const [isSampleWindowOpen, setIsSampleWindowOpen] = useState(false);
     const [isSampleSelectModalOpen, setIsSampleSelectModalOpen] = useState(false);
 
     // Данные для анкет
     const [questionnaires, setQuestionnaires] = useState([]);
     const [selectedQuestionnaire, setSelectedQuestionnaire] = useState('');
-    const [isQuestionnaireWindowOpen, setIsQuestionnaireWindowOpen] = useState(false);
     const [isQuestionnaireSelectModalOpen, setIsQuestionnaireSelectModalOpen] = useState(false);
 
     // Данные для маршрутов
@@ -45,6 +50,7 @@ export default function Survey() {
         try {
             const response = await axios.get('http://localhost:8080/surveys');
             setSurveys(Array.isArray(response.data) ? response.data : []);
+            setCurrentPage(1); // сбрасываем на первую страницу после обновления
         } catch (err) {
             console.error('Ошибка при загрузке опросов:', err);
             setSurveys([]);
@@ -87,7 +93,7 @@ export default function Survey() {
     // Загрузка связанных данных для опроса
     const fetchRelatedData = async (surveyId) => {
         setCurrentSurveyId(surveyId);
-        const results = await Promise.allSettled([fetchSamples(), fetchQuestionnaires(), fetchRoutes()]);
+        await Promise.allSettled([fetchSamples(), fetchQuestionnaires(), fetchRoutes()]);
         setShowRelatedBlocks(true);
     };
 
@@ -117,7 +123,6 @@ export default function Survey() {
                 // Обновление существующего опроса
                 response = await axios.put(`http://localhost:8080/survey/${editingSurveyId}`, surveyData);
                 if (response.data.message === 'Опрос успешно обновлен') {
-                    // Показываем уведомление и закрываем форму
                     alert('Опрос успешно обновлен!')
                     setIsWindowOpen(false);
                     await fetchRelatedData(editingSurveyId);
@@ -127,7 +132,6 @@ export default function Survey() {
                 // Создание нового опроса
                 response = await axios.post('http://localhost:8080/survey', surveyData);
                 if (response.data.message === 'Опрос успешно создан') {
-                    // Получаем ID созданного опроса и загружаем связанные данные
                     alert('Опрос успешно создан!')
                     setIsWindowOpen(false);
                     const surveyId = response.data.id;
@@ -203,12 +207,10 @@ export default function Survey() {
         setKoir(survey.koir || false);
         setExitPoll(survey.exit_poll || false);
         setManualInput(survey.manual_input || false);
-        // Устанавливаем выбранные значения из опроса
         setSelectedSample(survey.sample_id || '');
         setSelectedQuestionnaire(survey.questionnaire_id || '');
         setSelectedRoute(survey.route_id || '');
         setIsWindowOpen(true);
-        // Загружаем связанные данные и показываем блоки
         await fetchRelatedData(survey.id);
     };
 
@@ -242,6 +244,11 @@ export default function Survey() {
     useEffect(() => {
         fetchSurveys();
     }, []);
+
+    // Сброс страницы при изменении списка опросов (например, после удаления/добавления)
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [surveys]);
 
     return (
         <>
@@ -362,12 +369,9 @@ export default function Survey() {
                                 <label htmlFor="checkbox-switcher4" className="options-switcher-label"></label>
                             </div>
 
-                            {/* Блоки выборок, анкет и маршрутов */}
                             {showRelatedBlocks && (
                                 <div className="related-blocks-container">
-
                                     <div className="related-blocks">
-                                        {/* Блок Выборки */}
                                         <div className="related-block-item">
                                             <div className="block-header">
                                                 <p>Выборки</p>
@@ -379,7 +383,6 @@ export default function Survey() {
                                                     </div>
                                                 )}
                                             </div>
-
                                             <div className="block-content">
                                                 <button
                                                     className="block-action-btn"
@@ -391,7 +394,6 @@ export default function Survey() {
                                             </div>
                                         </div>
 
-                                        {/* Блок Анкеты */}
                                         <div className="related-block-item">
                                             <div className="block-header">
                                                 <p>Анкеты</p>
@@ -403,7 +405,6 @@ export default function Survey() {
                                                     </div>
                                                 )}
                                             </div>
-
                                             <div className="block-content">
                                                 <button
                                                     className="block-action-btn"
@@ -415,7 +416,6 @@ export default function Survey() {
                                             </div>
                                         </div>
 
-                                        {/* Блок Маршруты */}
                                         <div className="related-block-item">
                                             <div className="block-header">
                                                 <p>Маршруты</p>
@@ -427,7 +427,6 @@ export default function Survey() {
                                                     </div>
                                                 )}
                                             </div>
-
                                             <div className="block-content">
                                                 <button
                                                     className="block-action-btn"
@@ -446,7 +445,6 @@ export default function Survey() {
                                 Сохранить
                             </button>
                         </form>
-
                     </div>
                 </>
             )}
@@ -683,6 +681,7 @@ export default function Survey() {
                 </button>
             </div>
 
+            {/* Единая таблица с пагинацией */}
             <div className="survey-table">
                 <table>
                     <thead>
@@ -696,8 +695,8 @@ export default function Survey() {
                         </tr>
                     </thead>
                     <tbody>
-                        {surveys && surveys.length > 0 ? (
-                            surveys.map((survey) => (
+                        {currentSurveys.length > 0 ? (
+                            currentSurveys.map((survey) => (
                                 <tr key={survey.id}>
                                     <td
                                         className="survey-name-link"
@@ -732,10 +731,7 @@ export default function Survey() {
                                             : '-'
                                         }
                                     </td>
-                                    <td className='td-delete' title='Удалить' onClick={(e) => {
-                                        e.stopPropagation();
-                                        deleteSurvey(survey.id);
-                                    }}>
+                                    <td className='td-delete' title='Удалить'>
                                         <button
                                             className="delete-survey-btn"
                                             onClick={(e) => {
@@ -759,6 +755,23 @@ export default function Survey() {
                         )}
                     </tbody>
                 </table>
+                {surveys.length > itemsPerPage && (
+                    <div className="pagination">
+                        <button
+                            onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
+                            disabled={currentPage === 1}
+                        >
+                            Предыдущая
+                        </button>
+                        <span>Страница {currentPage} из {totalPages}</span>
+                        <button
+                            onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
+                            disabled={currentPage === totalPages}
+                        >
+                            Следующая
+                        </button>
+                    </div>
+                )}
             </div>
         </>
     )
