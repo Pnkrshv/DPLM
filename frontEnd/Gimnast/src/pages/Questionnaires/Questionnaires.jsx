@@ -14,6 +14,14 @@ export default function Questionnaires() {
   const [selectedCities, setSelectedCities] = useState({});
   const districtRefs = useRef({});
 
+  // Пагинация для таблицы анкет
+  const [questionnaireList, setQuestionnaireList] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 15;
+  const totalPages = Math.ceil(questionnaireList.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const currentQuestionnaires = questionnaireList.slice(startIndex, startIndex + itemsPerPage);
+
   useEffect(() => {
     if (cities && Object.keys(cities).length > 0) {
       setSelectedCities({});
@@ -107,6 +115,28 @@ export default function Questionnaires() {
     setIsModalOpen(false);
     setIsSettingsOpen(true);
   };
+
+  // Загрузка анкет из БД
+  const fetchQuestionnaires = async () => {
+    try {
+      const response = await axios.get('http://localhost:8080/questionnaires');
+      const data = Array.isArray(response.data) ? response.data : [];
+      setQuestionnaireList(data);
+      setCurrentPage(1);
+    } catch (err) {
+      console.error('Ошибка при загрузке анкет:', err);
+      setQuestionnaireList([]);
+    }
+  };
+
+  useEffect(() => {
+    fetchQuestionnaires();
+  }, []);
+
+  // Сброс страницы при изменении списка анкет
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [questionnaireList]);
 
   return (
     <>
@@ -435,8 +465,47 @@ export default function Questionnaires() {
               <th> </th>
             </tr>
           </thead>
-          <tbody></tbody>
+          <tbody>
+            {currentQuestionnaires.length > 0 ? (
+              currentQuestionnaires.map((questionnaire) => (
+                <tr key={questionnaire.id}>
+                  <td>{questionnaire.name || 'Без названия'}</td>
+                  <td>{questionnaire.code || '-'}</td>
+                  <td>
+                    {questionnaire.created_at
+                      ? new Date(questionnaire.created_at).toLocaleDateString('ru-RU')
+                      : '-'
+                    }
+                  </td>
+                  <td></td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="4" style={{ textAlign: 'center', padding: '20px', color: '#999' }}>
+                  Нет доступных анкет
+                </td>
+              </tr>
+            )}
+          </tbody>
         </table>
+        {questionnaireList.length > itemsPerPage && (
+          <div className="pagination">
+            <button
+              onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
+              disabled={currentPage === 1}
+            >
+              Предыдущая
+            </button>
+            <span>Страница {currentPage} из {totalPages}</span>
+            <button
+              onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
+              disabled={currentPage === totalPages}
+            >
+              Следующая
+            </button>
+          </div>
+        )}
       </div>
     </>
   );

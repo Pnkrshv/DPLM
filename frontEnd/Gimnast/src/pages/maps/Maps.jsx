@@ -31,6 +31,20 @@ export default function Maps() {
     const [editingRouteId, setEditingRouteId] = useState(null);
     const [currentSavedCities, setCurrentSavedCities] = useState([]);
 
+    // Пагинация для таблицы маршрутов
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 15;
+    const totalPages = Math.ceil(routes.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const currentRoutes = routes.slice(startIndex, startIndex + itemsPerPage);
+
+    // Пагинация для таблицы городов в модальном окне
+    const [citiesPage, setCitiesPage] = useState(1);
+    const citiesPerPage = 15;
+    const totalCitiesPages = Math.ceil(currentSavedCities.length / citiesPerPage);
+    const citiesStartIndex = (citiesPage - 1) * citiesPerPage;
+    const currentCities = currentSavedCities.slice(citiesStartIndex, citiesStartIndex + citiesPerPage);
+
     useEffect(() => {
         const fetchRegions = async () => {
             try {
@@ -343,6 +357,7 @@ export default function Maps() {
         try {
             const response = await axios.get("http://localhost:8080/routes");
             setRoutes(response.data);
+            setCurrentPage(1);
         } catch (err) {
             console.error("Ошибка при загрузке маршрутов", err);
         }
@@ -392,6 +407,11 @@ export default function Maps() {
     useEffect(() => {
         fetchRoutes();
     }, []);
+
+    // Сброс страницы городов при изменении списка городов
+    useEffect(() => {
+        setCitiesPage(1);
+    }, [currentSavedCities]);
 
     return (
         <>
@@ -922,32 +942,57 @@ export default function Maps() {
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                {currentSavedCities.map((item, index) => (
-                                                    <tr key={index}>
-                                                        <td>{index + 1}</td>
-                                                        <td>{item.city}</td>
-                                                        <td>{item.population || '-'}</td>
-                                                        <td>
-                                                            <label className="city-property-label">
-                                                                <input type="checkbox" className="city-property-check" />
-                                                                Моногород
-                                                            </label>
-                                                        </td>
-                                                        <td className="td-delete">
-                                                            <button
-                                                                className="remove-city-btn"
-                                                                onClick={() => removeCityFromRoute(index)}
-                                                                title="Удалить город"
-                                                            >
-                                                                <svg width="18px" height="18px" viewBox="0 0 24 24" fill="none">
-                                                                    <path d="M19 7L18.1327 19.1425C18.0579 20.1891 17.187 21 16.1378 21H7.86224C6.81296 21 5.94208 20.1891 5.86732 19.1425L5 7M10 11V17M14 11V17M15 7V4C15 3.44772 14.5523 3 14 3H10C9.44772 3 9 3.44772 9 4V7M4 7H20" stroke="#d32f2f" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                                                </svg>
-                                                            </button>
+                                                {currentCities.length > 0 ? (
+                                                    currentCities.map((item, index) => (
+                                                        <tr key={index}>
+                                                            <td>{citiesStartIndex + index + 1}</td>
+                                                            <td>{item.city}</td>
+                                                            <td>{item.population || '-'}</td>
+                                                            <td>
+                                                                <label className="city-property-label">
+                                                                    <input type="checkbox" className="city-property-check" />
+                                                                    Моногород
+                                                                </label>
+                                                            </td>
+                                                            <td className="td-delete">
+                                                                <button
+                                                                    className="remove-city-btn"
+                                                                    onClick={() => removeCityFromRoute(citiesStartIndex + index)}
+                                                                    title="Удалить город"
+                                                                >
+                                                                    <svg width="18px" height="18px" viewBox="0 0 24 24" fill="none">
+                                                                        <path d="M19 7L18.1327 19.1425C18.0579 20.1891 17.187 21 16.1378 21H7.86224C6.81296 21 5.94208 20.1891 5.86732 19.1425L5 7M10 11V17M14 11V17M15 7V4C15 3.44772 14.5523 3 14 3H10C9.44772 3 9 3.44772 9 4V7M4 7H20" stroke="#d32f2f" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                                                    </svg>
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                    ))
+                                                ) : (
+                                                    <tr>
+                                                        <td colSpan="5" style={{ textAlign: 'center', padding: '20px', color: '#999' }}>
+                                                            Нет добавленных городов
                                                         </td>
                                                     </tr>
-                                                ))}
+                                                )}
                                             </tbody>
                                         </table>
+                                        {currentSavedCities.length > citiesPerPage && (
+                                            <div className="pagination">
+                                                <button
+                                                    onClick={() => setCitiesPage(p => Math.max(p - 1, 1))}
+                                                    disabled={citiesPage === 1}
+                                                >
+                                                    Предыдущая
+                                                </button>
+                                                <span>Страница {citiesPage} из {totalCitiesPages}</span>
+                                                <button
+                                                    onClick={() => setCitiesPage(p => Math.min(p + 1, totalCitiesPages))}
+                                                    disabled={citiesPage === totalCitiesPages}
+                                                >
+                                                    Следующая
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
 
@@ -980,32 +1025,57 @@ export default function Maps() {
                         </tr>
                     </thead>
                     <tbody>
-                        {routes.map((route) => (
-                            <tr key={route.id}>
-                                <td
-                                    className="route-name-link"
-                                    title="Изменить"
-                                    onClick={() => loadRouteForEdit(route.id)}
-                                >
-                                    {route.name}
-                                </td>
-                                <td>{route.status}</td>
-                                <td>{route.cities_count}</td>
-                                <td>{new Date(route.created_at).toLocaleDateString()}</td>
-                                <td className="td-delete">
-                                    <button
-                                        className="delete-route-btn"
-                                        onClick={() => deleteRoute(route.id)}
+                        {currentRoutes.length > 0 ? (
+                            currentRoutes.map((route) => (
+                                <tr key={route.id}>
+                                    <td
+                                        className="route-name-link"
+                                        title="Изменить"
+                                        onClick={() => loadRouteForEdit(route.id)}
                                     >
-                                        <svg width="20px" height="20px" viewBox="0 0 24 24" fill="none">
-                                            <path d="M19 7L18.1327 19.1425C18.0579 20.1891 17.187 21 16.1378 21H7.86224C6.81296 21 5.94208 20.1891 5.86732 19.1425L5 7M10 11V17M14 11V17M15 7V4C15 3.44772 14.5523 3 14 3H10C9.44772 3 9 3.44772 9 4V7M4 7H20" stroke="#d32f2f" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                        </svg>
-                                    </button>
+                                        {route.name}
+                                    </td>
+                                    <td>{route.status}</td>
+                                    <td>{route.cities_count}</td>
+                                    <td>{new Date(route.created_at).toLocaleDateString()}</td>
+                                    <td className="td-delete">
+                                        <button
+                                            className="delete-route-btn"
+                                            onClick={() => deleteRoute(route.id)}
+                                        >
+                                            <svg width="20px" height="20px" viewBox="0 0 24 24" fill="none">
+                                                <path d="M19 7L18.1327 19.1425C18.0579 20.1891 17.187 21 16.1378 21H7.86224C6.81296 21 5.94208 20.1891 5.86732 19.1425L5 7M10 11V17M14 11V17M15 7V4C15 3.44772 14.5523 3 14 3H10C9.44772 3 9 3.44772 9 4V7M4 7H20" stroke="#d32f2f" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                            </svg>
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))
+                        ) : (
+                            <tr>
+                                <td colSpan="5" style={{ textAlign: 'center', padding: '20px', color: '#999' }}>
+                                    Нет доступных маршрутов
                                 </td>
                             </tr>
-                        ))}
+                        )}
                     </tbody>
                 </table>
+                {routes.length > itemsPerPage && (
+                    <div className="pagination">
+                        <button
+                            onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
+                            disabled={currentPage === 1}
+                        >
+                            Предыдущая
+                        </button>
+                        <span>Страница {currentPage} из {totalPages}</span>
+                        <button
+                            onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
+                            disabled={currentPage === totalPages}
+                        >
+                            Следующая
+                        </button>
+                    </div>
+                )}
             </div>
         </>
     );

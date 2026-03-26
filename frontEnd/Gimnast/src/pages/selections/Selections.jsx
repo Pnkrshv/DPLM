@@ -24,6 +24,13 @@ export default function Selections() {
   const [currentSample, setCurrentSample] = useState(null);
   const [editingSampleId, setEditingSampleId] = useState(null);
 
+  // Пагинация для таблицы выборок
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 15;
+  const totalPages = Math.ceil(samples.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const currentSamples = samples.slice(startIndex, startIndex + itemsPerPage);
+
   // Состояния для жёстких квот
   const [hardQuotaRows, setHardQuotaRows] = useState("");
   const [hardQuotaCols, setHardQuotaCols] = useState("");
@@ -257,6 +264,7 @@ export default function Selections() {
     try {
       const response = await axios.get("http://localhost:8080/samples");
       setSamples(response.data);
+      setCurrentPage(1);
     } catch (err) {
       console.error("Ошибка при загрузке выборок", err);
     }
@@ -862,64 +870,89 @@ export default function Selections() {
             </tr>
           </thead>
           <tbody>
-            {samples.map((sample) => {
-              let hardQuotasData = {};
-              let softQuotasData = {};
-              try {
-                hardQuotasData = JSON.parse(sample.hard_quotas);
-                softQuotasData = JSON.parse(sample.soft_quotas);
-              } catch (e) {
-                console.error("Ошибка парсинга квот", e);
-              }
+            {currentSamples.length > 0 ? (
+              currentSamples.map((sample) => {
+                let hardQuotasData = {};
+                let softQuotasData = {};
+                try {
+                  hardQuotasData = JSON.parse(sample.hard_quotas);
+                  softQuotasData = JSON.parse(sample.soft_quotas);
+                } catch (e) {
+                  console.error("Ошибка парсинга квот", e);
+                }
 
-              const hardQuotasCount = hardQuotasData.selectedCities
-                ? Object.values(hardQuotasData.selectedCities).reduce(
-                  (acc, district) => acc + Object.keys(district || {}).length,
-                  0
-                )
-                : 0;
+                const hardQuotasCount = hardQuotasData.selectedCities
+                  ? Object.values(hardQuotasData.selectedCities).reduce(
+                    (acc, district) => acc + Object.keys(district || {}).length,
+                    0
+                  )
+                  : 0;
 
-              const softQuotasCount = softQuotasData.enabled ? "Есть" : "Нет";
+                const softQuotasCount = softQuotasData.enabled ? "Есть" : "Нет";
 
-              return (
-                <tr key={sample.id}>
-                  <td
-                    className="sample-name-link"
-                    onClick={() => loadSampleForEdit(sample.id)}
-                    title="Изменить"
-                  >
-                    {sample.name}
-                  </td>
-                  <td>{hardQuotasCount}</td>
-                  <td>{softQuotasCount}</td>
-                  <td>{sample.respondents_count}</td>
-                  <td>{sample.sample_type}</td>
-                  <td>{new Date(sample.updated_at).toLocaleDateString()}</td>
-                  <td className="td-delete">
-                    <button
-                      className="delete-sample-btn"
-                      title="Удалить"
-                      onClick={async () => {
-                        if (confirm("Вы уверены, что хотите удалить эту выборку?")) {
-                          try {
-                            await axios.delete(`http://localhost:8080/sample/${sample.id}`);
-                            fetchSamples();
-                          } catch (err) {
-                            console.error("Ошибка при удалении", err);
-                          }
-                        }
-                      }}
+                return (
+                  <tr key={sample.id}>
+                    <td
+                      className="sample-name-link"
+                      onClick={() => loadSampleForEdit(sample.id)}
+                      title="Изменить"
                     >
-                      <svg width="22px" height="22px" viewBox="0 0 24 24" fill="none">
-                        <path d="M19 7L18.1327 19.1425C18.0579 20.1891 17.187 21 16.1378 21H7.86224C6.81296 21 5.94208 20.1891 5.86732 19.1425L5 7M10 11V17M14 11V17M15 7V4C15 3.44772 14.5523 3 14 3H10C9.44772 3 9 3.44772 9 4V7M4 7H20" stroke="#d32f2f" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    </button>
-                  </td>
-                </tr>
-              );
-            })}
+                      {sample.name}
+                    </td>
+                    <td>{hardQuotasCount}</td>
+                    <td>{softQuotasCount}</td>
+                    <td>{sample.respondents_count}</td>
+                    <td>{sample.sample_type}</td>
+                    <td>{new Date(sample.updated_at).toLocaleDateString()}</td>
+                    <td className="td-delete">
+                      <button
+                        className="delete-sample-btn"
+                        title="Удалить"
+                        onClick={async () => {
+                          if (confirm("Вы уверены, что хотите удалить эту выборку?")) {
+                            try {
+                              await axios.delete(`http://localhost:8080/sample/${sample.id}`);
+                              fetchSamples();
+                            } catch (err) {
+                              console.error("Ошибка при удалении", err);
+                            }
+                          }
+                        }}
+                      >
+                        <svg width="22px" height="22px" viewBox="0 0 24 24" fill="none">
+                          <path d="M19 7L18.1327 19.1425C18.0579 20.1891 17.187 21 16.1378 21H7.86224C6.81296 21 5.94208 20.1891 5.86732 19.1425L5 7M10 11V17M14 11V17M15 7V4C15 3.44772 14.5523 3 14 3H10C9.44772 3 9 3.44772 9 4V7M4 7H20" stroke="#d32f2f" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })
+            ) : (
+              <tr>
+                <td colSpan="7" style={{ textAlign: 'center', padding: '20px', color: '#999' }}>
+                  Нет доступных выборок
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
+        {samples.length > itemsPerPage && (
+          <div className="pagination">
+            <button
+              onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
+              disabled={currentPage === 1}
+            >
+              Предыдущая
+            </button>
+            <span>Страница {currentPage} из {totalPages}</span>
+            <button
+              onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
+              disabled={currentPage === totalPages}
+            >
+              Следующая
+            </button>
+          </div>
+        )}
       </div>
     </>
   );
