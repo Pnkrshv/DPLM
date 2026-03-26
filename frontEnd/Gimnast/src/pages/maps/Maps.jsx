@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import "./Maps.css";
 import axios from "axios";
 import MapComponent from "./MapComponent";
@@ -30,6 +30,9 @@ export default function Maps() {
     const [routes, setRoutes] = useState([]);
     const [editingRouteId, setEditingRouteId] = useState(null);
     const [currentSavedCities, setCurrentSavedCities] = useState([]);
+    // Состояния для выбора городов в таблице и фильтрации
+    const [citySelection, setCitySelection] = useState(new Set()); // хранит ключи "district|city"
+    const [filterMode, setFilterMode] = useState('all'); // 'all', 'selected', 'unselected'
 
     // Пагинация для таблицы маршрутов
     const [currentPage, setCurrentPage] = useState(1);
@@ -38,12 +41,27 @@ export default function Maps() {
     const startIndex = (currentPage - 1) * itemsPerPage;
     const currentRoutes = routes.slice(startIndex, startIndex + itemsPerPage);
 
+    const filteredCities = useMemo(() => {
+        if (filterMode === 'all') return currentSavedCities;
+        if (filterMode === 'selected') {
+            return currentSavedCities.filter(city =>
+                citySelection.has(`${city.district}|${city.city}`)
+            );
+        }
+        if (filterMode === 'unselected') {
+            return currentSavedCities.filter(city =>
+                !citySelection.has(`${city.district}|${city.city}`)
+            );
+        }
+        return currentSavedCities;
+    }, [currentSavedCities, citySelection, filterMode]);
+
     // Пагинация для таблицы городов в модальном окне
     const [citiesPage, setCitiesPage] = useState(1);
     const citiesPerPage = 15;
-    const totalCitiesPages = Math.ceil(currentSavedCities.length / citiesPerPage);
+    const totalCitiesPages = Math.ceil(filteredCities.length / citiesPerPage);
     const citiesStartIndex = (citiesPage - 1) * citiesPerPage;
-    const currentCities = currentSavedCities.slice(citiesStartIndex, citiesStartIndex + citiesPerPage);
+    const currentCities = filteredCities.slice(citiesStartIndex, citiesStartIndex + citiesPerPage);
 
     useEffect(() => {
         const fetchRegions = async () => {
@@ -258,7 +276,7 @@ export default function Maps() {
         return result;
     };
 
-    const groupedCities = currentSavedCities.reduce((acc, item) => {
+    const groupedCities = filteredCities.reduce((acc, item) => {
         if (!acc[item.district]) acc[item.district] = [];
         acc[item.district].push(item.city);
         return acc;
@@ -296,6 +314,8 @@ export default function Maps() {
         setSelectedDistrict("");
         setMapPosition([55.753960, 37.620393]);
         setIsAddWindowOpen(false);
+        setCurrentSavedCities((prev) => [...prev, newCity]);
+        setCitiesPage(1);
     };
 
     const handleSaveRoute = async () => {
@@ -401,7 +421,7 @@ export default function Maps() {
 
     const removeCityFromRoute = (index) => {
         setCurrentSavedCities((prev) => prev.filter((_, i) => i !== index));
-        setSavedCities((prev) => prev.filter((_, i) => i !== index));
+        setCitiesPage(1);
     };
 
     useEffect(() => {
@@ -412,6 +432,35 @@ export default function Maps() {
     useEffect(() => {
         setCitiesPage(1);
     }, [currentSavedCities]);
+
+
+
+    useEffect(() => {
+        // Удаляем ключи, которые не соответствуют ни одному городу в currentSavedCities
+        const validKeys = new Set(currentSavedCities.map(c => `${c.district}|${c.city}`));
+        setCitySelection(prev => {
+            const newSet = new Set();
+            for (let key of prev) {
+                if (validKeys.has(key)) newSet.add(key);
+            }
+            return newSet;
+        });
+    }, [currentSavedCities]);
+
+    const handleFilterAll = () => {
+        setFilterMode('all');
+        setCitiesPage(1);
+    };
+
+    const handleFilterSelected = () => {
+        setFilterMode('selected');
+        setCitiesPage(1);
+    };
+
+    const handleFilterUnselected = () => {
+        setFilterMode('unselected');
+        setCitiesPage(1);
+    };
 
     return (
         <>
@@ -570,7 +619,21 @@ export default function Maps() {
                                 </div>
                                 <div className="form-monotown">
                                     <label>Моногород</label>
-                                    <input type="checkbox" id="checkbox-switcher" className="options-switcher" />
+                                    <input
+                                        type="checkbox"
+                                        id={`modal-map-check-${citiesStartIndex + index}`}
+                                        className="options-switcher"
+                                        checked={citySelection.has(`${item.district}|${item.city}`)}
+                                        onChange={() => {
+                                            const key = `${item.district}|${item.city}`;
+                                            setCitySelection(prev => {
+                                                const newSet = new Set(prev);
+                                                if (newSet.has(key)) newSet.delete(key);
+                                                else newSet.add(key);
+                                                return newSet;
+                                            });
+                                        }}
+                                    />
                                     <label htmlFor="checkbox-switcher" className="options-switcher-label"></label>
                                 </div>
                                 <div className="form-buttons">
@@ -880,7 +943,7 @@ export default function Maps() {
                             <div className="modal-map-body">
                                 <div className="modal-map-cities">
                                     <div className="all-cities">
-                                        {currentSavedCities.length === 0 ? <p>Нет выбранных городов</p> : <p>Всего: {currentSavedCities.length}</p>}
+                                        {filteredCities.length === 0 ? <p>Нет выбранных городов</p> : <p>Всего: {filteredCities.length}</p>}
                                     </div>
                                     {Object.entries(groupedCities).map(([district, cities]) => (
                                         <div key={district} className="modal-group">
@@ -905,9 +968,11 @@ export default function Maps() {
                                 <div className="main-modal-map">
                                     <div className="modal-map-buttons">
                                         <div className="table-buttons">
-                                            <button>Все</button>
-                                            <button>Выбранные</button>
-                                            <button>Невыбранные</button>
+                                            <div className="table-buttons">
+                                                <button onClick={handleFilterAll}>Все</button>
+                                                <button onClick={handleFilterSelected}>Выбранные</button>
+                                                <button onClick={handleFilterUnselected}>Невыбранные</button>
+                                            </div>
                                         </div>
 
                                         <div className="settings-buttons">
@@ -949,8 +1014,22 @@ export default function Maps() {
                                                         <tr key={index}>
                                                             <td>
                                                                 <div className="table-checkbox">
-                                                                    <input type="checkbox" id={`modal-map-check-${index}`} className="options-switcher" />
-                                                                    <label htmlFor={`modal-map-check-${index}`} className="options-switcher-label"></label>
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        id={`modal-map-check-${citiesStartIndex + index}`}
+                                                                        className="options-switcher"
+                                                                        checked={citySelection.has(`${item.district}|${item.city}`)}
+                                                                        onChange={() => {
+                                                                            const key = `${item.district}|${item.city}`;
+                                                                            setCitySelection(prev => {
+                                                                                const newSet = new Set(prev);
+                                                                                if (newSet.has(key)) newSet.delete(key);
+                                                                                else newSet.add(key);
+                                                                                return newSet;
+                                                                            });
+                                                                        }}
+                                                                    />
+                                                                    <label htmlFor={`modal-map-check-${citiesStartIndex + index}`} className="options-switcher-label"></label>
                                                                 </div>
                                                             </td>
                                                             <td>{item.city}</td>
