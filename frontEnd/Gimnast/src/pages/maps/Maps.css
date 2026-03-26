@@ -711,6 +711,13 @@
     }
 }
 
+.table-checkbox {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+}
+
 /* Пагинация */
 .pagination {
     display: flex;

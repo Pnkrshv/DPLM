@@ -934,7 +934,9 @@ export default function Maps() {
                                         <table>
                                             <thead>
                                                 <tr>
-                                                    <th>№</th>
+                                                    <th>
+                                                        <p>{currentCities.length}</p>
+                                                    </th>
                                                     <th>Населенный пункт</th>
                                                     <th>Численность населения</th>
                                                     <th>Свойства</th>
@@ -945,7 +947,12 @@ export default function Maps() {
                                                 {currentCities.length > 0 ? (
                                                     currentCities.map((item, index) => (
                                                         <tr key={index}>
-                                                            <td>{citiesStartIndex + index + 1}</td>
+                                                            <td>
+                                                                <div className="table-checkbox">
+                                                                    <input type="checkbox" id={`modal-map-check-${index}`} className="options-switcher" />
+                                                                    <label htmlFor={`modal-map-check-${index}`} className="options-switcher-label"></label>
+                                                                </div>
+                                                            </td>
                                                             <td>{item.city}</td>
                                                             <td>{item.population || '-'}</td>
                                                             <td>
