@@ -1000,7 +1000,7 @@ export default function Maps() {
                                             <thead>
                                                 <tr>
                                                     <th>
-                                                        <p>{currentCities.length}</p>
+                                                        <p>{filteredCities.length}</p>
                                                     </th>
                                                     <th>Населенный пункт</th>
                                                     <th>Численность населения</th>
