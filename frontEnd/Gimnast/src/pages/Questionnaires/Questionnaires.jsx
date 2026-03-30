@@ -14,6 +14,13 @@ export default function Questionnaires() {
   const [selectedCities, setSelectedCities] = useState({});
   const [questionMenuOpen, setQuestionMenuOpen] = useState(false);
   const [questionMenuPosition, setQuestionMenuPosition] = useState({ x: 0, y: 0 });
+  const [isQuestionFormOpen, setIsQuestionFormOpen] = useState(false);
+  const [currentQuestionType, setCurrentQuestionType] = useState(null);
+  const [questionData, setQuestionData] = useState({ text: '', explanation: '', answers: [] });
+  const [answerMenuOpen, setAnswerMenuOpen] = useState(false);
+  const [answerMenuPosition, setAnswerMenuPosition] = useState({ x: 0, y: 0 });
+  const [questions, setQuestions] = useState([]);
+  const [currentQuestionnaire, setCurrentQuestionnaire] = useState(null);
   const districtRefs = useRef({});
 
   // Пагинация для таблицы анкет
@@ -127,9 +134,94 @@ export default function Questionnaires() {
   };
 
   const handleQuestionTypeSelect = (type) => {
-    // Здесь будет логика добавления вопроса выбранного типа
-    console.log('Выбран тип вопроса:', type);
+    setCurrentQuestionType(type);
+    setQuestionData({ text: '', explanation: '', answers: [] });
     setQuestionMenuOpen(false);
+    setIsQuestionFormOpen(true);
+  };
+
+  const handleAddAnswerClick = (e) => {
+    const rect = e.target.getBoundingClientRect();
+    setAnswerMenuPosition({
+      x: rect.left,
+      y: rect.bottom + 5
+    });
+    setAnswerMenuOpen(true);
+  };
+
+  const handleAnswerTypeSelect = (answerType) => {
+    const newAnswer = {
+      id: Date.now(),
+      type: answerType,
+      text: answerType === 'text' || answerType === 'other' ? '' : getAnswerLabel(answerType)
+    };
+    setQuestionData(prev => ({
+      ...prev,
+      answers: [...prev.answers, newAnswer]
+    }));
+    setAnswerMenuOpen(false);
+  };
+
+  const getAnswerLabel = (type) => {
+    const labels = {
+      'text': '',
+      'other': '',
+      'no_answer': 'Затрудняюсь ответить',
+      'refuse': 'Отказываюсь отвечать',
+      'agree_disagree': 'Согласен;Не согласен',
+      'like_dislike': 'Нравится;Не нравится'
+    };
+    return labels[type] || type;
+  };
+
+  const getQuestionTypeLabel = (type) => {
+    const labels = {
+      'open': 'Открытый',
+      'closed': 'Закрытый',
+      'mixed': 'Смешанный',
+      'scale': 'Шкальный',
+      'dichotomous': 'Дихотомический'
+    };
+    return labels[type] || type;
+  };
+
+  const handleAnswerTextChange = (answerId, newText) => {
+    setQuestionData(prev => ({
+      ...prev,
+      answers: prev.answers.map(answer =>
+        answer.id === answerId ? { ...answer, text: newText } : answer
+      )
+    }));
+  };
+
+  const handleRemoveAnswer = (answerId) => {
+    setQuestionData(prev => ({
+      ...prev,
+      answers: prev.answers.filter(answer => answer.id !== answerId)
+    }));
+  };
+
+  const handleSaveQuestion = () => {
+    if (!questionData.text.trim()) {
+      alert('Введите текст вопроса');
+      return;
+    }
+
+    const newQuestion = {
+      id: Date.now(),
+      type: currentQuestionType,
+      text: questionData.text,
+      explanation: questionData.explanation,
+      answers: [...questionData.answers]
+    };
+
+    setQuestions(prev => [...prev, newQuestion]);
+    setIsQuestionFormOpen(false);
+    setQuestionData({ text: '', explanation: '', answers: [] });
+  };
+
+  const handleRemoveQuestion = (questionId) => {
+    setQuestions(prev => prev.filter(q => q.id !== questionId));
   };
 
   const questionTypes = [
@@ -138,6 +230,15 @@ export default function Questionnaires() {
     { id: 'mixed', label: 'Смешанный' },
     { id: 'scale', label: 'Шкальный' },
     { id: 'dichotomous', label: 'Дихотомический' }
+  ];
+
+  const answerTypes = [
+    { id: 'text', label: 'Текст' },
+    { id: 'no_answer', label: 'Затрудняюсь ответить' },
+    { id: 'refuse', label: 'Отказываюсь отвечать' },
+    { id: 'other', label: 'Другое' },
+    { id: 'agree_disagree', label: 'Согласен;Не согласен' },
+    { id: 'like_dislike', label: 'Нравится;Не нравится' }
   ];
 
   // Загрузка анкет из БД
@@ -416,7 +517,46 @@ export default function Questionnaires() {
                           <div className="dop-button"><button><svg width="64px" height="64px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <circle cx="18" cy="12" r="1.5" transform="rotate(90 18 12)" fill="#080341"></circle> <circle cx="12" cy="12" r="1.5" transform="rotate(90 12 12)" fill="#080341"></circle> <circle cx="6" cy="12" r="1.5" transform="rotate(90 6 12)" fill="#080341"></circle> </g></svg></button></div>
                         </div>
                       </div>
-                      <textarea className="block-text-area" placeholder="Добавьте вопросы"></textarea>
+
+                      {questions.length === 0 ? (
+                        <div className="block-empty-placeholder">Добавьте вопросы</div>
+                      ) : (
+                        <div className="questions-list">
+                          {questions.map((question) => (
+                            <div key={question.id} className="question-item">
+                              <div className="question-item-header">
+                                <span className="question-type-badge">{getQuestionTypeLabel(question.type)}</span>
+                                <button
+                                  className="remove-question-btn"
+                                  onClick={() => handleRemoveQuestion(question.id)}
+                                >
+                                  <svg width="18px" height="18px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M7 7.00006L17 17.0001M7 17.0001L17 7.00006" stroke="#ff4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+                                  </svg>
+                                </button>
+                              </div>
+                              <div className="question-item-text">{question.text}</div>
+                              {question.explanation && (
+                                <div className="question-item-explanation">
+                                  <em>{question.explanation}</em>
+                                </div>
+                              )}
+                              {question.answers.length > 0 && (
+                                <div className="question-item-answers">
+                                  <span className="answers-label">Ответы:</span>
+                                  <ul className="answers-ul">
+                                    {question.answers.map((answer, idx) => (
+                                      <li key={answer.id || idx} className="answer-li">
+                                        {answer.text || answer.type}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
 
                     <div className="passport-block">
@@ -483,6 +623,121 @@ export default function Questionnaires() {
                   key={type.id}
                   className="question-menu-item"
                   onClick={() => handleQuestionTypeSelect(type.id)}
+                >
+                  {type.label}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </>
+      )}
+
+      {isQuestionFormOpen && (
+        <>
+          <div
+            className="modal-bg"
+            onClick={() => setIsQuestionFormOpen(false)}
+          ></div>
+          <div className="question-form-window">
+            <div className="question-form-content">
+              <textarea
+                className="question-text-input"
+                placeholder="Введите вопрос"
+                value={questionData.text}
+                onChange={(e) => setQuestionData(prev => ({ ...prev, text: e.target.value }))}
+              />
+
+              <textarea
+                className="question-explanation-input"
+                placeholder="Введите пояснение"
+                value={questionData.explanation}
+                onChange={(e) => setQuestionData(prev => ({ ...prev, explanation: e.target.value }))}
+              />
+
+              <div className="answers-section">
+
+
+                {questionData.answers.length > 0 && (
+                  <div className="answers-list">
+                    {questionData.answers.map((answer) => (
+                      <div key={answer.id} className="answer-item">
+                        {(answer.type === 'text' || answer.type === 'other') ? (
+                          <input
+                            type="text"
+                            className="answer-text-input"
+                            placeholder={answer.type === 'text' ? 'Введите вариант ответа' : 'Введите свой вариант'}
+                            value={answer.text}
+                            onChange={(e) => handleAnswerTextChange(answer.id, e.target.value)}
+                          />
+                        ) : (
+                          <span className="answer-label">{answer.text}</span>
+                        )}
+                        <button
+                          className="remove-answer-btn"
+                          onClick={() => handleRemoveAnswer(answer.id)}
+                        >
+                          <svg width="16px" height="16px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M7 7.00006L17 17.0001M7 17.0001L17 7.00006" stroke="#ff4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="answers-header">
+                <button
+                  className="add-answer-btn"
+                  onClick={handleAddAnswerClick}
+                >
+                  + Ответ
+                </button>
+              </div>
+            </div>
+
+            <div className="submit-form">
+              <button
+                className="cancel-btn"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setIsQuestionFormOpen(false);
+                }}
+              >
+                Отменить
+              </button>
+              <button
+                type="button"
+                className="save-btn"
+                onClick={handleSaveQuestion}
+              >
+                Сохранить
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {answerMenuOpen && (
+        <>
+          <div
+            className="question-menu-bg"
+            onClick={() => setAnswerMenuOpen(false)}
+          ></div>
+          <div
+            className="question-menu"
+            style={{
+              left: `${answerMenuPosition.x}px`,
+              top: `${answerMenuPosition.y}px`
+            }}
+          >
+            <h5>Выберите тип ответа</h5>
+            <ul className="question-menu-list">
+              {answerTypes.map((type) => (
+                <li
+                  key={type.id}
+                  className="question-menu-item"
+                  onClick={() => handleAnswerTypeSelect(type.id)}
                 >
                   {type.label}
                 </li>

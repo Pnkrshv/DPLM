@@ -27,7 +27,7 @@ func initDB() {
 		log.Fatalf("Ошибка при подключении к БД: %v", err)
 	}
 
-	if err := db.AutoMigrate(&UserData{}, &SampleData{}, &RouteData{}, &SurveyData{}, &QuestionnaireData{}); err != nil {
+	if err := db.AutoMigrate(&UserData{}, &SampleData{}, &RouteData{}, &SurveyData{}, &QuestionnaireData{}, &Question{}, &Answer{}); err != nil {
 		log.Fatalf("Ошибка миграции БД: %v", err)
 	}
 }
@@ -65,14 +65,41 @@ type RouteData struct {
 
 // Модель для анкет:
 type QuestionnaireData struct {
-	ID          string    `gorm:"primaryKey" json:"id"`
-	Name        string    `json:"name"`
-	Code        string    `json:"code"`
-	Description string    `json:"description" gorm:"type:text"`
-	Scope       string    `json:"scope" gorm:"default:'regions'"`
-	Status      string    `json:"status" gorm:"default:'черновик'"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	ID          string     `gorm:"primaryKey" json:"id"`
+	Name        string     `json:"name"`
+	Code        string     `json:"code"`
+	Description string     `json:"description" gorm:"type:text"`
+	Scope       string     `json:"scope" gorm:"default:'regions'"`
+	Status      string     `json:"status" gorm:"default:'черновик'"`
+	Questions   []Question `gorm:"foreignKey:QuestionnaireID" json:"questions,omitempty"`
+	CreatedAt   time.Time  `json:"created_at"`
+	UpdatedAt   time.Time  `json:"updated_at"`
+}
+
+// Модель для вопроса анкеты
+type Question struct {
+	ID              string    `gorm:"primaryKey" json:"id"`
+	QuestionnaireID string    `gorm:"type:uuid;not null" json:"questionnaire_id"`
+	Type            string    `gorm:"type:varchar(50);not null" json:"type"` // open, closed, mixed, scale, dichotomous
+	Text            string    `gorm:"type:text;not null" json:"text"`
+	Explanation     string    `gorm:"type:text" json:"explanation"`
+	OrderIndex      int       `gorm:"not null;default:0" json:"order_index"`
+	BlockType       string    `gorm:"type:varchar(50);default:'main'" json:"block_type"` // main, passport
+	IsRandomized    bool      `gorm:"default:false" json:"is_randomized"`
+	Answers         []Answer  `gorm:"foreignKey:QuestionID" json:"answers,omitempty"`
+	CreatedAt       time.Time `json:"created_at"`
+	UpdatedAt       time.Time `json:"updated_at"`
+}
+
+// Модель для варианта ответа
+type Answer struct {
+	ID         string    `gorm:"primaryKey" json:"id"`
+	QuestionID string    `gorm:"type:uuid;not null" json:"question_id"`
+	Type       string    `gorm:"type:varchar(50);not null" json:"type"` // text, no_answer, refuse, other, agree_disagree, like_dislike, custom
+	Text       string    `gorm:"type:text" json:"text"`
+	OrderIndex int       `gorm:"not null;default:0" json:"order_index"`
+	IsRequired bool      `gorm:"default:false" json:"is_required"`
+	CreatedAt  time.Time `json:"created_at"`
 }
 
 // Модель для опросов:
@@ -758,6 +785,171 @@ func deleteQuestionnaire(c echo.Context) error {
 	})
 }
 
+// Создание вопроса в анкете
+func createQuestion(c echo.Context) error {
+	questionnaireID := c.Param("id")
+	q := new(Question)
+	if err := c.Bind(q); err != nil {
+		return c.JSON(http.StatusBadRequest, echo.Map{
+			"error": "Неверный формат данных",
+		})
+	}
+
+	// Проверяем существование анкеты
+	var questionnaire QuestionnaireData
+	if err := db.First(&questionnaire, "id = ?", questionnaireID).Error; err != nil {
+		return c.JSON(http.StatusNotFound, echo.Map{
+			"error": "Анкета не найдена",
+		})
+	}
+
+	q.ID = uuid.NewString()
+	q.QuestionnaireID = questionnaireID
+	q.CreatedAt = time.Now()
+	q.UpdatedAt = time.Now()
+
+	if q.Text == "" {
+		return c.JSON(http.StatusBadRequest, echo.Map{
+			"error": "Текст вопроса обязателен",
+		})
+	}
+
+	// Создаем вопрос с ответами
+	if err := db.Create(q).Error; err != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{
+			"error": "Не удалось создать вопрос",
+		})
+	}
+
+	return c.JSON(http.StatusCreated, q)
+}
+
+// Получение вопросов анкеты
+func getQuestionsByQuestionnaireID(c echo.Context) error {
+	questionnaireID := c.Param("id")
+	var questions []Question
+	if err := db.Where("questionnaire_id = ?", questionnaireID).Order("order_index ASC").Find(&questions).Error; err != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{
+			"error": "Ошибка при получении вопросов",
+		})
+	}
+
+	// Загружаем ответы для каждого вопроса
+	for i := range questions {
+		if err := db.Where("question_id = ?", questions[i].ID).Order("order_index ASC").Find(&questions[i].Answers).Error; err != nil {
+			return c.JSON(http.StatusInternalServerError, echo.Map{
+				"error": "Ошибка при получении ответов",
+			})
+		}
+	}
+
+	return c.JSON(http.StatusOK, questions)
+}
+
+// Обновление вопроса
+func updateQuestion(c echo.Context) error {
+	questionnaireID := c.Param("questionnaire_id")
+	questionID := c.Param("question_id")
+
+	// Проверяем принадлежность вопроса анкете
+	var question Question
+	if err := db.Where("id = ? AND questionnaire_id = ?", questionID, questionnaireID).First(&question).Error; err != nil {
+		return c.JSON(http.StatusNotFound, echo.Map{
+			"error": "Вопрос не найден",
+		})
+	}
+
+	q := new(Question)
+	if err := c.Bind(q); err != nil {
+		return c.JSON(http.StatusBadRequest, echo.Map{
+			"error": "Неверный формат данных",
+		})
+	}
+
+	q.UpdatedAt = time.Now()
+	if err := db.Model(&Question{}).Where("id = ?", questionID).Updates(q).Error; err != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{
+			"error": "Не удалось обновить вопрос",
+		})
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"id":      questionID,
+		"message": "Вопрос успешно обновлен",
+	})
+}
+
+// Удаление вопроса
+func deleteQuestion(c echo.Context) error {
+	questionnaireID := c.Param("questionnaire_id")
+	questionID := c.Param("question_id")
+
+	// Проверяем принадлежность вопроса анкете
+	var question Question
+	if err := db.Where("id = ? AND questionnaire_id = ?", questionID, questionnaireID).First(&question).Error; err != nil {
+		return c.JSON(http.StatusNotFound, echo.Map{
+			"error": "Вопрос не найден",
+		})
+	}
+
+	if err := db.Delete(&Question{}, "id = ?", questionID).Error; err != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{
+			"error": "Не удалось удалить вопрос",
+		})
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"message": "Вопрос успешно удален",
+	})
+}
+
+// Добавление ответа к вопросу
+func createAnswer(c echo.Context) error {
+	questionID := c.Param("question_id")
+
+	// Проверяем существование вопроса
+	var question Question
+	if err := db.First(&question, "id = ?", questionID).Error; err != nil {
+		return c.JSON(http.StatusNotFound, echo.Map{
+			"error": "Вопрос не найден",
+		})
+	}
+
+	a := new(Answer)
+	if err := c.Bind(a); err != nil {
+		return c.JSON(http.StatusBadRequest, echo.Map{
+			"error": "Неверный формат данных",
+		})
+	}
+
+	a.ID = uuid.NewString()
+	a.QuestionID = questionID
+	a.CreatedAt = time.Now()
+
+	if err := db.Create(a).Error; err != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{
+			"error": "Не удалось создать ответ",
+		})
+	}
+
+	return c.JSON(http.StatusCreated, a)
+}
+
+// Удаление ответа
+func deleteAnswer(c echo.Context) error {
+	answerID := c.Param("answer_id")
+
+	if err := db.Delete(&Answer{}, "id = ?", answerID).Error; err != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{
+			"error": "Не удалось удалить ответ",
+		})
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"message": "Ответ успешно удален",
+	})
+}
+
 func main() {
 	initDB()
 	e := echo.New()
@@ -798,5 +990,13 @@ func main() {
 	e.GET("/questionnaires", getAllQuestionnaires)
 	e.PUT("/questionnaire/:id", updateQuestionnaire)
 	e.DELETE("/questionnaire/:id", deleteQuestionnaire)
+	// Эндпоинты для вопросов:
+	e.POST("/questionnaire/:id/questions", createQuestion)
+	e.GET("/questionnaire/:id/questions", getQuestionsByQuestionnaireID)
+	e.PUT("/questionnaire/:questionnaire_id/questions/:question_id", updateQuestion)
+	e.DELETE("/questionnaire/:questionnaire_id/questions/:question_id", deleteQuestion)
+	// Эндпоинты для ответов:
+	e.POST("/question/:question_id/answers", createAnswer)
+	e.DELETE("/answer/:answer_id", deleteAnswer)
 	e.Start(":8080")
 }
