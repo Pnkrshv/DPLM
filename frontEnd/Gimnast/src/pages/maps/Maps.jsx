@@ -36,7 +36,7 @@ export default function Maps() {
 
     // Пагинация для таблицы маршрутов
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 15;
+    const itemsPerPage = 13;
     const totalPages = Math.ceil(routes.length / itemsPerPage);
     const startIndex = (currentPage - 1) * itemsPerPage;
     const currentRoutes = routes.slice(startIndex, startIndex + itemsPerPage);

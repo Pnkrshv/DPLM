@@ -12,6 +12,8 @@ export default function Questionnaires() {
   const [activeBlock, setActiveBlock] = useState('questions');
   const [expandedDistricts, setExpandedDistricts] = useState({});
   const [selectedCities, setSelectedCities] = useState({});
+  const [questionMenuOpen, setQuestionMenuOpen] = useState(false);
+  const [questionMenuPosition, setQuestionMenuPosition] = useState({ x: 0, y: 0 });
   const districtRefs = useRef({});
 
   // Пагинация для таблицы анкет
@@ -111,10 +113,32 @@ export default function Questionnaires() {
   const handleSaveQuestionnaire = async () => {
     // Здесь должна быть логика сохранения анкеты на сервер
     // Пока просто закрываем форму и показываем уведомление
-    alert("Анкета успешно сохранена!");
     setIsModalOpen(false);
     setIsSettingsOpen(true);
   };
+
+  const handleAddQuestionClick = (e) => {
+    const rect = e.target.getBoundingClientRect();
+    setQuestionMenuPosition({
+      x: rect.left,
+      y: rect.bottom + 5
+    });
+    setQuestionMenuOpen(true);
+  };
+
+  const handleQuestionTypeSelect = (type) => {
+    // Здесь будет логика добавления вопроса выбранного типа
+    console.log('Выбран тип вопроса:', type);
+    setQuestionMenuOpen(false);
+  };
+
+  const questionTypes = [
+    { id: 'open', label: 'Открытый' },
+    { id: 'closed', label: 'Закрытый' },
+    { id: 'mixed', label: 'Смешанный' },
+    { id: 'scale', label: 'Шкальный' },
+    { id: 'dichotomous', label: 'Дихотомический' }
+  ];
 
   // Загрузка анкет из БД
   const fetchQuestionnaires = async () => {
@@ -378,7 +402,7 @@ export default function Questionnaires() {
                       </div>
 
                       <div className="btn-gr-2">
-                        <button className="add-question">+ Вопрос</button>
+                        <button className="add-question" onClick={handleAddQuestionClick}>+ Вопрос</button>
                         <button className="add-block">Добавить блок вопросов</button>
                       </div>
 
@@ -435,6 +459,35 @@ export default function Questionnaires() {
               </>
             )}
 
+          </div>
+        </>
+      )}
+
+      {questionMenuOpen && (
+        <>
+          <div
+            className="question-menu-bg"
+            onClick={() => setQuestionMenuOpen(false)}
+          ></div>
+          <div
+            className="question-menu"
+            style={{
+              left: `${questionMenuPosition.x}px`,
+              top: `${questionMenuPosition.y}px`
+            }}
+          >
+            <h5>Выберите тип вопроса</h5>
+            <ul className="question-menu-list">
+              {questionTypes.map((type) => (
+                <li
+                  key={type.id}
+                  className="question-menu-item"
+                  onClick={() => handleQuestionTypeSelect(type.id)}
+                >
+                  {type.label}
+                </li>
+              ))}
+            </ul>
           </div>
         </>
       )}
