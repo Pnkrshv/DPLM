@@ -138,25 +138,25 @@ export default function Questionnaires() {
 
       // Отправляем запрос на создание анкеты
       const response = await axios.post('http://localhost:8080/questionnaire', questionnaireData);
-      
+
       // Сохраняем ID созданной анкеты
       const questionnaireId = response.data.id;
       setCurrentQuestionnaire({ id: questionnaireId, ...questionnaireData });
-      
+
       // Очищаем форму
       setQuestionnaireName('');
       setQuestionnaireCode('');
       setQuestionnaireDescription('');
       setQuestions([]);
       setSelectedCities({});
-      
+
       // Закрываем модальное окно
       setIsModalOpen(false);
-      
+
       // Открываем окно настроек и загружаем вопросы
       setIsSettingsOpen(true);
       fetchQuestions(questionnaireId);
-      
+
       // Обновляем список анкет
       fetchQuestionnaires();
     } catch (err) {
@@ -191,16 +191,16 @@ export default function Questionnaires() {
     try {
       const response = await axios.get(`http://localhost:8080/questionnaire/${questionnaireId}`);
       const questionnaire = response.data;
-      
+
       setCurrentQuestionnaire(questionnaire);
       setQuestionnaireName(questionnaire.name || '');
       setQuestionnaireCode(questionnaire.code || '');
       setQuestionnaireDescription(questionnaire.description || '');
       setScope(questionnaire.scope || 'regions');
-      
+
       // Загружаем вопросы
       await fetchQuestions(questionnaireId);
-      
+
       // Открываем окно настроек
       setIsSettingsOpen(true);
       setActiveBlock('questions');
@@ -469,18 +469,18 @@ export default function Questionnaires() {
               <label>
                 <span>*</span>Название анкеты
               </label>
-              <input 
-                className="input-create" 
-                type="text" 
+              <input
+                className="input-create"
+                type="text"
                 value={questionnaireName}
                 onChange={(e) => setQuestionnaireName(e.target.value)}
                 placeholder="Введите название анкеты"
               />
 
               <label>Код анкеты</label>
-              <input 
-                className="input-create" 
-                type="text" 
+              <input
+                className="input-create"
+                type="text"
                 value={questionnaireCode}
                 onChange={(e) => setQuestionnaireCode(e.target.value)}
                 placeholder="Введите код анкеты (необязательно)"
@@ -934,14 +934,11 @@ export default function Questionnaires() {
             {currentQuestionnaires.length > 0 ? (
               currentQuestionnaires.map((questionnaire) => (
                 <tr key={questionnaire.id}>
-                  <td>
-                    <span
-                      className="questionnaire-name-link"
-                      onClick={() => openQuestionnaire(questionnaire.id)}
-                      title="Открыть анкету для редактирования"
-                    >
-                      {questionnaire.name || 'Без названия'}
-                    </span>
+                  <td
+                    onClick={() => openQuestionnaire(questionnaire.id)}
+                    className="questionnaire-name-link"
+                    title="Открыть анкету для редактирования">
+                    {questionnaire.name || 'Без названия'}
                   </td>
                   <td>{questionnaire.code || '-'}</td>
                   <td>
@@ -957,7 +954,7 @@ export default function Questionnaires() {
                       title="Удалить анкету"
                     >
                       <svg width="18px" height="18px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M19 7L18.1327 19.1425C18.0579 20.1891 17.187 21 16.1378 21H7.86224C6.81296 21 5.94208 20.1891 5.86732 19.1425L5 7M10 11V17M14 11V17M15 7V4C15 3.44772 14.5523 3 14 3H10C9.44772 3 9 3.44772 9 4V7M4 7H20" stroke="#ff4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M19 7L18.1327 19.1425C18.0579 20.1891 17.187 21 16.1378 21H7.86224C6.81296 21 5.94208 20.1891 5.86732 19.1425L5 7M10 11V17M14 11V17M15 7V4C15 3.44772 14.5523 3 14 3H10C9.44772 3 9 3.44772 9 4V7M4 7H20" stroke="#ff4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
                     </button>
                   </td>

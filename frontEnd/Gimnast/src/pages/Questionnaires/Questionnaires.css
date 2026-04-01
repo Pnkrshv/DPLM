@@ -92,10 +92,6 @@
     color: inherit;
     transition: color 0.2s ease;
   }
-
-  & .questionnaire-name-link:hover {
-    color: var(--active);
-  }
 }
 
 .create-window {
@@ -668,7 +664,7 @@
 }
 
 .pagination span {
-  font-family: main;
+  font-family: mainc;
   font-size: 0.9rem;
   color: #333;
 }
@@ -877,7 +873,7 @@
   flex-direction: column;
   gap: 0.75rem;
   padding: 0.75rem;
-  max-height: 400px;
+  max-height: 350px;
   overflow-y: auto;
 }
 
