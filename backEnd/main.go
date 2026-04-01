@@ -723,6 +723,9 @@ func createQuestionnaire(c echo.Context) error {
 	q.CreatedAt = time.Now()
 	q.UpdatedAt = time.Now()
 	q.Status = "черновик"
+	if q.Scope == "" {
+		q.Scope = "regions"
+	}
 	if q.Name == "" {
 		return c.JSON(http.StatusBadRequest, echo.Map{
 			"error": "Название анкеты обязательно",
@@ -734,9 +737,15 @@ func createQuestionnaire(c echo.Context) error {
 		})
 	}
 	return c.JSON(http.StatusCreated, echo.Map{
-		"id":      q.ID,
-		"name":    q.Name,
-		"message": "Анкета успешно создана",
+		"id":          q.ID,
+		"name":        q.Name,
+		"code":        q.Code,
+		"description": q.Description,
+		"scope":       q.Scope,
+		"status":      q.Status,
+		"created_at":  q.CreatedAt,
+		"updated_at":  q.UpdatedAt,
+		"message":     "Анкета успешно создана",
 	})
 }
 
@@ -749,6 +758,27 @@ func getAllQuestionnaires(c echo.Context) error {
 		})
 	}
 	return c.JSON(http.StatusOK, questionnaires)
+}
+
+// Получение анкеты по ID:
+func getQuestionnaireByID(c echo.Context) error {
+	id := c.Param("id")
+
+	var questionnaire QuestionnaireData
+	result := db.Where("id = ?", id).First(&questionnaire)
+
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return c.JSON(http.StatusNotFound, echo.Map{
+				"error": "Анкета не найдена",
+			})
+		}
+		return c.JSON(http.StatusInternalServerError, echo.Map{
+			"error": "Ошибка при получении анкеты",
+		})
+	}
+
+	return c.JSON(http.StatusOK, questionnaire)
 }
 
 // Обновление анкеты:
@@ -814,12 +844,54 @@ func createQuestion(c echo.Context) error {
 		})
 	}
 
-	// Создаем вопрос с ответами
+	// Сохраняем вопрос
 	if err := db.Create(q).Error; err != nil {
 		return c.JSON(http.StatusInternalServerError, echo.Map{
 			"error": "Не удалось создать вопрос",
 		})
 	}
+
+	// Создаем ответы, если они переданы
+	type AnswerPayload struct {
+		Type       string `json:"type"`
+		Text       string `json:"text"`
+		OrderIndex int    `json:"order_index"`
+		IsRequired bool   `json:"is_required"`
+	}
+
+	var answersPayload []AnswerPayload
+	if err := c.Bind(&answersPayload); err != nil {
+		// Пробуем получить answers из основного объекта
+		var fullPayload struct {
+			Answers []AnswerPayload `json:"answers"`
+		}
+		if err2 := c.Bind(&fullPayload); err2 == nil && len(fullPayload.Answers) > 0 {
+			answersPayload = fullPayload.Answers
+		}
+	}
+
+	// Создаем ответы для вопроса
+	for _, ans := range answersPayload {
+		answer := &Answer{
+			ID:         uuid.NewString(),
+			QuestionID: q.ID,
+			Type:       ans.Type,
+			Text:       ans.Text,
+			OrderIndex: ans.OrderIndex,
+			IsRequired: ans.IsRequired,
+			CreatedAt:  time.Now(),
+		}
+		if err := db.Create(answer).Error; err != nil {
+			log.Printf("Ошибка при создании ответа: %v", err)
+		}
+	}
+
+	// Загружаем ответы для возврата
+	var createdAnswers []Answer
+	if err := db.Where("question_id = ?", q.ID).Order("order_index ASC").Find(&createdAnswers).Error; err != nil {
+		log.Printf("Ошибка при загрузке ответов: %v", err)
+	}
+	q.Answers = createdAnswers
 
 	return c.JSON(http.StatusCreated, q)
 }
@@ -892,6 +964,14 @@ func deleteQuestion(c echo.Context) error {
 		})
 	}
 
+	// Сначала удаляем все ответы, связанные с вопросом
+	if err := db.Where("question_id = ?", questionID).Delete(&Answer{}).Error; err != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{
+			"error": "Не удалось удалить ответы вопроса",
+		})
+	}
+
+	// Затем удаляем сам вопрос
 	if err := db.Delete(&Question{}, "id = ?", questionID).Error; err != nil {
 		return c.JSON(http.StatusInternalServerError, echo.Map{
 			"error": "Не удалось удалить вопрос",
@@ -988,6 +1068,7 @@ func main() {
 	// Эндпоинты для анкет:
 	e.POST("/questionnaire", createQuestionnaire)
 	e.GET("/questionnaires", getAllQuestionnaires)
+	e.GET("/questionnaire/:id", getQuestionnaireByID)
 	e.PUT("/questionnaire/:id", updateQuestionnaire)
 	e.DELETE("/questionnaire/:id", deleteQuestionnaire)
 	// Эндпоинты для вопросов:

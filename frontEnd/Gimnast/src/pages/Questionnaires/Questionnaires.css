@@ -64,7 +64,7 @@
   & table {
     width: 100%;
     border-collapse: collapse;
-    text-align: left;
+    text-align: center;
     font-family: main;
     font-size: 85%;
   }
@@ -75,6 +75,26 @@
     background-color: transparent;
     font-weight: 300;
     text-transform: uppercase;
+  }
+
+  & td {
+    padding: 0.5% 0;
+    text-align: center;
+    border: solid 1px black;
+  }
+
+  & tbody tr:hover {
+    background-color: rgba(64, 158, 255, 0.1);
+  }
+
+  & .questionnaire-name-link {
+    cursor: pointer;
+    color: inherit;
+    transition: color 0.2s ease;
+  }
+
+  & .questionnaire-name-link:hover {
+    color: var(--active);
   }
 }
 
@@ -947,4 +967,29 @@
   background-color: #f9f9f9;
   border-radius: 4px;
   border-left: 3px solid #4caf50;
+}
+
+/* Стили для кнопки удаления анкеты */
+.delete-questionnaire-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 4px;
+  transition: 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.delete-questionnaire-btn:hover {
+  background-color: rgba(255, 68, 68, 0.1);
+}
+
+.delete-questionnaire-btn svg {
+  transition: transform 0.2s;
+}
+
+.delete-questionnaire-btn:hover svg {
+  transform: scale(1.1);
 }

@@ -21,6 +21,9 @@ export default function Questionnaires() {
   const [answerMenuPosition, setAnswerMenuPosition] = useState({ x: 0, y: 0 });
   const [questions, setQuestions] = useState([]);
   const [currentQuestionnaire, setCurrentQuestionnaire] = useState(null);
+  const [questionnaireName, setQuestionnaireName] = useState('');
+  const [questionnaireDescription, setQuestionnaireDescription] = useState('');
+  const [questionnaireCode, setQuestionnaireCode] = useState('');
   const districtRefs = useRef({});
 
   // Пагинация для таблицы анкет
@@ -118,10 +121,108 @@ export default function Questionnaires() {
   }, [isModalopen, scope, cities.length, loading]);
 
   const handleSaveQuestionnaire = async () => {
-    // Здесь должна быть логика сохранения анкеты на сервер
-    // Пока просто закрываем форму и показываем уведомление
-    setIsModalOpen(false);
-    setIsSettingsOpen(true);
+    if (!questionnaireName.trim()) {
+      alert('Введите название анкеты');
+      return;
+    }
+
+    try {
+      // Собираем данные анкеты
+      const questionnaireData = {
+        name: questionnaireName,
+        code: questionnaireCode,
+        description: questionnaireDescription,
+        scope: scope,
+        cities: scope === 'cities' ? selectedCities : null
+      };
+
+      // Отправляем запрос на создание анкеты
+      const response = await axios.post('http://localhost:8080/questionnaire', questionnaireData);
+      
+      // Сохраняем ID созданной анкеты
+      const questionnaireId = response.data.id;
+      setCurrentQuestionnaire({ id: questionnaireId, ...questionnaireData });
+      
+      // Очищаем форму
+      setQuestionnaireName('');
+      setQuestionnaireCode('');
+      setQuestionnaireDescription('');
+      setQuestions([]);
+      setSelectedCities({});
+      
+      // Закрываем модальное окно
+      setIsModalOpen(false);
+      
+      // Открываем окно настроек и загружаем вопросы
+      setIsSettingsOpen(true);
+      fetchQuestions(questionnaireId);
+      
+      // Обновляем список анкет
+      fetchQuestionnaires();
+    } catch (err) {
+      console.error('Ошибка при сохранении анкеты:', err);
+      alert('Ошибка при сохранении анкеты: ' + (err.response?.data?.error || err.message));
+    }
+  };
+
+  const openQuestionnaireModal = () => {
+    setQuestionnaireName('');
+    setQuestionnaireCode('');
+    setQuestionnaireDescription('');
+    setScope('regions');
+    setSelectedCities({});
+    setQuestions([]);
+    setIsModalOpen(true);
+  };
+
+  // Загрузка вопросов для текущей анкеты
+  const fetchQuestions = async (questionnaireId) => {
+    try {
+      const response = await axios.get(`http://localhost:8080/questionnaire/${questionnaireId}/questions`);
+      setQuestions(response.data);
+    } catch (err) {
+      console.error('Ошибка при загрузке вопросов:', err);
+      setQuestions([]);
+    }
+  };
+
+  // Открытие анкеты для редактирования
+  const openQuestionnaire = async (questionnaireId) => {
+    try {
+      const response = await axios.get(`http://localhost:8080/questionnaire/${questionnaireId}`);
+      const questionnaire = response.data;
+      
+      setCurrentQuestionnaire(questionnaire);
+      setQuestionnaireName(questionnaire.name || '');
+      setQuestionnaireCode(questionnaire.code || '');
+      setQuestionnaireDescription(questionnaire.description || '');
+      setScope(questionnaire.scope || 'regions');
+      
+      // Загружаем вопросы
+      await fetchQuestions(questionnaireId);
+      
+      // Открываем окно настроек
+      setIsSettingsOpen(true);
+      setActiveBlock('questions');
+    } catch (err) {
+      console.error('Ошибка при загрузке анкеты:', err);
+      alert('Ошибка при загрузке данных анкеты: ' + (err.response?.data?.error || err.message));
+    }
+  };
+
+  // Удаление анкеты
+  const deleteQuestionnaire = async (questionnaireId) => {
+    if (!confirm('Вы уверены, что хотите удалить эту анкету?')) {
+      return;
+    }
+
+    try {
+      await axios.delete(`http://localhost:8080/questionnaire/${questionnaireId}`);
+      fetchQuestionnaires();
+    } catch (err) {
+      console.error('Ошибка при удалении анкеты:', err);
+      alert('Ошибка при удалении анкеты: ' + (err.response?.data?.error || err.message));
+    }
   };
 
   const handleAddQuestionClick = (e) => {
@@ -201,27 +302,66 @@ export default function Questionnaires() {
     }));
   };
 
-  const handleSaveQuestion = () => {
+  const handleSaveQuestion = async () => {
     if (!questionData.text.trim()) {
       alert('Введите текст вопроса');
       return;
     }
 
-    const newQuestion = {
-      id: Date.now(),
-      type: currentQuestionType,
-      text: questionData.text,
-      explanation: questionData.explanation,
-      answers: [...questionData.answers]
-    };
+    if (!currentQuestionnaire || !currentQuestionnaire.id) {
+      alert('Анкета не создана. Сначала сохраните анкету.');
+      return;
+    }
 
-    setQuestions(prev => [...prev, newQuestion]);
-    setIsQuestionFormOpen(false);
-    setQuestionData({ text: '', explanation: '', answers: [] });
+    try {
+      // Подготавливаем данные вопроса
+      const questionPayload = {
+        type: currentQuestionType,
+        text: questionData.text,
+        explanation: questionData.explanation,
+        order_index: questions.length,
+        answers: questionData.answers.map((answer, index) => ({
+          type: answer.type,
+          text: answer.text,
+          order_index: index
+        }))
+      };
+
+      // Отправляем вопрос на сервер
+      const response = await axios.post(
+        `http://localhost:8080/questionnaire/${currentQuestionnaire.id}/questions`,
+        questionPayload
+      );
+
+      // Добавляем сохраненный вопрос в список
+      setQuestions(prev => [...prev, response.data]);
+      setIsQuestionFormOpen(false);
+      setQuestionData({ text: '', explanation: '', answers: [] });
+    } catch (err) {
+      console.error('Ошибка при сохранении вопроса:', err);
+      alert('Ошибка при сохранении вопроса: ' + (err.response?.data?.error || err.message));
+    }
   };
 
-  const handleRemoveQuestion = (questionId) => {
-    setQuestions(prev => prev.filter(q => q.id !== questionId));
+  const handleRemoveQuestion = async (questionId) => {
+    if (!currentQuestionnaire || !currentQuestionnaire.id) {
+      alert('Анкета не найдена');
+      return;
+    }
+
+    if (!confirm('Вы уверены, что хотите удалить этот вопрос?')) {
+      return;
+    }
+
+    try {
+      await axios.delete(
+        `http://localhost:8080/questionnaire/${currentQuestionnaire.id}/questions/${questionId}`
+      );
+      setQuestions(prev => prev.filter(q => q.id !== questionId));
+    } catch (err) {
+      console.error('Ошибка при удалении вопроса:', err);
+      alert('Ошибка при удалении вопроса: ' + (err.response?.data?.error || err.message));
+    }
   };
 
   const questionTypes = [
@@ -329,10 +469,29 @@ export default function Questionnaires() {
               <label>
                 <span>*</span>Название анкеты
               </label>
-              <input className="input-create" type="text" />
+              <input 
+                className="input-create" 
+                type="text" 
+                value={questionnaireName}
+                onChange={(e) => setQuestionnaireName(e.target.value)}
+                placeholder="Введите название анкеты"
+              />
+
+              <label>Код анкеты</label>
+              <input 
+                className="input-create" 
+                type="text" 
+                value={questionnaireCode}
+                onChange={(e) => setQuestionnaireCode(e.target.value)}
+                placeholder="Введите код анкеты (необязательно)"
+              />
 
               <label>Инструкция по проведению интервью</label>
-              <textarea></textarea>
+              <textarea
+                value={questionnaireDescription}
+                onChange={(e) => setQuestionnaireDescription(e.target.value)}
+                placeholder="Введите инструкцию"
+              ></textarea>
 
               <div className="region">
                 <label>Анкета актуальна для</label>
@@ -541,7 +700,7 @@ export default function Questionnaires() {
                                   <em>{question.explanation}</em>
                                 </div>
                               )}
-                              {question.answers.length > 0 && (
+                              {question.answers && question.answers.length > 0 && (
                                 <div className="question-item-answers">
                                   <span className="answers-label">Ответы:</span>
                                   <ul className="answers-ul">
@@ -750,9 +909,7 @@ export default function Questionnaires() {
       <div className="buttons">
         <button
           className="create-btn"
-          onClick={() => {
-            setIsModalOpen(true);
-          }}
+          onClick={openQuestionnaireModal}
         >
           <p>Создать анкету</p>
         </button>
@@ -777,7 +934,15 @@ export default function Questionnaires() {
             {currentQuestionnaires.length > 0 ? (
               currentQuestionnaires.map((questionnaire) => (
                 <tr key={questionnaire.id}>
-                  <td>{questionnaire.name || 'Без названия'}</td>
+                  <td>
+                    <span
+                      className="questionnaire-name-link"
+                      onClick={() => openQuestionnaire(questionnaire.id)}
+                      title="Открыть анкету для редактирования"
+                    >
+                      {questionnaire.name || 'Без названия'}
+                    </span>
+                  </td>
                   <td>{questionnaire.code || '-'}</td>
                   <td>
                     {questionnaire.created_at
@@ -785,7 +950,17 @@ export default function Questionnaires() {
                       : '-'
                     }
                   </td>
-                  <td></td>
+                  <td>
+                    <button
+                      className="delete-questionnaire-btn"
+                      onClick={() => deleteQuestionnaire(questionnaire.id)}
+                      title="Удалить анкету"
+                    >
+                      <svg width="18px" height="18px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M19 7L18.1327 19.1425C18.0579 20.1891 17.187 21 16.1378 21H7.86224C6.81296 21 5.94208 20.1891 5.86732 19.1425L5 7M10 11V17M14 11V17M15 7V4C15 3.44772 14.5523 3 14 3H10C9.44772 3 9 3.44772 9 4V7M4 7H20" stroke="#ff4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </button>
+                  </td>
                 </tr>
               ))
             ) : (
