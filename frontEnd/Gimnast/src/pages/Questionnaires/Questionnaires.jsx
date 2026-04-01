@@ -251,14 +251,28 @@ export default function Questionnaires() {
   };
 
   const handleAnswerTypeSelect = (answerType) => {
-    const newAnswer = {
-      id: Date.now(),
-      type: answerType,
-      text: answerType === 'text' || answerType === 'other' ? '' : getAnswerLabel(answerType)
-    };
+    let newAnswers = [];
+    if (answerType === 'agree_disagree') {
+      newAnswers = [
+        { id: Date.now() + 1, type: answerType, text: 'Согласен' },
+        { id: Date.now() + 2, type: answerType, text: 'Не согласен' }
+      ];
+    } else if (answerType === 'like_dislike') {
+      newAnswers = [
+        { id: Date.now() + 1, type: answerType, text: 'Нравится' },
+        { id: Date.now() + 2, type: answerType, text: 'Не нравится' }
+      ];
+    } else {
+      const newAnswer = {
+        id: Date.now(),
+        type: answerType,
+        text: answerType === 'text' || answerType === 'other' ? '' : getAnswerLabel(answerType)
+      };
+      newAnswers = [newAnswer];
+    }
     setQuestionData(prev => ({
       ...prev,
-      answers: [...prev.answers, newAnswer]
+      answers: [...prev.answers, ...newAnswers]
     }));
     setAnswerMenuOpen(false);
   };
@@ -947,13 +961,14 @@ export default function Questionnaires() {
                       : '-'
                     }
                   </td>
-                  <td>
+                  <td
+                    onClick={() => deleteQuestionnaire(questionnaire.id)}
+                    title="Удалить анкету"
+                    className="td-delete"
+                  >
                     <button
-                      className="delete-questionnaire-btn"
-                      onClick={() => deleteQuestionnaire(questionnaire.id)}
-                      title="Удалить анкету"
-                    >
-                      <svg width="18px" height="18px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      className="delete-route-btn">
+                      <svg width="16px" height="16px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M19 7L18.1327 19.1425C18.0579 20.1891 17.187 21 16.1378 21H7.86224C6.81296 21 5.94208 20.1891 5.86732 19.1425L5 7M10 11V17M14 11V17M15 7V4C15 3.44772 14.5523 3 14 3H10C9.44772 3 9 3.44772 9 4V7M4 7H20" stroke="#ff4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
                     </button>

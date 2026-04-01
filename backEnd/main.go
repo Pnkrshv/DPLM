@@ -818,12 +818,6 @@ func deleteQuestionnaire(c echo.Context) error {
 // Создание вопроса в анкете
 func createQuestion(c echo.Context) error {
 	questionnaireID := c.Param("id")
-	q := new(Question)
-	if err := c.Bind(q); err != nil {
-		return c.JSON(http.StatusBadRequest, echo.Map{
-			"error": "Неверный формат данных",
-		})
-	}
 
 	// Проверяем существование анкеты
 	var questionnaire QuestionnaireData
@@ -833,25 +827,7 @@ func createQuestion(c echo.Context) error {
 		})
 	}
 
-	q.ID = uuid.NewString()
-	q.QuestionnaireID = questionnaireID
-	q.CreatedAt = time.Now()
-	q.UpdatedAt = time.Now()
-
-	if q.Text == "" {
-		return c.JSON(http.StatusBadRequest, echo.Map{
-			"error": "Текст вопроса обязателен",
-		})
-	}
-
-	// Сохраняем вопрос
-	if err := db.Create(q).Error; err != nil {
-		return c.JSON(http.StatusInternalServerError, echo.Map{
-			"error": "Не удалось создать вопрос",
-		})
-	}
-
-	// Создаем ответы, если они переданы
+	// Структуры для парсинга запроса
 	type AnswerPayload struct {
 		Type       string `json:"type"`
 		Text       string `json:"text"`
@@ -859,19 +835,52 @@ func createQuestion(c echo.Context) error {
 		IsRequired bool   `json:"is_required"`
 	}
 
-	var answersPayload []AnswerPayload
-	if err := c.Bind(&answersPayload); err != nil {
-		// Пробуем получить answers из основного объекта
-		var fullPayload struct {
-			Answers []AnswerPayload `json:"answers"`
-		}
-		if err2 := c.Bind(&fullPayload); err2 == nil && len(fullPayload.Answers) > 0 {
-			answersPayload = fullPayload.Answers
-		}
+	type QuestionRequest struct {
+		Type         string          `json:"type"`
+		Text         string          `json:"text"`
+		Explanation  string          `json:"explanation"`
+		OrderIndex   int             `json:"order_index"`
+		BlockType    string          `json:"block_type"`
+		IsRandomized bool            `json:"is_randomized"`
+		Answers      []AnswerPayload `json:"answers"`
 	}
 
-	// Создаем ответы для вопроса
-	for _, ans := range answersPayload {
+	var req QuestionRequest
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, echo.Map{
+			"error": "Неверный формат данных вопроса",
+		})
+	}
+
+	if req.Text == "" {
+		return c.JSON(http.StatusBadRequest, echo.Map{
+			"error": "Текст вопроса обязателен",
+		})
+	}
+
+	// Создаём вопрос
+	q := &Question{
+		ID:              uuid.NewString(),
+		QuestionnaireID: questionnaireID,
+		Type:            req.Type,
+		Text:            req.Text,
+		Explanation:     req.Explanation,
+		OrderIndex:      req.OrderIndex,
+		BlockType:       req.BlockType,
+		IsRandomized:    req.IsRandomized,
+		CreatedAt:       time.Now(),
+		UpdatedAt:       time.Now(),
+	}
+
+	if err := db.Create(q).Error; err != nil {
+		log.Printf("Ошибка при создании вопроса: %v", err)
+		return c.JSON(http.StatusInternalServerError, echo.Map{
+			"error": "Не удалось создать вопрос",
+		})
+	}
+
+	// Создаём ответы
+	for _, ans := range req.Answers {
 		answer := &Answer{
 			ID:         uuid.NewString(),
 			QuestionID: q.ID,
@@ -886,12 +895,10 @@ func createQuestion(c echo.Context) error {
 		}
 	}
 
-	// Загружаем ответы для возврата
-	var createdAnswers []Answer
-	if err := db.Where("question_id = ?", q.ID).Order("order_index ASC").Find(&createdAnswers).Error; err != nil {
-		log.Printf("Ошибка при загрузке ответов: %v", err)
-	}
-	q.Answers = createdAnswers
+	// Загружаем созданные ответы для ответа клиенту
+	var answers []Answer
+	db.Where("question_id = ?", q.ID).Order("order_index ASC").Find(&answers)
+	q.Answers = answers
 
 	return c.JSON(http.StatusCreated, q)
 }
