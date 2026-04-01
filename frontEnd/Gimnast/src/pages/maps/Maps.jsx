@@ -314,7 +314,6 @@ export default function Maps() {
         setSelectedDistrict("");
         setMapPosition([55.753960, 37.620393]);
         setIsAddWindowOpen(false);
-        setCurrentSavedCities((prev) => [...prev, newCity]);
         setCitiesPage(1);
     };
 
@@ -621,20 +620,10 @@ export default function Maps() {
                                     <label>Моногород</label>
                                     <input
                                         type="checkbox"
-                                        id={`modal-map-check-${citiesStartIndex + index}`}
+                                        id="modal-map-check-monotown"
                                         className="options-switcher"
-                                        checked={citySelection.has(`${item.district}|${item.city}`)}
-                                        onChange={() => {
-                                            const key = `${item.district}|${item.city}`;
-                                            setCitySelection(prev => {
-                                                const newSet = new Set(prev);
-                                                if (newSet.has(key)) newSet.delete(key);
-                                                else newSet.add(key);
-                                                return newSet;
-                                            });
-                                        }}
                                     />
-                                    <label htmlFor="checkbox-switcher" className="options-switcher-label"></label>
+                                    <label htmlFor="modal-map-check-monotown" className="options-switcher-label"></label>
                                 </div>
                                 <div className="form-buttons">
                                     <button className="cancel-btn" type="button" onClick={() => setIsAddWindowOpen(false)}>

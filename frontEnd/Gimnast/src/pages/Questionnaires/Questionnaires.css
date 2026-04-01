@@ -871,6 +871,7 @@
 .questions-list {
   display: flex;
   flex-direction: column;
+  scrollbar-width: thin;
   gap: 0.75rem;
   padding: 0.75rem;
   max-height: 350px;
