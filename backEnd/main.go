@@ -781,6 +781,45 @@ func getQuestionnaireByID(c echo.Context) error {
 	return c.JSON(http.StatusOK, questionnaire)
 }
 
+// Получение полной анкеты с вопросами и ответами
+func getQuestionnaireFull(c echo.Context) error {
+	id := c.Param("id")
+
+	var questionnaire QuestionnaireData
+	result := db.Where("id = ?", id).First(&questionnaire)
+
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return c.JSON(http.StatusNotFound, echo.Map{
+				"error": "Анкета не найдена",
+			})
+		}
+		return c.JSON(http.StatusInternalServerError, echo.Map{
+			"error": "Ошибка при получении анкеты",
+		})
+	}
+
+	// Загружаем вопросы
+	var questions []Question
+	if err := db.Where("questionnaire_id = ?", id).Order("order_index ASC").Find(&questions).Error; err != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{
+			"error": "Ошибка при получении вопросов",
+		})
+	}
+
+	// Загружаем ответы для каждого вопроса
+	for i := range questions {
+		if err := db.Where("question_id = ?", questions[i].ID).Order("order_index ASC").Find(&questions[i].Answers).Error; err != nil {
+			return c.JSON(http.StatusInternalServerError, echo.Map{
+				"error": "Ошибка при получении ответов",
+			})
+		}
+	}
+	questionnaire.Questions = questions
+
+	return c.JSON(http.StatusOK, questionnaire)
+}
+
 // Обновление анкеты:
 func updateQuestionnaire(c echo.Context) error {
 	id := c.Param("id")
@@ -1076,6 +1115,7 @@ func main() {
 	e.POST("/questionnaire", createQuestionnaire)
 	e.GET("/questionnaires", getAllQuestionnaires)
 	e.GET("/questionnaire/:id", getQuestionnaireByID)
+	e.GET("/questionnaire/:id/full", getQuestionnaireFull)
 	e.PUT("/questionnaire/:id", updateQuestionnaire)
 	e.DELETE("/questionnaire/:id", deleteQuestionnaire)
 	// Эндпоинты для вопросов:

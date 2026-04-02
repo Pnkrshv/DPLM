@@ -56,7 +56,7 @@ export default function Maps() {
         return currentSavedCities;
     }, [currentSavedCities, citySelection, filterMode]);
 
-    // Пагинация для таблицы городов в модальном окне
+    // Пагинация
     const [citiesPage, setCitiesPage] = useState(1);
     const citiesPerPage = 15;
     const totalCitiesPages = Math.ceil(filteredCities.length / citiesPerPage);
@@ -102,7 +102,6 @@ export default function Maps() {
     };
 
     const handleSearchCity = async (cityName) => {
-        // Если cityName передан как объект, берём city свойство
         let query;
         if (typeof cityName === 'object' && cityName !== null) {
             query = cityName.city || '';
@@ -253,7 +252,6 @@ export default function Maps() {
         Object.keys(selectedCities).forEach((district) => {
             Object.keys(selectedCities[district]).forEach((city) => {
                 if (selectedCities[district][city]) {
-                    // Проверяем, нет ли уже такого города в result
                     const exists = result.find(r => r.city === city && r.district === district);
                     if (!exists) {
                         result.push({

@@ -1,6 +1,8 @@
 import "./Questionnaires.css";
 import { useEffect, useRef, useState } from "react";
 import axios from "axios";
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from "docx";
+import { saveAs } from "file-saver";
 
 export default function Questionnaires() {
   const [scope, setScope] = useState("regions");
@@ -183,6 +185,135 @@ export default function Questionnaires() {
     } catch (err) {
       console.error('Ошибка при загрузке вопросов:', err);
       setQuestions([]);
+    }
+  };
+
+  // Экспорт анкеты в Word
+  const exportToWord = async () => {
+    if (!currentQuestionnaire || !currentQuestionnaire.id) {
+      alert('Анкета не выбрана');
+      return;
+    }
+
+    try {
+      // Загружаем полную анкету с вопросами и ответами
+      const response = await axios.get(`http://localhost:8080/questionnaire/${currentQuestionnaire.id}/full`);
+      const questionnaire = response.data;
+
+      // Создаем документ Word
+      const docChildren = [];
+
+      // Заголовок анкеты
+      docChildren.push(
+        new Paragraph({
+          text: questionnaire.name || 'Анкета',
+          heading: HeadingLevel.HEADING_1,
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 200 }
+        })
+      );
+
+      // Код анкеты (если есть)
+      if (questionnaire.code) {
+        docChildren.push(
+          new Paragraph({
+            text: `Код: ${questionnaire.code}`,
+            alignment: AlignmentType.CENTER,
+            spacing: { after: 200 }
+          })
+        );
+      }
+
+      // Описание/инструкция (если есть)
+      if (questionnaire.description) {
+        docChildren.push(
+          new Paragraph({
+            text: questionnaire.description,
+            italics: true,
+            spacing: { after: 300 }
+          })
+        );
+      }
+
+      // Вопросы
+      if (questionnaire.questions && questionnaire.questions.length > 0) {
+        questionnaire.questions.forEach((question, index) => {
+          // Номер и текст вопроса
+          docChildren.push(
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: `${index + 1}. ${question.text}`,
+                  bold: true,
+                  size: 24
+                })
+              ],
+              spacing: { before: 200, after: 100 }
+            })
+          );
+
+          // Пояснение к вопросу (если есть)
+          if (question.explanation) {
+            docChildren.push(
+              new Paragraph({
+                children: [
+                  new TextRun({
+                    text: question.explanation,
+                    italics: true,
+                    size: 20
+                  })
+                ],
+                spacing: { after: 100 }
+              })
+            );
+          }
+
+          // Варианты ответов (если есть)
+          if (question.answers && question.answers.length > 0) {
+            question.answers.forEach((answer, ansIndex) => {
+              const answerText = answer.text || answer.type;
+              if (answerText) {
+                docChildren.push(
+                  new Paragraph({
+                    children: [
+                      new TextRun({
+                        text: `${String.fromCharCode(1072 + ansIndex)}) ${answerText}`,
+                        size: 22,
+                      })
+                    ],
+                    spacing: { after: 50 }
+                  })
+                );
+              }
+            });
+          }
+
+          // Добавляем пустую строку после вопроса
+          docChildren.push(
+            new Paragraph({
+              text: '',
+              spacing: { after: 200 }
+            })
+          );
+        });
+      }
+
+      // Создаем документ
+      const doc = new Document({
+        sections: [{
+          properties: {},
+          children: docChildren
+        }]
+      });
+
+      // Генерируем и скачиваем файл
+      const blob = await Packer.toBlob(doc);
+      const fileName = `${questionnaire.code || questionnaire.name || 'anketa'}.docx`;
+      saveAs(blob, fileName);
+
+    } catch (err) {
+      console.error('Ошибка при экспорте в Word:', err);
+      alert('Ошибка при экспорте: ' + (err.response?.data?.error || err.message));
     }
   };
 
@@ -671,7 +802,7 @@ export default function Questionnaires() {
                     <div className="buttons-group">
 
                       <div className="btn-gr-1">
-                        <button className="export-word">Выгрузить в Word</button>
+                        <button className="export-word" onClick={exportToWord}>Выгрузить в Word</button>
                         <button className="export-is">Экспорт в ИС Полог</button>
                       </div>
 
