@@ -360,6 +360,8 @@
 
 .block-2-left {
   width: 65%;
+  overflow-y: auto;
+  scrollbar-width: thin;
   border-right: solid grey 1px;
 }
 
@@ -862,10 +864,10 @@
 .block-empty-placeholder {
   padding: 1%;
   text-align: start;
+  margin-bottom: 1%;
   color: #999;
   font-size: clamp(.6rem, .8rem, 1rem);
   border-top: 1px solid #ddd;
-  height: 20vh;
 }
 
 .questions-list {
@@ -1007,4 +1009,17 @@
 
 .question-block-header.selected {
   border-bottom: 1px solid #006064;
+}
+
+/* Стили для дополнительных блоков */
+.additional-block {
+  display: flex;
+  flex-direction: column;
+  border: solid #006064 1px;
+  margin: 1% 2%;
+  border-radius: 4px;
+  min-height: 20vh;
+  -webkit-box-shadow: 4px 4px 8px 0px rgba(34, 60, 80, 0.2);
+  -moz-box-shadow: 4px 4px 8px 0px rgba(34, 60, 80, 0.2);
+  box-shadow: 4px 4px 8px 0px rgba(34, 60, 80, 0.2);
 }

@@ -12,7 +12,7 @@ export default function Questionnaires() {
   const [error, setError] = useState(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [activeBlock, setActiveBlock] = useState('questions');
-  const [selectedQuestionBlock, setSelectedQuestionBlock] = useState('main'); // 'main' или 'passport'
+  const [selectedQuestionBlock, setSelectedQuestionBlock] = useState('main'); // 'main', 'passport', или 'additional_N'
   const [expandedDistricts, setExpandedDistricts] = useState({});
   const [selectedCities, setSelectedCities] = useState({});
   const [questionMenuOpen, setQuestionMenuOpen] = useState(false);
@@ -24,6 +24,7 @@ export default function Questionnaires() {
   const [answerMenuPosition, setAnswerMenuPosition] = useState({ x: 0, y: 0 });
   const [questions, setQuestions] = useState([]);
   const [passportQuestions, setPassportQuestions] = useState([]); // Вопросы паспортички
+  const [additionalBlocks, setAdditionalBlocks] = useState([]); // Дополнительные блоки [{id, name, questions}]
   const [currentQuestionnaire, setCurrentQuestionnaire] = useState(null);
   const [questionnaireName, setQuestionnaireName] = useState('');
   const [questionnaireDescription, setQuestionnaireDescription] = useState('');
@@ -153,6 +154,7 @@ export default function Questionnaires() {
       setQuestionnaireDescription('');
       setQuestions([]);
       setPassportQuestions([]);
+      setAdditionalBlocks([]);
       setSelectedCities({});
 
       // Закрываем модальное окно
@@ -178,6 +180,7 @@ export default function Questionnaires() {
     setSelectedCities({});
     setQuestions([]);
     setPassportQuestions([]);
+    setAdditionalBlocks([]);
     setIsModalOpen(true);
   };
 
@@ -187,16 +190,36 @@ export default function Questionnaires() {
       const response = await axios.get(`http://localhost:8080/questionnaire/${questionnaireId}/questions`);
       const allQuestions = response.data;
       
-      // Разделяем вопросы на основные и паспортичку
-      const mainQ = allQuestions.filter(q => q.block_type !== 'passport');
+      // Разделяем вопросы на основные, паспортичку и дополнительные блоки
+      const mainQ = allQuestions.filter(q => q.block_type === 'main');
       const passportQ = allQuestions.filter(q => q.block_type === 'passport');
+      
+      // Группируем дополнительные блоки
+      const additionalBlocksMap = {};
+      allQuestions.forEach(q => {
+        if (q.block_type && q.block_type.startsWith('additional_')) {
+          if (!additionalBlocksMap[q.block_type]) {
+            additionalBlocksMap[q.block_type] = [];
+          }
+          additionalBlocksMap[q.block_type].push(q);
+        }
+      });
+      
+      // Создаем массив дополнительных блоков
+      const additionalBlocksArr = Object.keys(additionalBlocksMap).map((blockId, index) => ({
+        id: blockId,
+        name: `Дополнительный блок ${index + 1}`,
+        questions: additionalBlocksMap[blockId]
+      }));
       
       setQuestions(mainQ);
       setPassportQuestions(passportQ);
+      setAdditionalBlocks(additionalBlocksArr);
     } catch (err) {
       console.error('Ошибка при загрузке вопросов:', err);
       setQuestions([]);
       setPassportQuestions([]);
+      setAdditionalBlocks([]);
     }
   };
 
@@ -310,7 +333,17 @@ export default function Questionnaires() {
 
       // Сначала добавляем вопросы паспортички
       const passportQuestions = (questionnaire.questions || []).filter(q => q.block_type === 'passport');
-      const mainQuestions = (questionnaire.questions || []).filter(q => q.block_type !== 'passport');
+      const mainQuestions = (questionnaire.questions || []).filter(q => q.block_type === 'main');
+      const additionalQuestions = (questionnaire.questions || []).filter(q => q.block_type && q.block_type.startsWith('additional_'));
+
+      // Группируем дополнительные блоки для экспорта
+      const additionalBlocksMap = {};
+      additionalQuestions.forEach(q => {
+        if (!additionalBlocksMap[q.block_type]) {
+          additionalBlocksMap[q.block_type] = [];
+        }
+        additionalBlocksMap[q.block_type].push(q);
+      });
 
       // Вопросы о респонденте (паспортичка) - идут первыми
       if (passportQuestions.length > 0) {
@@ -320,11 +353,24 @@ export default function Questionnaires() {
       }
 
       // Основные вопросы - идут после паспортички
+      let questionCounter = passportQuestions.length;
       if (mainQuestions.length > 0) {
         mainQuestions.forEach((question, index) => {
-          addQuestionToDoc(question, passportQuestions.length + index);
+          addQuestionToDoc(question, questionCounter + index);
         });
+        questionCounter += mainQuestions.length;
       }
+
+      // Дополнительные блоки - идут после основных вопросов
+      Object.keys(additionalBlocksMap).forEach((blockId) => {
+        const blockQuestions = additionalBlocksMap[blockId];
+        if (blockQuestions.length > 0) {
+          blockQuestions.forEach((question, index) => {
+            addQuestionToDoc(question, questionCounter + index);
+          });
+          questionCounter += blockQuestions.length;
+        }
+      });
 
       // Создаем документ
       const doc = new Document({
@@ -395,6 +441,17 @@ export default function Questionnaires() {
 
   const handleBlockClick = (blockName) => {
     setSelectedQuestionBlock(blockName);
+  };
+
+  const handleAddBlock = () => {
+    const newBlockId = `additional_${additionalBlocks.length}`;
+    const newBlock = {
+      id: newBlockId,
+      name: `Дополнительный блок ${additionalBlocks.length + 1}`,
+      questions: []
+    };
+    setAdditionalBlocks(prev => [...prev, newBlock]);
+    setSelectedQuestionBlock(newBlockId);
   };
 
   const handleQuestionTypeSelect = (type) => {
@@ -491,12 +548,24 @@ export default function Questionnaires() {
     }
 
     try {
+      // Определяем order_index в зависимости от выбранного блока
+      let orderIndex;
+      if (selectedQuestionBlock === 'passport') {
+        orderIndex = passportQuestions.length;
+      } else if (selectedQuestionBlock === 'main') {
+        orderIndex = questions.length;
+      } else {
+        // Дополнительный блок
+        const blockIndex = additionalBlocks.findIndex(b => b.id === selectedQuestionBlock);
+        orderIndex = blockIndex !== -1 ? additionalBlocks[blockIndex].questions.length : 0;
+      }
+
       // Подготавливаем данные вопроса
       const questionPayload = {
         type: currentQuestionType,
         text: questionData.text,
         explanation: questionData.explanation,
-        order_index: selectedQuestionBlock === 'passport' ? passportQuestions.length : questions.length,
+        order_index: orderIndex,
         block_type: selectedQuestionBlock, // Добавляем информацию о блоке (правильное имя поля для бэкенда)
         answers: questionData.answers.map((answer, index) => ({
           type: answer.type,
@@ -514,8 +583,15 @@ export default function Questionnaires() {
       // Добавляем сохраненный вопрос в соответствующий блок
       if (selectedQuestionBlock === 'passport') {
         setPassportQuestions(prev => [...prev, response.data]);
-      } else {
+      } else if (selectedQuestionBlock === 'main') {
         setQuestions(prev => [...prev, response.data]);
+      } else {
+        // Дополнительный блок
+        setAdditionalBlocks(prev => prev.map(block => 
+          block.id === selectedQuestionBlock 
+            ? { ...block, questions: [...block.questions, response.data] }
+            : block
+        ));
       }
       setIsQuestionFormOpen(false);
       setQuestionData({ text: '', explanation: '', answers: [] });
@@ -561,6 +637,31 @@ export default function Questionnaires() {
         `http://localhost:8080/questionnaire/${currentQuestionnaire.id}/questions/${questionId}`
       );
       setPassportQuestions(prev => prev.filter(q => q.id !== questionId));
+    } catch (err) {
+      console.error('Ошибка при удалении вопроса:', err);
+      alert('Ошибка при удалении вопроса: ' + (err.response?.data?.error || err.message));
+    }
+  };
+
+  const handleRemoveAdditionalBlockQuestion = async (blockId, questionId) => {
+    if (!currentQuestionnaire || !currentQuestionnaire.id) {
+      alert('Анкета не найдена');
+      return;
+    }
+
+    if (!confirm('Вы уверены, что хотите удалить этот вопрос?')) {
+      return;
+    }
+
+    try {
+      await axios.delete(
+        `http://localhost:8080/questionnaire/${currentQuestionnaire.id}/questions/${questionId}`
+      );
+      setAdditionalBlocks(prev => prev.map(block => 
+        block.id === blockId 
+          ? { ...block, questions: block.questions.filter(q => q.id !== questionId) }
+          : block
+      ));
     } catch (err) {
       console.error('Ошибка при удалении вопроса:', err);
       alert('Ошибка при удалении вопроса: ' + (err.response?.data?.error || err.message));
@@ -866,7 +967,7 @@ export default function Questionnaires() {
 
                       <div className="btn-gr-2">
                         <button className="add-question" onClick={handleAddQuestionClick}>+ Вопрос</button>
-                        <button className="add-block">Добавить блок вопросов</button>
+                        <button className="add-block" onClick={handleAddBlock}>Добавить блок вопросов</button>
                       </div>
 
                     </div>
@@ -975,6 +1076,61 @@ export default function Questionnaires() {
                         </div>
                       )}
                     </div>
+
+                    {/* Дополнительные блоки */}
+                    {additionalBlocks.map((block, blockIndex) => (
+                      <div key={block.id} className={`additional-block ${selectedQuestionBlock === block.id ? 'question-block-selected' : ''}`}>
+                        <div 
+                          className="question-block-header"
+                          onClick={() => handleBlockClick(block.id)}
+                        >
+                          <div className="block-title"><h5>{block.name}</h5></div>
+                          <div className="nav-buttons">
+                            <div className="posled-button"><button><svg fill="#000000" width="64px" height="64px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><path d="M7.293,7.707a1,1,0,0,1,0-1.414l4-4a1,1,0,0,1,1.414,0l4,4a1,1,0,1,1-1.414,1.414L12,4.414,8.707,7.707A1,1,0,0,1,7.293,7.707Zm0,10,4,4a1,1,0,0,0,1.414,0l4-4a1,1,0,0,0-1.414-1.414L12,19.586,8.707,16.293a1,1,0,1,0-1.414,1.414Z"></path></g></svg></button></div>
+                            <div className="dop-button"><button><svg width="64px" height="64px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <circle cx="18" cy="12" r="1.5" transform="rotate(90 18 12)" fill="#080341"></circle> <circle cx="12" cy="12" r="1.5" transform="rotate(90 12 12)" fill="#080341"></circle> <circle cx="6" cy="12" r="1.5" transform="rotate(90 6 12)" fill="#080341"></circle> </g></svg></button></div>
+                          </div>
+                        </div>
+                        {block.questions.length === 0 ? (
+                          <div className="block-empty-placeholder">Добавьте вопросы</div>
+                        ) : (
+                          <div className="questions-list">
+                            {block.questions.map((question) => (
+                              <div key={question.id} className="question-item">
+                                <div className="question-item-header">
+                                  <span className="question-type-badge">{getQuestionTypeLabel(question.type)}</span>
+                                  <button
+                                    className="remove-question-btn"
+                                    onClick={() => handleRemoveAdditionalBlockQuestion(block.id, question.id)}
+                                  >
+                                    <svg width="18px" height="18px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                      <path d="M7 7.00006L17 17.0001M7 17.0001L17 7.00006" stroke="#ff4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
+                                  </button>
+                                </div>
+                                <div className="question-item-text">{question.text}</div>
+                                {question.explanation && (
+                                  <div className="question-item-explanation">
+                                    <em>{question.explanation}</em>
+                                  </div>
+                                )}
+                                {question.answers && question.answers.length > 0 && (
+                                  <div className="question-item-answers">
+                                    <span className="answers-label">Ответы:</span>
+                                    <ul className="answers-ul">
+                                      {question.answers.map((answer, idx) => (
+                                        <li key={answer.id || idx} className="answer-li">
+                                          {answer.text || answer.type}
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
 
                   </div>
 
