@@ -152,6 +152,7 @@ export default function Questionnaires() {
       setQuestionnaireCode('');
       setQuestionnaireDescription('');
       setQuestions([]);
+      setPassportQuestions([]);
       setSelectedCities({});
 
       // Закрываем модальное окно
@@ -176,6 +177,7 @@ export default function Questionnaires() {
     setScope('regions');
     setSelectedCities({});
     setQuestions([]);
+    setPassportQuestions([]);
     setIsModalOpen(true);
   };
 
@@ -183,10 +185,18 @@ export default function Questionnaires() {
   const fetchQuestions = async (questionnaireId) => {
     try {
       const response = await axios.get(`http://localhost:8080/questionnaire/${questionnaireId}/questions`);
-      setQuestions(response.data);
+      const allQuestions = response.data;
+      
+      // Разделяем вопросы на основные и паспортичку
+      const mainQ = allQuestions.filter(q => q.block_type !== 'passport');
+      const passportQ = allQuestions.filter(q => q.block_type === 'passport');
+      
+      setQuestions(mainQ);
+      setPassportQuestions(passportQ);
     } catch (err) {
       console.error('Ошибка при загрузке вопросов:', err);
       setQuestions([]);
+      setPassportQuestions([]);
     }
   };
 
@@ -237,66 +247,82 @@ export default function Questionnaires() {
         );
       }
 
-      // Вопросы
-      if (questionnaire.questions && questionnaire.questions.length > 0) {
-        questionnaire.questions.forEach((question, index) => {
-          // Номер и текст вопроса
+      // Функция для добавления вопроса в документ
+      const addQuestionToDoc = (question, index) => {
+        // Номер и текст вопроса
+        docChildren.push(
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: `${index + 1}. ${question.text}`,
+                bold: true,
+                size: 24
+              })
+            ],
+            spacing: { before: 200, after: 100 }
+          })
+        );
+
+        // Пояснение к вопросу (если есть)
+        if (question.explanation) {
           docChildren.push(
             new Paragraph({
               children: [
                 new TextRun({
-                  text: `${index + 1}. ${question.text}`,
-                  bold: true,
-                  size: 24
+                  text: question.explanation,
+                  italics: true,
+                  size: 20
                 })
               ],
-              spacing: { before: 200, after: 100 }
+              spacing: { after: 100 }
             })
           );
+        }
 
-          // Пояснение к вопросу (если есть)
-          if (question.explanation) {
-            docChildren.push(
-              new Paragraph({
-                children: [
-                  new TextRun({
-                    text: question.explanation,
-                    italics: true,
-                    size: 20
-                  })
-                ],
-                spacing: { after: 100 }
-              })
-            );
-          }
+        // Варианты ответов
+        if (question.answers && question.answers.length > 0) {
+          question.answers.forEach((answer, ansIndex) => {
+            const answerText = answer.text || answer.type;
+            if (answerText) {
+              docChildren.push(
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: `${String.fromCharCode(1072 + ansIndex)}) ${answerText}`,
+                      size: 22,
+                    })
+                  ],
+                  spacing: { after: 50 }
+                })
+              );
+            }
+          });
+        }
 
-          // Варианты ответов
-          if (question.answers && question.answers.length > 0) {
-            question.answers.forEach((answer, ansIndex) => {
-              const answerText = answer.text || answer.type;
-              if (answerText) {
-                docChildren.push(
-                  new Paragraph({
-                    children: [
-                      new TextRun({
-                        text: `${String.fromCharCode(1072 + ansIndex)}) ${answerText}`,
-                        size: 22,
-                      })
-                    ],
-                    spacing: { after: 50 }
-                  })
-                );
-              }
-            });
-          }
+        // Добавляем пустую строку после вопроса
+        docChildren.push(
+          new Paragraph({
+            text: '',
+            spacing: { after: 200 }
+          })
+        );
+      };
 
-          // Добавляем пустую строку после вопроса
-          docChildren.push(
-            new Paragraph({
-              text: '',
-              spacing: { after: 200 }
-            })
-          );
+      // Сначала добавляем вопросы паспортички
+      const passportQuestions = (questionnaire.questions || []).filter(q => q.block_type === 'passport');
+      const mainQuestions = (questionnaire.questions || []).filter(q => q.block_type !== 'passport');
+
+      // Вопросы о респонденте (паспортичка) - идут первыми
+      if (passportQuestions.length > 0) {
+        passportQuestions.forEach((question, index) => {
+          addQuestionToDoc(question, index);
+        });
+      }
+
+      // Основные вопросы - идут после паспортички
+      if (mainQuestions.length > 0) {
+        mainQuestions.forEach((question, index) => {
+          addQuestionToDoc(question, passportQuestions.length + index);
         });
       }
 
@@ -471,7 +497,7 @@ export default function Questionnaires() {
         text: questionData.text,
         explanation: questionData.explanation,
         order_index: selectedQuestionBlock === 'passport' ? passportQuestions.length : questions.length,
-        block: selectedQuestionBlock, // Добавляем информацию о блоке
+        block_type: selectedQuestionBlock, // Добавляем информацию о блоке (правильное имя поля для бэкенда)
         answers: questionData.answers.map((answer, index) => ({
           type: answer.type,
           text: answer.text,
