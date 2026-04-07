@@ -360,6 +360,7 @@
 
 .block-2-left {
   width: 65%;
+  max-height: 75vh;
   overflow-y: auto;
   scrollbar-width: thin;
   border-right: solid grey 1px;
@@ -874,7 +875,7 @@
   display: flex;
   flex-direction: column;
   scrollbar-width: thin;
-  gap: 0.75rem;
+  gap: 1vh;
   padding: 1%;
   max-height: 350px;
   overflow-y: auto;
