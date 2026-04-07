@@ -990,3 +990,36 @@
 .delete-questionnaire-btn:hover svg {
   transform: scale(1.1);
 }
+
+/* Стили для выделения выбранного блока вопросов */
+.question-block-selected {
+  border-color: var(--active) !important;
+  box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2) !important;
+}
+
+.question-block-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1% 2%;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.question-block-header:hover {
+  background-color: rgba(64, 158, 255, 0.05);
+}
+
+.question-block-header.selected {
+  background-color: rgba(64, 158, 255, 0.1);
+  border-bottom: 2px solid var(--active);
+}
+
+.question-block-header h5 {
+  transition: color 0.2s ease;
+}
+
+.question-block-header.selected h5 {
+  color: var(--active);
+  font-weight: 600;
+}

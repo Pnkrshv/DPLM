@@ -12,6 +12,7 @@ export default function Questionnaires() {
   const [error, setError] = useState(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [activeBlock, setActiveBlock] = useState('questions');
+  const [selectedQuestionBlock, setSelectedQuestionBlock] = useState('main'); // 'main' или 'passport'
   const [expandedDistricts, setExpandedDistricts] = useState({});
   const [selectedCities, setSelectedCities] = useState({});
   const [questionMenuOpen, setQuestionMenuOpen] = useState(false);
@@ -22,6 +23,7 @@ export default function Questionnaires() {
   const [answerMenuOpen, setAnswerMenuOpen] = useState(false);
   const [answerMenuPosition, setAnswerMenuPosition] = useState({ x: 0, y: 0 });
   const [questions, setQuestions] = useState([]);
+  const [passportQuestions, setPassportQuestions] = useState([]); // Вопросы паспортички
   const [currentQuestionnaire, setCurrentQuestionnaire] = useState(null);
   const [questionnaireName, setQuestionnaireName] = useState('');
   const [questionnaireDescription, setQuestionnaireDescription] = useState('');
@@ -213,7 +215,7 @@ export default function Questionnaires() {
         })
       );
 
-      // Код анкеты (если есть)
+      // Код анкеты
       if (questionnaire.code) {
         docChildren.push(
           new Paragraph({
@@ -224,7 +226,7 @@ export default function Questionnaires() {
         );
       }
 
-      // Описание/инструкция (если есть)
+      // Описание
       if (questionnaire.description) {
         docChildren.push(
           new Paragraph({
@@ -268,7 +270,7 @@ export default function Questionnaires() {
             );
           }
 
-          // Варианты ответов (если есть)
+          // Варианты ответов
           if (question.answers && question.answers.length > 0) {
             question.answers.forEach((answer, ansIndex) => {
               const answerText = answer.text || answer.type;
@@ -363,6 +365,10 @@ export default function Questionnaires() {
       y: rect.bottom + 5
     });
     setQuestionMenuOpen(true);
+  };
+
+  const handleBlockClick = (blockName) => {
+    setSelectedQuestionBlock(blockName);
   };
 
   const handleQuestionTypeSelect = (type) => {
@@ -464,7 +470,8 @@ export default function Questionnaires() {
         type: currentQuestionType,
         text: questionData.text,
         explanation: questionData.explanation,
-        order_index: questions.length,
+        order_index: selectedQuestionBlock === 'passport' ? passportQuestions.length : questions.length,
+        block: selectedQuestionBlock, // Добавляем информацию о блоке
         answers: questionData.answers.map((answer, index) => ({
           type: answer.type,
           text: answer.text,
@@ -478,8 +485,12 @@ export default function Questionnaires() {
         questionPayload
       );
 
-      // Добавляем сохраненный вопрос в список
-      setQuestions(prev => [...prev, response.data]);
+      // Добавляем сохраненный вопрос в соответствующий блок
+      if (selectedQuestionBlock === 'passport') {
+        setPassportQuestions(prev => [...prev, response.data]);
+      } else {
+        setQuestions(prev => [...prev, response.data]);
+      }
       setIsQuestionFormOpen(false);
       setQuestionData({ text: '', explanation: '', answers: [] });
     } catch (err) {
@@ -503,6 +514,27 @@ export default function Questionnaires() {
         `http://localhost:8080/questionnaire/${currentQuestionnaire.id}/questions/${questionId}`
       );
       setQuestions(prev => prev.filter(q => q.id !== questionId));
+    } catch (err) {
+      console.error('Ошибка при удалении вопроса:', err);
+      alert('Ошибка при удалении вопроса: ' + (err.response?.data?.error || err.message));
+    }
+  };
+
+  const handleRemovePassportQuestion = async (questionId) => {
+    if (!currentQuestionnaire || !currentQuestionnaire.id) {
+      alert('Анкета не найдена');
+      return;
+    }
+
+    if (!confirm('Вы уверены, что хотите удалить этот вопрос?')) {
+      return;
+    }
+
+    try {
+      await axios.delete(
+        `http://localhost:8080/questionnaire/${currentQuestionnaire.id}/questions/${questionId}`
+      );
+      setPassportQuestions(prev => prev.filter(q => q.id !== questionId));
     } catch (err) {
       console.error('Ошибка при удалении вопроса:', err);
       alert('Ошибка при удалении вопроса: ' + (err.response?.data?.error || err.message));
@@ -813,8 +845,11 @@ export default function Questionnaires() {
 
                     </div>
 
-                    <div className="create-question-block">
-                      <div className="block-nav">
+                    <div className={`create-question-block ${selectedQuestionBlock === 'main' ? 'question-block-selected' : ''}`}>
+                      <div 
+                        className={`question-block-header ${selectedQuestionBlock === 'main' ? 'selected' : ''}`}
+                        onClick={() => handleBlockClick('main')}
+                      >
                         <div className="block-title"><h5>Основной блок</h5></div>
                         <div className="nav-buttons">
                           <div className="posled-button"><button><svg fill="#000000" width="64px" height="64px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><path d="M7.293,7.707a1,1,0,0,1,0-1.414l4-4a1,1,0,0,1,1.414,0l4,4a1,1,0,1,1-1.414,1.414L12,4.414,8.707,7.707A1,1,0,0,1,7.293,7.707Zm0,10,4,4a1,1,0,0,0,1.414,0l4-4a1,1,0,0,0-1.414-1.414L12,19.586,8.707,16.293a1,1,0,1,0-1.414,1.414Z"></path></g></svg></button></div>
@@ -863,15 +898,56 @@ export default function Questionnaires() {
                       )}
                     </div>
 
-                    <div className="passport-block">
-                      <div className="block-nav">
+                    <div className={`passport-block ${selectedQuestionBlock === 'passport' ? 'question-block-selected' : ''}`}>
+                      <div 
+                        className={`question-block-header ${selectedQuestionBlock === 'passport' ? 'selected' : ''}`}
+                        onClick={() => handleBlockClick('passport')}
+                      >
                         <div className="block-title"><h5>Вопросы о респонденте (паспортичка)</h5></div>
                         <div className="nav-buttons">
                           <div className="posled-button"><button><svg fill="#000000" width="64px" height="64px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><path d="M7.293,7.707a1,1,0,0,1,0-1.414l4-4a1,1,0,0,1,1.414,0l4,4a1,1,0,1,1-1.414,1.414L12,4.414,8.707,7.707A1,1,0,0,1,7.293,7.707Zm0,10,4,4a1,1,0,0,0,1.414,0l4-4a1,1,0,0,0-1.414-1.414L12,19.586,8.707,16.293a1,1,0,1,0-1.414,1.414Z"></path></g></svg></button></div>
                           <div className="dop-button"><button><svg width="64px" height="64px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <circle cx="18" cy="12" r="1.5" transform="rotate(90 18 12)" fill="#080341"></circle> <circle cx="12" cy="12" r="1.5" transform="rotate(90 12 12)" fill="#080341"></circle> <circle cx="6" cy="12" r="1.5" transform="rotate(90 6 12)" fill="#080341"></circle> </g></svg></button></div>
                         </div>
                       </div>
-                      <textarea className="block-text-area" placeholder="Добавьте вопросы"></textarea>
+                      {passportQuestions.length === 0 ? (
+                        <div className="block-empty-placeholder">Добавьте вопросы</div>
+                      ) : (
+                        <div className="questions-list">
+                          {passportQuestions.map((question) => (
+                            <div key={question.id} className="question-item">
+                              <div className="question-item-header">
+                                <span className="question-type-badge">{getQuestionTypeLabel(question.type)}</span>
+                                <button
+                                  className="remove-question-btn"
+                                  onClick={() => handleRemovePassportQuestion(question.id)}
+                                >
+                                  <svg width="18px" height="18px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M7 7.00006L17 17.0001M7 17.0001L17 7.00006" stroke="#ff4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+                                  </svg>
+                                </button>
+                              </div>
+                              <div className="question-item-text">{question.text}</div>
+                              {question.explanation && (
+                                <div className="question-item-explanation">
+                                  <em>{question.explanation}</em>
+                                </div>
+                              )}
+                              {question.answers && question.answers.length > 0 && (
+                                <div className="question-item-answers">
+                                  <span className="answers-label">Ответы:</span>
+                                  <ul className="answers-ul">
+                                    {question.answers.map((answer, idx) => (
+                                      <li key={answer.id || idx} className="answer-li">
+                                        {answer.text || answer.type}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
 
                   </div>
@@ -1058,7 +1134,7 @@ export default function Questionnaires() {
         >
           <p>Создать анкету</p>
         </button>
-        <button className="update-btn">
+        <button className="update-btn" onClick={fetchQuestionnaires}>
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="21.986">
             <path d="M19.841 3.24A10.988 10.988 0 0 0 8.54.573l1.266 3.8a7.033 7.033 0 0 1 8.809 9.158L17 11.891v7.092h7l-2.407-2.439A11.049 11.049 0 0 0 19.841 3.24zM1 10.942a11.05 11.05 0 0 0 11.013 11.044 11.114 11.114 0 0 0 3.521-.575l-1.266-3.8a7.035 7.035 0 0 1-8.788-9.22L7 9.891V6.034c.021-.02.038-.044.06-.065L7 5.909V2.982H0l2.482 2.449A10.951 10.951 0 0 0 1 10.942z" />
           </svg>
