@@ -336,7 +336,7 @@ export default function Questionnaires() {
 
       // Генерируем и скачиваем файл
       const blob = await Packer.toBlob(doc);
-      const fileName = `${questionnaire.code || questionnaire.name || 'anketa'}.docx`;
+      const fileName = `${questionnaire.name || questionnaire.code || 'anketa'}.docx`;
       saveAs(blob, fileName);
 
     } catch (err) {
