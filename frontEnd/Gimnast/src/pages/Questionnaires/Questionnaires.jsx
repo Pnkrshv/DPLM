@@ -189,11 +189,11 @@ export default function Questionnaires() {
     try {
       const response = await axios.get(`http://localhost:8080/questionnaire/${questionnaireId}/questions`);
       const allQuestions = response.data;
-      
+
       // Разделяем вопросы на основные, паспортичку и дополнительные блоки
       const mainQ = allQuestions.filter(q => q.block_type === 'main');
       const passportQ = allQuestions.filter(q => q.block_type === 'passport');
-      
+
       // Группируем дополнительные блоки
       const additionalBlocksMap = {};
       allQuestions.forEach(q => {
@@ -204,14 +204,14 @@ export default function Questionnaires() {
           additionalBlocksMap[q.block_type].push(q);
         }
       });
-      
+
       // Создаем массив дополнительных блоков
       const additionalBlocksArr = Object.keys(additionalBlocksMap).map((blockId, index) => ({
         id: blockId,
         name: `Дополнительный блок ${index + 1}`,
         questions: additionalBlocksMap[blockId]
       }));
-      
+
       setQuestions(mainQ);
       setPassportQuestions(passportQ);
       setAdditionalBlocks(additionalBlocksArr);
@@ -587,8 +587,8 @@ export default function Questionnaires() {
         setQuestions(prev => [...prev, response.data]);
       } else {
         // Дополнительный блок
-        setAdditionalBlocks(prev => prev.map(block => 
-          block.id === selectedQuestionBlock 
+        setAdditionalBlocks(prev => prev.map(block =>
+          block.id === selectedQuestionBlock
             ? { ...block, questions: [...block.questions, response.data] }
             : block
         ));
@@ -657,8 +657,8 @@ export default function Questionnaires() {
       await axios.delete(
         `http://localhost:8080/questionnaire/${currentQuestionnaire.id}/questions/${questionId}`
       );
-      setAdditionalBlocks(prev => prev.map(block => 
-        block.id === blockId 
+      setAdditionalBlocks(prev => prev.map(block =>
+        block.id === blockId
           ? { ...block, questions: block.questions.filter(q => q.id !== questionId) }
           : block
       ));
@@ -973,7 +973,7 @@ export default function Questionnaires() {
                     </div>
 
                     <div className={`create-question-block ${selectedQuestionBlock === 'main' ? 'question-block-selected' : ''}`}>
-                      <div 
+                      <div
                         className={`question-block-header ${selectedQuestionBlock === 'main' ? 'selected' : ''}`}
                         onClick={() => handleBlockClick('main')}
                       >
@@ -1026,7 +1026,7 @@ export default function Questionnaires() {
                     </div>
 
                     <div className={`passport-block ${selectedQuestionBlock === 'passport' ? 'question-block-selected' : ''}`}>
-                      <div 
+                      <div
                         className={`question-block-header ${selectedQuestionBlock === 'passport' ? 'selected' : ''}`}
                         onClick={() => handleBlockClick('passport')}
                       >
@@ -1080,7 +1080,7 @@ export default function Questionnaires() {
                     {/* Дополнительные блоки */}
                     {additionalBlocks.map((block, blockIndex) => (
                       <div key={block.id} className={`additional-block ${selectedQuestionBlock === block.id ? 'question-block-selected' : ''}`}>
-                        <div 
+                        <div
                           className="question-block-header"
                           onClick={() => handleBlockClick(block.id)}
                         >
