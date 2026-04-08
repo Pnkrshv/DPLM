@@ -662,6 +662,10 @@
   cursor: pointer;
   transition: 0.3s all ease-in;
 
+  &:focus svg {
+    animation: update 2s ease;
+  }
+
   &:hover {
     background-color: rgb(216, 216, 216);
   }
