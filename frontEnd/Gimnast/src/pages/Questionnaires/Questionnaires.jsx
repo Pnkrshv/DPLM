@@ -17,6 +17,9 @@ export default function Questionnaires() {
   const [selectedCities, setSelectedCities] = useState({});
   const [questionMenuOpen, setQuestionMenuOpen] = useState(false);
   const [questionMenuPosition, setQuestionMenuPosition] = useState({ x: 0, y: 0 });
+  const [blockMenuOpen, setBlockMenuOpen] = useState(false);
+  const [blockMenuPosition, setBlockMenuPosition] = useState({ x: 0, y: 0 });
+  const [selectedBlockForMenu, setSelectedBlockForMenu] = useState(null);
   const [isQuestionFormOpen, setIsQuestionFormOpen] = useState(false);
   const [currentQuestionType, setCurrentQuestionType] = useState(null);
   const [questionData, setQuestionData] = useState({ text: '', explanation: '', answers: [] });
@@ -657,14 +660,61 @@ export default function Questionnaires() {
       await axios.delete(
         `http://localhost:8080/questionnaire/${currentQuestionnaire.id}/questions/${questionId}`
       );
-      setAdditionalBlocks(prev => prev.map(block =>
-        block.id === blockId
+      setAdditionalBlocks(prev => prev.map(block => 
+        block.id === blockId 
           ? { ...block, questions: block.questions.filter(q => q.id !== questionId) }
           : block
       ));
     } catch (err) {
       console.error('Ошибка при удалении вопроса:', err);
       alert('Ошибка при удалении вопроса: ' + (err.response?.data?.error || err.message));
+    }
+  };
+
+  const handleRemoveBlock = async (blockId) => {
+    if (!confirm('Вы уверены, что хотите удалить этот блок и все его вопросы?')) {
+      return;
+    }
+
+    try {
+      // Удаляем все вопросы блока с сервера
+      const block = additionalBlocks.find(b => b.id === blockId);
+      if (block && block.questions) {
+        for (const question of block.questions) {
+          await axios.delete(
+            `http://localhost:8080/questionnaire/${currentQuestionnaire.id}/questions/${question.id}`
+          );
+        }
+      }
+
+      // Удаляем блок из состояния
+      setAdditionalBlocks(prev => prev.filter(b => b.id !== blockId));
+      
+      // Если удаленный блок был выбран, сбрасываем выбор
+      if (selectedQuestionBlock === blockId) {
+        setSelectedQuestionBlock('main');
+      }
+    } catch (err) {
+      console.error('Ошибка при удалении блока:', err);
+      alert('Ошибка при удалении блока: ' + (err.response?.data?.error || err.message));
+    }
+  };
+
+  const handleBlockMenuClick = (e, blockId) => {
+    e.stopPropagation();
+    const rect = e.currentTarget.getBoundingClientRect();
+    setBlockMenuPosition({
+      x: rect.left - 80,
+      y: rect.bottom + 5
+    });
+    setSelectedBlockForMenu(blockId);
+    setBlockMenuOpen(true);
+  };
+
+  const handleBlockDelete = () => {
+    setBlockMenuOpen(false);
+    if (selectedBlockForMenu) {
+      handleRemoveBlock(selectedBlockForMenu);
     }
   };
 
@@ -1087,7 +1137,19 @@ export default function Questionnaires() {
                           <div className="block-title"><h5>{block.name}</h5></div>
                           <div className="nav-buttons">
                             <div className="posled-button"><button><svg fill="#000000" width="64px" height="64px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><path d="M7.293,7.707a1,1,0,0,1,0-1.414l4-4a1,1,0,0,1,1.414,0l4,4a1,1,0,1,1-1.414,1.414L12,4.414,8.707,7.707A1,1,0,0,1,7.293,7.707Zm0,10,4,4a1,1,0,0,0,1.414,0l4-4a1,1,0,0,0-1.414-1.414L12,19.586,8.707,16.293a1,1,0,1,0-1.414,1.414Z"></path></g></svg></button></div>
-                            <div className="dop-button"><button><svg width="64px" height="64px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <circle cx="18" cy="12" r="1.5" transform="rotate(90 18 12)" fill="#080341"></circle> <circle cx="12" cy="12" r="1.5" transform="rotate(90 12 12)" fill="#080341"></circle> <circle cx="6" cy="12" r="1.5" transform="rotate(90 6 12)" fill="#080341"></circle> </g></svg></button></div>
+                            <div className="dop-button">
+                              <button onClick={(e) => handleBlockMenuClick(e, block.id)}>
+                                <svg width="64px" height="64px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                  <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                                  <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                                  <g id="SVGRepo_iconCarrier"> 
+                                    <circle cx="18" cy="12" r="1.5" transform="rotate(90 18 12)" fill="#080341"></circle> 
+                                    <circle cx="12" cy="12" r="1.5" transform="rotate(90 12 12)" fill="#080341"></circle> 
+                                    <circle cx="6" cy="12" r="1.5" transform="rotate(90 6 12)" fill="#080341"></circle> 
+                                  </g>
+                                </svg>
+                              </button>
+                            </div>
                           </div>
                         </div>
                         {block.questions.length === 0 ? (
@@ -1189,6 +1251,31 @@ export default function Questionnaires() {
                   {type.label}
                 </li>
               ))}
+            </ul>
+          </div>
+        </>
+      )}
+
+      {blockMenuOpen && (
+        <>
+          <div
+            className="question-menu-bg"
+            onClick={() => setBlockMenuOpen(false)}
+          ></div>
+          <div
+            className="question-menu"
+            style={{
+              left: `${blockMenuPosition.x}px`,
+              top: `${blockMenuPosition.y}px`
+            }}
+          >
+            <ul className="question-menu-list">
+              <li
+                className="question-menu-item delete-option"
+                onClick={handleBlockDelete}
+              >
+                Удалить блок
+              </li>
             </ul>
           </div>
         </>

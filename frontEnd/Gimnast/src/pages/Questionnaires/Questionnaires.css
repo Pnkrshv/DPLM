@@ -726,6 +726,14 @@
   border-radius: 0;
 }
 
+.question-menu-item.delete-option {
+  color: #ff4444;
+}
+
+.question-menu-item.delete-option:hover {
+  background-color: rgba(255, 68, 68, 0.1);
+}
+
 /* Форма создания вопроса */
 .question-form-window {
   position: fixed;
