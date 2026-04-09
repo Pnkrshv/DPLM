@@ -84,8 +84,10 @@ type Question struct {
 	Text            string    `gorm:"type:text;not null" json:"text"`
 	Explanation     string    `gorm:"type:text" json:"explanation"`
 	OrderIndex      int       `gorm:"not null;default:0" json:"order_index"`
-	BlockType       string    `gorm:"type:varchar(50);default:'main'" json:"block_type"` // main, passport
-	IsRandomized    bool      `gorm:"default:false" json:"is_randomized"`
+	BlockType       string    `gorm:"type:varchar(50);default:'main'" json:"block_type"`  // main, passport
+	IsRandomized    bool      `gorm:"default:false" json:"is_randomized"`                 // перемешивать ответы
+	MaxAnswers      int       `gorm:"default:0" json:"max_answers"`                       // максимум ответов (0 = неограниченно)
+	RegionScope     string    `gorm:"type:varchar(50);default:'all'" json:"region_scope"` // для каких регионов
 	Answers         []Answer  `gorm:"foreignKey:QuestionID" json:"answers,omitempty"`
 	CreatedAt       time.Time `json:"created_at"`
 	UpdatedAt       time.Time `json:"updated_at"`
@@ -881,6 +883,8 @@ func createQuestion(c echo.Context) error {
 		OrderIndex   int             `json:"order_index"`
 		BlockType    string          `json:"block_type"`
 		IsRandomized bool            `json:"is_randomized"`
+		MaxAnswers   int             `json:"max_answers"`
+		RegionScope  string          `json:"region_scope"`
 		Answers      []AnswerPayload `json:"answers"`
 	}
 
@@ -907,6 +911,8 @@ func createQuestion(c echo.Context) error {
 		OrderIndex:      req.OrderIndex,
 		BlockType:       req.BlockType,
 		IsRandomized:    req.IsRandomized,
+		MaxAnswers:      req.MaxAnswers,
+		RegionScope:     req.RegionScope,
 		CreatedAt:       time.Now(),
 		UpdatedAt:       time.Now(),
 	}

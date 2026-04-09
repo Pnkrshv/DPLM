@@ -303,7 +303,7 @@
 
 .expand-icon {
   padding-top: 1%;
-  margin-right: .5vw;
+  margin-right: 0.5vw;
 }
 
 .district-item {
@@ -317,7 +317,7 @@
   flex-direction: column;
   align-items: start;
   margin-left: 2rem;
-  gap: .5vh;
+  gap: 0.5vh;
 }
 
 .city-item {
@@ -400,13 +400,13 @@
   list-style: none;
   color: grey;
   gap: 5%;
-  padding: 10px .5% 0 .5%;
+  padding: 10px 0.5% 0 0.5%;
   border-bottom: solid grey 1.7px;
   font-size: clamp(14px, 90%, 110%);
 
   & .nav-element2 {
     cursor: pointer;
-    transition: all .3s ease;
+    transition: all 0.3s ease;
     position: relative;
     padding-bottom: 10px;
 
@@ -425,14 +425,14 @@
   }
 
   &::after {
-    content: '';
+    content: "";
     position: absolute;
     width: 100%;
     height: 2px;
     background-color: var(--active);
     bottom: -1.7px;
     left: 0;
-    transition: all .3s ease;
+    transition: all 0.3s ease;
   }
 }
 
@@ -459,20 +459,20 @@
 .options-switcher-label {
   display: block;
   width: calc(var(--index) * 1.6);
-  height: calc(var(--index) * .7);
+  height: calc(var(--index) * 0.7);
   background-color: #e9e9ea;
   border-radius: 100px;
   position: relative;
   cursor: pointer;
-  transition: background-color .3s ease;
+  transition: background-color 0.3s ease;
 
   &::after {
-    content: '';
+    content: "";
     position: absolute;
     top: 8%;
     left: 7%;
-    width: calc(var(--index) * .6);
-    height: calc(var(--index) * .6);
+    width: calc(var(--index) * 0.6);
+    height: calc(var(--index) * 0.6);
     background-color: white;
     border-radius: 50%;
     box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
@@ -489,7 +489,7 @@
 }
 
 .options-switcher-label:active::after {
-  width: calc(var(--index) * .6);
+  width: calc(var(--index) * 0.6);
 }
 
 .buttons-group {
@@ -521,7 +521,7 @@
   padding: 2%;
   border-radius: 4px;
   cursor: pointer;
-  transition: all .3s ease;
+  transition: all 0.3s ease;
 
   &:hover {
     background-color: var(--hoveractive);
@@ -538,7 +538,7 @@
   border-radius: 4px;
   font-size: 90%;
   cursor: pointer;
-  transition: all .3s ease;
+  transition: all 0.3s ease;
 
   &:hover {
     background-color: rgb(177, 249, 177);
@@ -552,7 +552,7 @@
   border-radius: 4px;
   border: none;
   cursor: pointer;
-  transition: .3s ease;
+  transition: 0.3s ease;
 
   &:hover {
     background-color: rgb(61, 165, 61);
@@ -709,7 +709,7 @@
 .question-menu h5 {
   padding: 5%;
   text-align: center;
-  font-size: clamp(.6rem, .8rem, 1rem);
+  font-size: clamp(0.6rem, 0.8rem, 1rem);
   color: #666;
   border-bottom: 1px solid #eee;
   font-weight: normal;
@@ -725,7 +725,7 @@
   padding: 0.5rem 1rem;
   cursor: pointer;
   transition: background-color 0.2s;
-  font-size: clamp(.6rem, .8rem, 1rem);
+  font-size: clamp(0.6rem, 0.8rem, 1rem);
 }
 
 .question-menu-item:hover {
@@ -758,13 +758,98 @@
   background-color: white;
   border: solid 1px grey;
   border-radius: 4px;
-  width: 50vw;
-  min-width: 500px;
-  max-width: 800px;
-  max-height: 85vh;
+  width: 85%;
+  max-width: 1200px;
+  max-height: 90vh;
   display: flex;
   flex-direction: column;
   box-shadow: 4px 4px 12px rgba(34, 60, 80, 0.25);
+}
+
+.question-form-container {
+  display: flex;
+  padding: 1%;
+  align-items: center;
+  gap: 1vw;
+  margin-bottom: calc(var(--index) * 0.5);
+}
+
+.question-form-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.question-form-header {
+  display: flex;
+  padding: 1%;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #eee;
+}
+
+.question-form-header h4 {
+  font-size: clamp(0.6rem, 0.8rem, 1rem);
+  color: #333;
+  font-family: main;
+}
+
+.question-form-sidebar {
+  width: 280px;
+  background-color: #f9f9f9;
+  border-radius: 4px;
+  padding: 1%;
+  font-family: main;
+  border: 1px solid #e0e0e0;
+}
+
+.question-form-sidebar h5 {
+  font-size: clamp(0.6rem, 0.8rem, 1rem);
+  color: #333;
+  border-bottom: 1px solid #ddd;
+}
+
+.property-group {
+  margin-bottom: calc(var(--index) * 0.5);
+}
+
+.property-group label {
+  display: block;
+  font-size: 0.85rem;
+  color: #555;
+  margin-bottom: 0.3rem;
+  font-weight: 500;
+}
+
+.property-input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-family: main;
+  font-size: 0.85rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.property-input:focus {
+  border-color: var(--active);
+}
+
+.property-select {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-family: main;
+  font-size: 0.85rem;
+  outline: none;
+  background-color: white;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.property-select:focus {
+  border-color: var(--active);
 }
 
 .question-form-content {
@@ -889,7 +974,7 @@
   text-align: start;
   margin-bottom: 1%;
   color: #999;
-  font-size: clamp(.6rem, .8rem, 1rem);
+  font-size: clamp(0.6rem, 0.8rem, 1rem);
   border-top: 1px solid #ddd;
 }
 
@@ -990,6 +1075,36 @@
   background-color: #f9f9f9;
   border-radius: 4px;
   border-left: 3px solid #4caf50;
+}
+
+/* Стили для свойств вопроса в списке */
+.question-properties {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.property-badge {
+  font-size: 0.7rem;
+  padding: 0.2rem 0.5rem;
+  background-color: #e3f2fd;
+  color: #1976d2;
+  border-radius: 12px;
+  border: 1px solid #bbdefb;
+  white-space: nowrap;
+}
+
+.property-badge.property-badge-random {
+  background-color: #f3e5f5;
+  color: #7b1fa2;
+  border-color: #e1bee7;
+}
+
+.property-badge.property-badge-region {
+  background-color: #fff3e0;
+  color: #f57c00;
+  border-color: #ffe0b2;
 }
 
 /* Стили для кнопки удаления анкеты */

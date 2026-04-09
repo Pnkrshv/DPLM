@@ -23,6 +23,11 @@ export default function Questionnaires() {
   const [isQuestionFormOpen, setIsQuestionFormOpen] = useState(false);
   const [currentQuestionType, setCurrentQuestionType] = useState(null);
   const [questionData, setQuestionData] = useState({ text: '', explanation: '', answers: [] });
+  const [questionProperties, setQuestionProperties] = useState({
+    maxAnswers: '',
+    shuffleAnswers: false,
+    regionScope: 'all'
+  });
   const [answerMenuOpen, setAnswerMenuOpen] = useState(false);
   const [answerMenuPosition, setAnswerMenuPosition] = useState({ x: 0, y: 0 });
   const [questions, setQuestions] = useState([]);
@@ -460,6 +465,11 @@ export default function Questionnaires() {
   const handleQuestionTypeSelect = (type) => {
     setCurrentQuestionType(type);
     setQuestionData({ text: '', explanation: '', answers: [] });
+    setQuestionProperties({
+      maxAnswers: '',
+      shuffleAnswers: false,
+      regionScope: 'all'
+    });
     setQuestionMenuOpen(false);
     setIsQuestionFormOpen(true);
   };
@@ -523,6 +533,21 @@ export default function Questionnaires() {
     return labels[type] || type;
   };
 
+  const getRegionLabel = (scope) => {
+    const labels = {
+      'all': 'Все регионы',
+      'central': 'Центральный',
+      'northwest': 'Северо-Западный',
+      'south': 'Южный',
+      'northcaucasus': 'Северо-Кавказский',
+      'volga': 'Приволжский',
+      'ural': 'Уральский',
+      'siberia': 'Сибирский',
+      'fareast': 'Дальневосточный'
+    };
+    return labels[scope] || scope;
+  };
+
   const handleAnswerTextChange = (answerId, newText) => {
     setQuestionData(prev => ({
       ...prev,
@@ -569,7 +594,10 @@ export default function Questionnaires() {
         text: questionData.text,
         explanation: questionData.explanation,
         order_index: orderIndex,
-        block_type: selectedQuestionBlock, // Добавляем информацию о блоке (правильное имя поля для бэкенда)
+        block_type: selectedQuestionBlock,
+        max_answers: questionProperties.maxAnswers ? parseInt(questionProperties.maxAnswers) : null,
+        shuffle_answers: questionProperties.shuffleAnswers,
+        region_scope: questionProperties.regionScope,
         answers: questionData.answers.map((answer, index) => ({
           type: answer.type,
           text: answer.text,
@@ -598,6 +626,11 @@ export default function Questionnaires() {
       }
       setIsQuestionFormOpen(false);
       setQuestionData({ text: '', explanation: '', answers: [] });
+      setQuestionProperties({
+        maxAnswers: '',
+        shuffleAnswers: false,
+        regionScope: 'all'
+      });
     } catch (err) {
       console.error('Ошибка при сохранении вопроса:', err);
       alert('Ошибка при сохранении вопроса: ' + (err.response?.data?.error || err.message));
@@ -1042,6 +1075,19 @@ export default function Questionnaires() {
                             <div key={question.id} className="question-item">
                               <div className="question-item-header">
                                 <span className="question-type-badge">{getQuestionTypeLabel(question.type)}</span>
+                                <div className="question-properties">
+                                  {question.max_answers > 0 && (
+                                    <span className="property-badge">Макс: {question.max_answers}</span>
+                                  )}
+                                  {question.is_randomized && (
+                                    <span className="property-badge property-badge-random">Перемешивание</span>
+                                  )}
+                                  {question.region_scope && question.region_scope !== 'all' && (
+                                    <span className="property-badge property-badge-region">
+                                      {getRegionLabel(question.region_scope)}
+                                    </span>
+                                  )}
+                                </div>
                                 <button
                                   className="remove-question-btn"
                                   onClick={() => handleRemoveQuestion(question.id)}
@@ -1285,63 +1331,142 @@ export default function Questionnaires() {
         <>
           <div
             className="modal-bg"
-            onClick={() => setIsQuestionFormOpen(false)}
+            onClick={() => {
+              setIsQuestionFormOpen(false);
+              setQuestionProperties({
+                maxAnswers: '',
+                shuffleAnswers: false,
+                regionScope: 'all'
+              });
+            }}
           ></div>
           <div className="question-form-window">
-            <div className="question-form-content">
-              <textarea
-                className="question-text-input"
-                placeholder="Введите вопрос"
-                value={questionData.text}
-                onChange={(e) => setQuestionData(prev => ({ ...prev, text: e.target.value }))}
-              />
-
-              <textarea
-                className="question-explanation-input"
-                placeholder="Введите пояснение"
-                value={questionData.explanation}
-                onChange={(e) => setQuestionData(prev => ({ ...prev, explanation: e.target.value }))}
-              />
-
-              <div className="answers-section">
-
-
-                {questionData.answers.length > 0 && (
-                  <div className="answers-list">
-                    {questionData.answers.map((answer) => (
-                      <div key={answer.id} className="answer-item">
-                        {(answer.type === 'text' || answer.type === 'other') ? (
-                          <input
-                            type="text"
-                            className="answer-text-input"
-                            placeholder={answer.type === 'text' ? 'Введите вариант ответа' : 'Введите свой вариант'}
-                            value={answer.text}
-                            onChange={(e) => handleAnswerTextChange(answer.id, e.target.value)}
-                          />
-                        ) : (
-                          <span className="answer-label">{answer.text}</span>
-                        )}
-                        <button
-                          className="remove-answer-btn"
-                          onClick={() => handleRemoveAnswer(answer.id)}
-                        >
-                          <svg width="16px" height="16px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M7 7.00006L17 17.0001M7 17.0001L17 7.00006" stroke="#ff4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
-                          </svg>
-                        </button>
-                      </div>
-                    ))}
+            <div className="question-form-container">
+              <div className="question-form-main">
+                <div className="question-form-header">
+                  <h4>Создание вопроса</h4>
+                  <div className="close-btn" onClick={() => {
+                    setIsQuestionFormOpen(false);
+                    setQuestionProperties({
+                      maxAnswers: '',
+                      shuffleAnswers: false,
+                      regionScope: 'all'
+                    });
+                  }}>
+                    <svg width="24px" height="24px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M7 7.00006L17 17.0001M7 17.0001L17 7.00006" stroke="#292929" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
                   </div>
-                )}
+                </div>
+
+                <textarea
+                  className="question-text-input"
+                  placeholder="Введите вопрос"
+                  value={questionData.text}
+                  onChange={(e) => setQuestionData(prev => ({ ...prev, text: e.target.value }))}
+                />
+
+                <textarea
+                  className="question-explanation-input"
+                  placeholder="Введите пояснение"
+                  value={questionData.explanation}
+                  onChange={(e) => setQuestionData(prev => ({ ...prev, explanation: e.target.value }))}
+                />
+
+                <div className="answers-section">
+                  {questionData.answers.length > 0 && (
+                    <div className="answers-list">
+                      {questionData.answers.map((answer) => (
+                        <div key={answer.id} className="answer-item">
+                          {(answer.type === 'text' || answer.type === 'other') ? (
+                            <input
+                              type="text"
+                              className="answer-text-input"
+                              placeholder={answer.type === 'text' ? 'Введите вариант ответа' : 'Введите свой вариант'}
+                              value={answer.text}
+                              onChange={(e) => handleAnswerTextChange(answer.id, e.target.value)}
+                            />
+                          ) : (
+                            <span className="answer-label">{answer.text}</span>
+                          )}
+                          <button
+                            className="remove-answer-btn"
+                            onClick={() => handleRemoveAnswer(answer.id)}
+                          >
+                            <svg width="16px" height="16px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M7 7.00006L17 17.0001M7 17.0001L17 7.00006" stroke="#ff4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="answers-header">
+                  <button
+                    className="add-answer-btn"
+                    onClick={handleAddAnswerClick}
+                  >
+                    + Ответ
+                  </button>
+                </div>
               </div>
 
-              <div className="answers-header">
-                <button
-                  className="add-answer-btn"
-                  onClick={handleAddAnswerClick}
-                >
-                  + Ответ
-                </button>
+              <div className="question-form-sidebar">
+                <h5>Свойства вопроса</h5>
+                
+                <div className="property-group">
+                  <label>Максимум ответов</label>
+                  <input
+                    type="number"
+                    className="property-input"
+                    value={questionProperties.maxAnswers}
+                    onChange={(e) => setQuestionProperties(prev => ({
+                      ...prev,
+                      maxAnswers: e.target.value
+                    }))}
+                    min="1"
+                    placeholder="Неограниченно"
+                  />
+                </div>
+
+                <div className="property-group">
+                  <label>Перемешивать ответы</label>
+                  <input
+                    type="checkbox"
+                    id="shuffle-answers-switcher"
+                    className="options-switcher"
+                    checked={questionProperties.shuffleAnswers}
+                    onChange={(e) => setQuestionProperties(prev => ({
+                      ...prev,
+                      shuffleAnswers: e.target.checked
+                    }))}
+                  />
+                  <label htmlFor="shuffle-answers-switcher" className="options-switcher-label"></label>
+                </div>
+
+                <div className="property-group">
+                  <label>Вопрос для регионов</label>
+                  <select
+                    className="property-select"
+                    value={questionProperties.regionScope}
+                    onChange={(e) => setQuestionProperties(prev => ({
+                      ...prev,
+                      regionScope: e.target.value
+                    }))}
+                  >
+                    <option value="all">Все регионы</option>
+                    <option value="central">Центральный</option>
+                    <option value="northwest">Северо-Западный</option>
+                    <option value="south">Южный</option>
+                    <option value="northcaucasus">Северо-Кавказский</option>
+                    <option value="volga">Приволжский</option>
+                    <option value="ural">Уральский</option>
+                    <option value="siberia">Сибирский</option>
+                    <option value="fareast">Дальневосточный</option>
+                  </select>
+                </div>
               </div>
             </div>
 
@@ -1351,6 +1476,11 @@ export default function Questionnaires() {
                 onClick={(e) => {
                   e.preventDefault();
                   setIsQuestionFormOpen(false);
+                  setQuestionProperties({
+                    maxAnswers: '',
+                    shuffleAnswers: false,
+                    regionScope: 'all'
+                  });
                 }}
               >
                 Отменить
