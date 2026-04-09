@@ -1160,6 +1160,7 @@
 .settings-table-container {
   padding: 1%;
   overflow-y: auto;
+  scrollbar-width: thin;
 }
 
 .settings-table-container h4 {
@@ -1224,6 +1225,14 @@
 
 .settings-table td.switcher-cell {
   padding: 0.4rem;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.switcher-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .settings-table td.actions-cell {
@@ -1267,7 +1276,7 @@
 }
 
 .settings-block-title {
-  font-size: 1rem;
+  font-size: clamp(.6rem, .8rem, 1rem);
   color: #333;
   font-weight: 600;
   margin-bottom: calc(var(--index) * 0.3);

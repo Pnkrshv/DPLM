@@ -1334,54 +1334,64 @@ export default function Questionnaires() {
                                     <span className="question-text-cell">{question.text}</span>
                                   </td>
                                   <td className="switcher-cell">
-                                    <input
-                                      type="checkbox"
-                                      id={`adapt-q-${question.id}`}
-                                      className="options-switcher"
-                                      checked={settings.allow_adaptation}
-                                      onChange={(e) => handleQuestionSettingChange(question.id, 'allow_adaptation', e.target.checked)}
-                                    />
-                                    <label htmlFor={`adapt-q-${question.id}`} className="options-switcher-label"></label>
+                                    <div className="switcher-wrapper">
+                                      <input
+                                        type="checkbox"
+                                        id={`adapt-q-${question.id}`}
+                                        className="options-switcher"
+                                        checked={settings.allow_adaptation}
+                                        onChange={(e) => handleQuestionSettingChange(question.id, 'allow_adaptation', e.target.checked)}
+                                      />
+                                      <label htmlFor={`adapt-q-${question.id}`} className="options-switcher-label"></label>
+                                    </div>
                                   </td>
                                   <td className="switcher-cell">
-                                    <input
-                                      type="checkbox"
-                                      id={`adapt-a-${question.id}`}
-                                      className="options-switcher"
-                                      checked={settings.allow_answer_adaptation}
-                                      onChange={(e) => handleQuestionSettingChange(question.id, 'allow_answer_adaptation', e.target.checked)}
-                                    />
-                                    <label htmlFor={`adapt-a-${question.id}`} className="options-switcher-label"></label>
+                                    <div className="switcher-wrapper">
+                                      <input
+                                        type="checkbox"
+                                        id={`adapt-a-${question.id}`}
+                                        className="options-switcher"
+                                        checked={settings.allow_answer_adaptation}
+                                        onChange={(e) => handleQuestionSettingChange(question.id, 'allow_answer_adaptation', e.target.checked)}
+                                      />
+                                      <label htmlFor={`adapt-a-${question.id}`} className="options-switcher-label"></label>
+                                    </div>
                                   </td>
                                   <td className="switcher-cell">
-                                    <input
-                                      type="checkbox"
-                                      id={`required-${question.id}`}
-                                      className="options-switcher"
-                                      checked={settings.required}
-                                      onChange={(e) => handleQuestionSettingChange(question.id, 'required', e.target.checked)}
-                                    />
-                                    <label htmlFor={`required-${question.id}`} className="options-switcher-label"></label>
+                                    <div className="switcher-wrapper">
+                                      <input
+                                        type="checkbox"
+                                        id={`required-${question.id}`}
+                                        className="options-switcher"
+                                        checked={settings.required}
+                                        onChange={(e) => handleQuestionSettingChange(question.id, 'required', e.target.checked)}
+                                      />
+                                      <label htmlFor={`required-${question.id}`} className="options-switcher-label"></label>
+                                    </div>
                                   </td>
                                   <td className="switcher-cell">
-                                    <input
-                                      type="checkbox"
-                                      id={`contradict-${question.id}`}
-                                      className="options-switcher"
-                                      checked={settings.no_contradictions}
-                                      onChange={(e) => handleQuestionSettingChange(question.id, 'no_contradictions', e.target.checked)}
-                                    />
-                                    <label htmlFor={`contradict-${question.id}`} className="options-switcher-label"></label>
+                                    <div className="switcher-wrapper">
+                                      <input
+                                        type="checkbox"
+                                        id={`contradict-${question.id}`}
+                                        className="options-switcher"
+                                        checked={settings.no_contradictions}
+                                        onChange={(e) => handleQuestionSettingChange(question.id, 'no_contradictions', e.target.checked)}
+                                      />
+                                      <label htmlFor={`contradict-${question.id}`} className="options-switcher-label"></label>
+                                    </div>
                                   </td>
                                   <td className="switcher-cell">
-                                    <input
-                                      type="checkbox"
-                                      id={`audio-${question.id}`}
-                                      className="options-switcher"
-                                      checked={settings.audio_recording}
-                                      onChange={(e) => handleQuestionSettingChange(question.id, 'audio_recording', e.target.checked)}
-                                    />
-                                    <label htmlFor={`audio-${question.id}`} className="options-switcher-label"></label>
+                                    <div className="switcher-wrapper">
+                                      <input
+                                        type="checkbox"
+                                        id={`audio-${question.id}`}
+                                        className="options-switcher"
+                                        checked={settings.audio_recording}
+                                        onChange={(e) => handleQuestionSettingChange(question.id, 'audio_recording', e.target.checked)}
+                                      />
+                                      <label htmlFor={`audio-${question.id}`} className="options-switcher-label"></label>
+                                    </div>
                                   </td>
                                   <td className="actions-cell">
                                     <button
@@ -1431,54 +1441,64 @@ export default function Questionnaires() {
                                     <span className="question-text-cell">{question.text}</span>
                                   </td>
                                   <td className="switcher-cell">
-                                    <input
-                                      type="checkbox"
-                                      id={`adapt-q-${question.id}`}
-                                      className="options-switcher"
-                                      checked={settings.allow_adaptation}
-                                      onChange={(e) => handleQuestionSettingChange(question.id, 'allow_adaptation', e.target.checked)}
-                                    />
-                                    <label htmlFor={`adapt-q-${question.id}`} className="options-switcher-label"></label>
+                                    <div className="switcher-wrapper">
+                                      <input
+                                        type="checkbox"
+                                        id={`adapt-q-${question.id}`}
+                                        className="options-switcher"
+                                        checked={settings.allow_adaptation}
+                                        onChange={(e) => handleQuestionSettingChange(question.id, 'allow_adaptation', e.target.checked)}
+                                      />
+                                      <label htmlFor={`adapt-q-${question.id}`} className="options-switcher-label"></label>
+                                    </div>
                                   </td>
                                   <td className="switcher-cell">
-                                    <input
-                                      type="checkbox"
-                                      id={`adapt-a-${question.id}`}
-                                      className="options-switcher"
-                                      checked={settings.allow_answer_adaptation}
-                                      onChange={(e) => handleQuestionSettingChange(question.id, 'allow_answer_adaptation', e.target.checked)}
-                                    />
-                                    <label htmlFor={`adapt-a-${question.id}`} className="options-switcher-label"></label>
+                                    <div className="switcher-wrapper">
+                                      <input
+                                        type="checkbox"
+                                        id={`adapt-a-${question.id}`}
+                                        className="options-switcher"
+                                        checked={settings.allow_answer_adaptation}
+                                        onChange={(e) => handleQuestionSettingChange(question.id, 'allow_answer_adaptation', e.target.checked)}
+                                      />
+                                      <label htmlFor={`adapt-a-${question.id}`} className="options-switcher-label"></label>
+                                    </div>
                                   </td>
                                   <td className="switcher-cell">
-                                    <input
-                                      type="checkbox"
-                                      id={`required-${question.id}`}
-                                      className="options-switcher"
-                                      checked={settings.required}
-                                      onChange={(e) => handleQuestionSettingChange(question.id, 'required', e.target.checked)}
-                                    />
-                                    <label htmlFor={`required-${question.id}`} className="options-switcher-label"></label>
+                                    <div className="switcher-wrapper">
+                                      <input
+                                        type="checkbox"
+                                        id={`required-${question.id}`}
+                                        className="options-switcher"
+                                        checked={settings.required}
+                                        onChange={(e) => handleQuestionSettingChange(question.id, 'required', e.target.checked)}
+                                      />
+                                      <label htmlFor={`required-${question.id}`} className="options-switcher-label"></label>
+                                    </div>
                                   </td>
                                   <td className="switcher-cell">
-                                    <input
-                                      type="checkbox"
-                                      id={`contradict-${question.id}`}
-                                      className="options-switcher"
-                                      checked={settings.no_contradictions}
-                                      onChange={(e) => handleQuestionSettingChange(question.id, 'no_contradictions', e.target.checked)}
-                                    />
-                                    <label htmlFor={`contradict-${question.id}`} className="options-switcher-label"></label>
+                                    <div className="switcher-wrapper">
+                                      <input
+                                        type="checkbox"
+                                        id={`contradict-${question.id}`}
+                                        className="options-switcher"
+                                        checked={settings.no_contradictions}
+                                        onChange={(e) => handleQuestionSettingChange(question.id, 'no_contradictions', e.target.checked)}
+                                      />
+                                      <label htmlFor={`contradict-${question.id}`} className="options-switcher-label"></label>
+                                    </div>
                                   </td>
                                   <td className="switcher-cell">
-                                    <input
-                                      type="checkbox"
-                                      id={`audio-${question.id}`}
-                                      className="options-switcher"
-                                      checked={settings.audio_recording}
-                                      onChange={(e) => handleQuestionSettingChange(question.id, 'audio_recording', e.target.checked)}
-                                    />
-                                    <label htmlFor={`audio-${question.id}`} className="options-switcher-label"></label>
+                                    <div className="switcher-wrapper">
+                                      <input
+                                        type="checkbox"
+                                        id={`audio-${question.id}`}
+                                        className="options-switcher"
+                                        checked={settings.audio_recording}
+                                        onChange={(e) => handleQuestionSettingChange(question.id, 'audio_recording', e.target.checked)}
+                                      />
+                                      <label htmlFor={`audio-${question.id}`} className="options-switcher-label"></label>
+                                    </div>
                                   </td>
                                   <td className="actions-cell">
                                     <button
@@ -1529,54 +1549,64 @@ export default function Questionnaires() {
                                       <span className="question-text-cell">{question.text}</span>
                                     </td>
                                     <td className="switcher-cell">
-                                      <input
-                                        type="checkbox"
-                                        id={`adapt-q-${question.id}`}
-                                        className="options-switcher"
-                                        checked={settings.allow_adaptation}
-                                        onChange={(e) => handleQuestionSettingChange(question.id, 'allow_adaptation', e.target.checked)}
-                                      />
-                                      <label htmlFor={`adapt-q-${question.id}`} className="options-switcher-label"></label>
+                                      <div className="switcher-wrapper">
+                                        <input
+                                          type="checkbox"
+                                          id={`adapt-q-${question.id}`}
+                                          className="options-switcher"
+                                          checked={settings.allow_adaptation}
+                                          onChange={(e) => handleQuestionSettingChange(question.id, 'allow_adaptation', e.target.checked)}
+                                        />
+                                        <label htmlFor={`adapt-q-${question.id}`} className="options-switcher-label"></label>
+                                      </div>
                                     </td>
                                     <td className="switcher-cell">
-                                      <input
-                                        type="checkbox"
-                                        id={`adapt-a-${question.id}`}
-                                        className="options-switcher"
-                                        checked={settings.allow_answer_adaptation}
-                                        onChange={(e) => handleQuestionSettingChange(question.id, 'allow_answer_adaptation', e.target.checked)}
-                                      />
-                                      <label htmlFor={`adapt-a-${question.id}`} className="options-switcher-label"></label>
+                                      <div className="switcher-wrapper">
+                                        <input
+                                          type="checkbox"
+                                          id={`adapt-a-${question.id}`}
+                                          className="options-switcher"
+                                          checked={settings.allow_answer_adaptation}
+                                          onChange={(e) => handleQuestionSettingChange(question.id, 'allow_answer_adaptation', e.target.checked)}
+                                        />
+                                        <label htmlFor={`adapt-a-${question.id}`} className="options-switcher-label"></label>
+                                      </div>
                                     </td>
                                     <td className="switcher-cell">
-                                      <input
-                                        type="checkbox"
-                                        id={`required-${question.id}`}
-                                        className="options-switcher"
-                                        checked={settings.required}
-                                        onChange={(e) => handleQuestionSettingChange(question.id, 'required', e.target.checked)}
-                                      />
-                                      <label htmlFor={`required-${question.id}`} className="options-switcher-label"></label>
+                                      <div className="switcher-wrapper">
+                                        <input
+                                          type="checkbox"
+                                          id={`required-${question.id}`}
+                                          className="options-switcher"
+                                          checked={settings.required}
+                                          onChange={(e) => handleQuestionSettingChange(question.id, 'required', e.target.checked)}
+                                        />
+                                        <label htmlFor={`required-${question.id}`} className="options-switcher-label"></label>
+                                      </div>
                                     </td>
                                     <td className="switcher-cell">
-                                      <input
-                                        type="checkbox"
-                                        id={`contradict-${question.id}`}
-                                        className="options-switcher"
-                                        checked={settings.no_contradictions}
-                                        onChange={(e) => handleQuestionSettingChange(question.id, 'no_contradictions', e.target.checked)}
-                                      />
-                                      <label htmlFor={`contradict-${question.id}`} className="options-switcher-label"></label>
+                                      <div className="switcher-wrapper">
+                                        <input
+                                          type="checkbox"
+                                          id={`contradict-${question.id}`}
+                                          className="options-switcher"
+                                          checked={settings.no_contradictions}
+                                          onChange={(e) => handleQuestionSettingChange(question.id, 'no_contradictions', e.target.checked)}
+                                        />
+                                        <label htmlFor={`contradict-${question.id}`} className="options-switcher-label"></label>
+                                      </div>
                                     </td>
                                     <td className="switcher-cell">
-                                      <input
-                                        type="checkbox"
-                                        id={`audio-${question.id}`}
-                                        className="options-switcher"
-                                        checked={settings.audio_recording}
-                                        onChange={(e) => handleQuestionSettingChange(question.id, 'audio_recording', e.target.checked)}
-                                      />
-                                      <label htmlFor={`audio-${question.id}`} className="options-switcher-label"></label>
+                                      <div className="switcher-wrapper">
+                                        <input
+                                          type="checkbox"
+                                          id={`audio-${question.id}`}
+                                          className="options-switcher"
+                                          checked={settings.audio_recording}
+                                          onChange={(e) => handleQuestionSettingChange(question.id, 'audio_recording', e.target.checked)}
+                                        />
+                                        <label htmlFor={`audio-${question.id}`} className="options-switcher-label"></label>
+                                      </div>
                                     </td>
                                     <td className="actions-cell">
                                       <button
