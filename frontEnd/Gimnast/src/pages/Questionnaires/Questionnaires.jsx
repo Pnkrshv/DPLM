@@ -20,6 +20,10 @@ export default function Questionnaires() {
   const [blockMenuOpen, setBlockMenuOpen] = useState(false);
   const [blockMenuPosition, setBlockMenuPosition] = useState({ x: 0, y: 0 });
   const [selectedBlockForMenu, setSelectedBlockForMenu] = useState(null);
+  const [settingsMenuOpen, setSettingsMenuOpen] = useState(false);
+  const [settingsMenuPosition, setSettingsMenuPosition] = useState({ x: 0, y: 0 });
+  const [selectedQuestionForSettings, setSelectedQuestionForSettings] = useState(null);
+  const [questionSettings, setQuestionSettings] = useState({}); // {questionId: {allow_adaptation: bool, allow_answer_adaptation: bool, required: bool, no_contradictions: bool, audio_recording: bool}}
   const [isQuestionFormOpen, setIsQuestionFormOpen] = useState(false);
   const [currentQuestionType, setCurrentQuestionType] = useState(null);
   const [questionData, setQuestionData] = useState({ text: '', explanation: '', answers: [] });
@@ -693,8 +697,8 @@ export default function Questionnaires() {
       await axios.delete(
         `http://localhost:8080/questionnaire/${currentQuestionnaire.id}/questions/${questionId}`
       );
-      setAdditionalBlocks(prev => prev.map(block => 
-        block.id === blockId 
+      setAdditionalBlocks(prev => prev.map(block =>
+        block.id === blockId
           ? { ...block, questions: block.questions.filter(q => q.id !== questionId) }
           : block
       ));
@@ -722,7 +726,7 @@ export default function Questionnaires() {
 
       // Удаляем блок из состояния
       setAdditionalBlocks(prev => prev.filter(b => b.id !== blockId));
-      
+
       // Если удаленный блок был выбран, сбрасываем выбор
       if (selectedQuestionBlock === blockId) {
         setSelectedQuestionBlock('main');
@@ -749,6 +753,43 @@ export default function Questionnaires() {
     if (selectedBlockForMenu) {
       handleRemoveBlock(selectedBlockForMenu);
     }
+  };
+
+  const handleSettingsMenuClick = (e, questionId) => {
+    e.stopPropagation();
+    const rect = e.currentTarget.getBoundingClientRect();
+    setSettingsMenuPosition({
+      x: rect.left,
+      y: rect.bottom + 5
+    });
+    setSelectedQuestionForSettings(questionId);
+    setSettingsMenuOpen(true);
+  };
+
+  const handleQuestionSettingChange = (questionId, setting, value) => {
+    setQuestionSettings(prev => ({
+      ...prev,
+      [questionId]: {
+        ...(prev[questionId] || {
+          allow_adaptation: false,
+          allow_answer_adaptation: false,
+          required: false,
+          no_contradictions: false,
+          audio_recording: false
+        }),
+        [setting]: value
+      }
+    }));
+  };
+
+  const getQuestionSettings = (questionId) => {
+    return questionSettings[questionId] || {
+      allow_adaptation: false,
+      allow_answer_adaptation: false,
+      required: false,
+      no_contradictions: false,
+      audio_recording: false
+    };
   };
 
   const questionTypes = [
@@ -815,11 +856,11 @@ export default function Questionnaires() {
                   fill="none"
                   xmlns="http://www.w3.org/2000/svg"
                 >
-                  <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                  <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
                   <g
                     id="SVGRepo_tracerCarrier"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   ></g>
                   <g id="SVGRepo_iconCarrier">
                     {" "}
@@ -828,9 +869,9 @@ export default function Questionnaires() {
                       <path
                         d="M7 7.00006L17 17.0001M7 17.0001L17 7.00006"
                         stroke="#292929"
-                        stroke-width="2.5"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
                       ></path>{" "}
                     </g>{" "}
                     <defs>
@@ -956,8 +997,8 @@ export default function Questionnaires() {
                           <div key={district} className="district-item">
                             <div className="district-header">
                               <p className="expand-icon" onClick={() => toggleExpand(district)}>
-                                {isExpanded ? <svg width="16px" height="16px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path fill-rule="evenodd" clip-rule="evenodd" d="M4.29289 8.29289C4.68342 7.90237 5.31658 7.90237 5.70711 8.29289L12 14.5858L18.2929 8.29289C18.6834 7.90237 19.3166 7.90237 19.7071 8.29289C20.0976 8.68342 20.0976 9.31658 19.7071 9.70711L12.7071 16.7071C12.3166 17.0976 11.6834 17.0976 11.2929 16.7071L4.29289 9.70711C3.90237 9.31658 3.90237 8.68342 4.29289 8.29289Z" fill="#000000"></path> </g></svg> :
-                                  <svg fill="#000000" width="16px" height="16px" viewBox="-8.5 0 32 32" version="1.1" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <title>right</title> <path d="M7.75 16.063l-7.688-7.688 3.719-3.594 11.063 11.094-11.344 11.313-3.5-3.469z"></path> </g></svg>}
+                                {isExpanded ? <svg width="16px" height="16px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" strokeWidth="0"></g><g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round"></g><g id="SVGRepo_iconCarrier"> <path fill-rule="evenodd" clip-rule="evenodd" d="M4.29289 8.29289C4.68342 7.90237 5.31658 7.90237 5.70711 8.29289L12 14.5858L18.2929 8.29289C18.6834 7.90237 19.3166 7.90237 19.7071 8.29289C20.0976 8.68342 20.0976 9.31658 19.7071 9.70711L12.7071 16.7071C12.3166 17.0976 11.6834 17.0976 11.2929 16.7071L4.29289 9.70711C3.90237 9.31658 3.90237 8.68342 4.29289 8.29289Z" fill="#000000"></path> </g></svg> :
+                                  <svg fill="#000000" width="16px" height="16px" viewBox="-8.5 0 32 32" version="1.1" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" strokeWidth="0"></g><g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round"></g><g id="SVGRepo_iconCarrier"> <title>right</title> <path d="M7.75 16.063l-7.688-7.688 3.719-3.594 11.063 11.094-11.344 11.313-3.5-3.469z"></path> </g></svg>}
                               </p>
                               <input
                                 type="checkbox"
@@ -1062,8 +1103,8 @@ export default function Questionnaires() {
                       >
                         <div className="block-title"><h5>Основной блок</h5></div>
                         <div className="nav-buttons">
-                          <div className="posled-button"><button><svg fill="#000000" width="64px" height="64px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><path d="M7.293,7.707a1,1,0,0,1,0-1.414l4-4a1,1,0,0,1,1.414,0l4,4a1,1,0,1,1-1.414,1.414L12,4.414,8.707,7.707A1,1,0,0,1,7.293,7.707Zm0,10,4,4a1,1,0,0,0,1.414,0l4-4a1,1,0,0,0-1.414-1.414L12,19.586,8.707,16.293a1,1,0,1,0-1.414,1.414Z"></path></g></svg></button></div>
-                          <div className="dop-button"><button><svg width="64px" height="64px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <circle cx="18" cy="12" r="1.5" transform="rotate(90 18 12)" fill="#080341"></circle> <circle cx="12" cy="12" r="1.5" transform="rotate(90 12 12)" fill="#080341"></circle> <circle cx="6" cy="12" r="1.5" transform="rotate(90 6 12)" fill="#080341"></circle> </g></svg></button></div>
+                          <div className="posled-button"><button><svg fill="#000000" width="64px" height="64px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" strokeWidth="0"></g><g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round"></g><g id="SVGRepo_iconCarrier"><path d="M7.293,7.707a1,1,0,0,1,0-1.414l4-4a1,1,0,0,1,1.414,0l4,4a1,1,0,1,1-1.414,1.414L12,4.414,8.707,7.707A1,1,0,0,1,7.293,7.707Zm0,10,4,4a1,1,0,0,0,1.414,0l4-4a1,1,0,0,0-1.414-1.414L12,19.586,8.707,16.293a1,1,0,1,0-1.414,1.414Z"></path></g></svg></button></div>
+                          <div className="dop-button"><button><svg width="64px" height="64px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" strokeWidth="0"></g><g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round"></g><g id="SVGRepo_iconCarrier"> <circle cx="18" cy="12" r="1.5" transform="rotate(90 18 12)" fill="#080341"></circle> <circle cx="12" cy="12" r="1.5" transform="rotate(90 12 12)" fill="#080341"></circle> <circle cx="6" cy="12" r="1.5" transform="rotate(90 6 12)" fill="#080341"></circle> </g></svg></button></div>
                         </div>
                       </div>
 
@@ -1093,7 +1134,7 @@ export default function Questionnaires() {
                                   onClick={() => handleRemoveQuestion(question.id)}
                                 >
                                   <svg width="18px" height="18px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M7 7.00006L17 17.0001M7 17.0001L17 7.00006" stroke="#ff4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+                                    <path d="M7 7.00006L17 17.0001M7 17.0001L17 7.00006" stroke="#ff4444" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                                   </svg>
                                 </button>
                               </div>
@@ -1128,8 +1169,8 @@ export default function Questionnaires() {
                       >
                         <div className="block-title"><h5>Вопросы о респонденте (паспортичка)</h5></div>
                         <div className="nav-buttons">
-                          <div className="posled-button"><button><svg fill="#000000" width="64px" height="64px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><path d="M7.293,7.707a1,1,0,0,1,0-1.414l4-4a1,1,0,0,1,1.414,0l4,4a1,1,0,1,1-1.414,1.414L12,4.414,8.707,7.707A1,1,0,0,1,7.293,7.707Zm0,10,4,4a1,1,0,0,0,1.414,0l4-4a1,1,0,0,0-1.414-1.414L12,19.586,8.707,16.293a1,1,0,1,0-1.414,1.414Z"></path></g></svg></button></div>
-                          <div className="dop-button"><button><svg width="64px" height="64px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <circle cx="18" cy="12" r="1.5" transform="rotate(90 18 12)" fill="#080341"></circle> <circle cx="12" cy="12" r="1.5" transform="rotate(90 12 12)" fill="#080341"></circle> <circle cx="6" cy="12" r="1.5" transform="rotate(90 6 12)" fill="#080341"></circle> </g></svg></button></div>
+                          <div className="posled-button"><button><svg fill="#000000" width="64px" height="64px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" strokeWidth="0"></g><g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round"></g><g id="SVGRepo_iconCarrier"><path d="M7.293,7.707a1,1,0,0,1,0-1.414l4-4a1,1,0,0,1,1.414,0l4,4a1,1,0,1,1-1.414,1.414L12,4.414,8.707,7.707A1,1,0,0,1,7.293,7.707Zm0,10,4,4a1,1,0,0,0,1.414,0l4-4a1,1,0,0,0-1.414-1.414L12,19.586,8.707,16.293a1,1,0,1,0-1.414,1.414Z"></path></g></svg></button></div>
+                          <div className="dop-button"><button><svg width="64px" height="64px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" strokeWidth="0"></g><g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round"></g><g id="SVGRepo_iconCarrier"> <circle cx="18" cy="12" r="1.5" transform="rotate(90 18 12)" fill="#080341"></circle> <circle cx="12" cy="12" r="1.5" transform="rotate(90 12 12)" fill="#080341"></circle> <circle cx="6" cy="12" r="1.5" transform="rotate(90 6 12)" fill="#080341"></circle> </g></svg></button></div>
                         </div>
                       </div>
                       {passportQuestions.length === 0 ? (
@@ -1145,7 +1186,7 @@ export default function Questionnaires() {
                                   onClick={() => handleRemovePassportQuestion(question.id)}
                                 >
                                   <svg width="18px" height="18px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M7 7.00006L17 17.0001M7 17.0001L17 7.00006" stroke="#ff4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+                                    <path d="M7 7.00006L17 17.0001M7 17.0001L17 7.00006" stroke="#ff4444" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                                   </svg>
                                 </button>
                               </div>
@@ -1182,16 +1223,16 @@ export default function Questionnaires() {
                         >
                           <div className="block-title"><h5>{block.name}</h5></div>
                           <div className="nav-buttons">
-                            <div className="posled-button"><button><svg fill="#000000" width="64px" height="64px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><path d="M7.293,7.707a1,1,0,0,1,0-1.414l4-4a1,1,0,0,1,1.414,0l4,4a1,1,0,1,1-1.414,1.414L12,4.414,8.707,7.707A1,1,0,0,1,7.293,7.707Zm0,10,4,4a1,1,0,0,0,1.414,0l4-4a1,1,0,0,0-1.414-1.414L12,19.586,8.707,16.293a1,1,0,1,0-1.414,1.414Z"></path></g></svg></button></div>
+                            <div className="posled-button"><button><svg fill="#000000" width="64px" height="64px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" strokeWidth="0"></g><g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round"></g><g id="SVGRepo_iconCarrier"><path d="M7.293,7.707a1,1,0,0,1,0-1.414l4-4a1,1,0,0,1,1.414,0l4,4a1,1,0,1,1-1.414,1.414L12,4.414,8.707,7.707A1,1,0,0,1,7.293,7.707Zm0,10,4,4a1,1,0,0,0,1.414,0l4-4a1,1,0,0,0-1.414-1.414L12,19.586,8.707,16.293a1,1,0,1,0-1.414,1.414Z"></path></g></svg></button></div>
                             <div className="dop-button">
                               <button onClick={(e) => handleBlockMenuClick(e, block.id)}>
                                 <svg width="64px" height="64px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                  <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
-                                  <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
-                                  <g id="SVGRepo_iconCarrier"> 
-                                    <circle cx="18" cy="12" r="1.5" transform="rotate(90 18 12)" fill="#080341"></circle> 
-                                    <circle cx="12" cy="12" r="1.5" transform="rotate(90 12 12)" fill="#080341"></circle> 
-                                    <circle cx="6" cy="12" r="1.5" transform="rotate(90 6 12)" fill="#080341"></circle> 
+                                  <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+                                  <g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round"></g>
+                                  <g id="SVGRepo_iconCarrier">
+                                    <circle cx="18" cy="12" r="1.5" transform="rotate(90 18 12)" fill="#080341"></circle>
+                                    <circle cx="12" cy="12" r="1.5" transform="rotate(90 12 12)" fill="#080341"></circle>
+                                    <circle cx="6" cy="12" r="1.5" transform="rotate(90 6 12)" fill="#080341"></circle>
                                   </g>
                                 </svg>
                               </button>
@@ -1211,7 +1252,7 @@ export default function Questionnaires() {
                                     onClick={() => handleRemoveAdditionalBlockQuestion(block.id, question.id)}
                                   >
                                     <svg width="18px" height="18px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                      <path d="M7 7.00006L17 17.0001M7 17.0001L17 7.00006" stroke="#ff4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+                                      <path d="M7 7.00006L17 17.0001M7 17.0001L17 7.00006" stroke="#ff4444" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                                     </svg>
                                   </button>
                                 </div>
@@ -1265,7 +1306,307 @@ export default function Questionnaires() {
 
             {activeBlock === 'settings' && (
               <>
-                <p>settings</p>
+                <div className="settings-table-container">
+                  {/* Основной блок */}
+                  {questions.length > 0 && (
+                    <div className="settings-block-section">
+                      <h5 className="settings-block-title">Основной блок</h5>
+                      <div className="settings-table">
+                        <table>
+                          <thead>
+                            <tr>
+                              <th className="question-column"></th>
+                              <th>Разрешена адаптация вопросов</th>
+                              <th>Разрешена адаптация ответов</th>
+                              <th>Обязательный вопрос</th>
+                              <th>Запрет противоречий</th>
+                              <th>Запись звука</th>
+                              <th className="actions-column"></th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {questions.map((question, index) => {
+                              const settings = getQuestionSettings(question.id);
+                              return (
+                                <tr key={question.id}>
+                                  <td className="question-cell">
+                                    <span className="question-number">{index + 1}.</span>
+                                    <span className="question-text-cell">{question.text}</span>
+                                  </td>
+                                  <td className="switcher-cell">
+                                    <input
+                                      type="checkbox"
+                                      id={`adapt-q-${question.id}`}
+                                      className="options-switcher"
+                                      checked={settings.allow_adaptation}
+                                      onChange={(e) => handleQuestionSettingChange(question.id, 'allow_adaptation', e.target.checked)}
+                                    />
+                                    <label htmlFor={`adapt-q-${question.id}`} className="options-switcher-label"></label>
+                                  </td>
+                                  <td className="switcher-cell">
+                                    <input
+                                      type="checkbox"
+                                      id={`adapt-a-${question.id}`}
+                                      className="options-switcher"
+                                      checked={settings.allow_answer_adaptation}
+                                      onChange={(e) => handleQuestionSettingChange(question.id, 'allow_answer_adaptation', e.target.checked)}
+                                    />
+                                    <label htmlFor={`adapt-a-${question.id}`} className="options-switcher-label"></label>
+                                  </td>
+                                  <td className="switcher-cell">
+                                    <input
+                                      type="checkbox"
+                                      id={`required-${question.id}`}
+                                      className="options-switcher"
+                                      checked={settings.required}
+                                      onChange={(e) => handleQuestionSettingChange(question.id, 'required', e.target.checked)}
+                                    />
+                                    <label htmlFor={`required-${question.id}`} className="options-switcher-label"></label>
+                                  </td>
+                                  <td className="switcher-cell">
+                                    <input
+                                      type="checkbox"
+                                      id={`contradict-${question.id}`}
+                                      className="options-switcher"
+                                      checked={settings.no_contradictions}
+                                      onChange={(e) => handleQuestionSettingChange(question.id, 'no_contradictions', e.target.checked)}
+                                    />
+                                    <label htmlFor={`contradict-${question.id}`} className="options-switcher-label"></label>
+                                  </td>
+                                  <td className="switcher-cell">
+                                    <input
+                                      type="checkbox"
+                                      id={`audio-${question.id}`}
+                                      className="options-switcher"
+                                      checked={settings.audio_recording}
+                                      onChange={(e) => handleQuestionSettingChange(question.id, 'audio_recording', e.target.checked)}
+                                    />
+                                    <label htmlFor={`audio-${question.id}`} className="options-switcher-label"></label>
+                                  </td>
+                                  <td className="actions-cell">
+                                    <button
+                                      className="settings-dots-btn"
+                                      onClick={(e) => handleSettingsMenuClick(e, question.id)}
+                                    >
+                                      <svg width="20px" height="20px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <circle cx="12" cy="12" r="1.5" fill="#080341"></circle>
+                                        <circle cx="12" cy="6" r="1.5" fill="#080341"></circle>
+                                        <circle cx="12" cy="18" r="1.5" fill="#080341"></circle>
+                                      </svg>
+                                    </button>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Паспортичка */}
+                  {passportQuestions.length > 0 && (
+                    <div className="settings-block-section">
+                      <h5 className="settings-block-title">Вопросы о респонденте (паспортичка)</h5>
+                      <div className="settings-table">
+                        <table>
+                          <thead>
+                            <tr>
+                              <th className="question-column"></th>
+                              <th>Разрешена адаптация вопросов</th>
+                              <th>Разрешена адаптация ответов</th>
+                              <th>Обязательный вопрос</th>
+                              <th>Запрет противоречий</th>
+                              <th>Запись звука</th>
+                              <th className="actions-column"></th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {passportQuestions.map((question, index) => {
+                              const settings = getQuestionSettings(question.id);
+                              return (
+                                <tr key={question.id}>
+                                  <td className="question-cell">
+                                    <span className="question-number">{index + 1}.</span>
+                                    <span className="question-text-cell">{question.text}</span>
+                                  </td>
+                                  <td className="switcher-cell">
+                                    <input
+                                      type="checkbox"
+                                      id={`adapt-q-${question.id}`}
+                                      className="options-switcher"
+                                      checked={settings.allow_adaptation}
+                                      onChange={(e) => handleQuestionSettingChange(question.id, 'allow_adaptation', e.target.checked)}
+                                    />
+                                    <label htmlFor={`adapt-q-${question.id}`} className="options-switcher-label"></label>
+                                  </td>
+                                  <td className="switcher-cell">
+                                    <input
+                                      type="checkbox"
+                                      id={`adapt-a-${question.id}`}
+                                      className="options-switcher"
+                                      checked={settings.allow_answer_adaptation}
+                                      onChange={(e) => handleQuestionSettingChange(question.id, 'allow_answer_adaptation', e.target.checked)}
+                                    />
+                                    <label htmlFor={`adapt-a-${question.id}`} className="options-switcher-label"></label>
+                                  </td>
+                                  <td className="switcher-cell">
+                                    <input
+                                      type="checkbox"
+                                      id={`required-${question.id}`}
+                                      className="options-switcher"
+                                      checked={settings.required}
+                                      onChange={(e) => handleQuestionSettingChange(question.id, 'required', e.target.checked)}
+                                    />
+                                    <label htmlFor={`required-${question.id}`} className="options-switcher-label"></label>
+                                  </td>
+                                  <td className="switcher-cell">
+                                    <input
+                                      type="checkbox"
+                                      id={`contradict-${question.id}`}
+                                      className="options-switcher"
+                                      checked={settings.no_contradictions}
+                                      onChange={(e) => handleQuestionSettingChange(question.id, 'no_contradictions', e.target.checked)}
+                                    />
+                                    <label htmlFor={`contradict-${question.id}`} className="options-switcher-label"></label>
+                                  </td>
+                                  <td className="switcher-cell">
+                                    <input
+                                      type="checkbox"
+                                      id={`audio-${question.id}`}
+                                      className="options-switcher"
+                                      checked={settings.audio_recording}
+                                      onChange={(e) => handleQuestionSettingChange(question.id, 'audio_recording', e.target.checked)}
+                                    />
+                                    <label htmlFor={`audio-${question.id}`} className="options-switcher-label"></label>
+                                  </td>
+                                  <td className="actions-cell">
+                                    <button
+                                      className="settings-dots-btn"
+                                      onClick={(e) => handleSettingsMenuClick(e, question.id)}
+                                    >
+                                      <svg width="20px" height="20px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <circle cx="12" cy="12" r="1.5" fill="#080341"></circle>
+                                        <circle cx="12" cy="6" r="1.5" fill="#080341"></circle>
+                                        <circle cx="12" cy="18" r="1.5" fill="#080341"></circle>
+                                      </svg>
+                                    </button>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Дополнительные блоки */}
+                  {additionalBlocks.map((block) => (
+                    block.questions.length > 0 && (
+                      <div key={block.id} className="settings-block-section">
+                        <h5 className="settings-block-title">{block.name}</h5>
+                        <div className="settings-table">
+                          <table>
+                            <thead>
+                              <tr>
+                                <th className="question-column"></th>
+                                <th>Разрешена адаптация вопросов</th>
+                                <th>Разрешена адаптация ответов</th>
+                                <th>Обязательный вопрос</th>
+                                <th>Запрет противоречий</th>
+                                <th>Запись звука</th>
+                                <th className="actions-column"></th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {block.questions.map((question, index) => {
+                                const settings = getQuestionSettings(question.id);
+                                return (
+                                  <tr key={question.id}>
+                                    <td className="question-cell">
+                                      <span className="question-number">{index + 1}.</span>
+                                      <span className="question-text-cell">{question.text}</span>
+                                    </td>
+                                    <td className="switcher-cell">
+                                      <input
+                                        type="checkbox"
+                                        id={`adapt-q-${question.id}`}
+                                        className="options-switcher"
+                                        checked={settings.allow_adaptation}
+                                        onChange={(e) => handleQuestionSettingChange(question.id, 'allow_adaptation', e.target.checked)}
+                                      />
+                                      <label htmlFor={`adapt-q-${question.id}`} className="options-switcher-label"></label>
+                                    </td>
+                                    <td className="switcher-cell">
+                                      <input
+                                        type="checkbox"
+                                        id={`adapt-a-${question.id}`}
+                                        className="options-switcher"
+                                        checked={settings.allow_answer_adaptation}
+                                        onChange={(e) => handleQuestionSettingChange(question.id, 'allow_answer_adaptation', e.target.checked)}
+                                      />
+                                      <label htmlFor={`adapt-a-${question.id}`} className="options-switcher-label"></label>
+                                    </td>
+                                    <td className="switcher-cell">
+                                      <input
+                                        type="checkbox"
+                                        id={`required-${question.id}`}
+                                        className="options-switcher"
+                                        checked={settings.required}
+                                        onChange={(e) => handleQuestionSettingChange(question.id, 'required', e.target.checked)}
+                                      />
+                                      <label htmlFor={`required-${question.id}`} className="options-switcher-label"></label>
+                                    </td>
+                                    <td className="switcher-cell">
+                                      <input
+                                        type="checkbox"
+                                        id={`contradict-${question.id}`}
+                                        className="options-switcher"
+                                        checked={settings.no_contradictions}
+                                        onChange={(e) => handleQuestionSettingChange(question.id, 'no_contradictions', e.target.checked)}
+                                      />
+                                      <label htmlFor={`contradict-${question.id}`} className="options-switcher-label"></label>
+                                    </td>
+                                    <td className="switcher-cell">
+                                      <input
+                                        type="checkbox"
+                                        id={`audio-${question.id}`}
+                                        className="options-switcher"
+                                        checked={settings.audio_recording}
+                                        onChange={(e) => handleQuestionSettingChange(question.id, 'audio_recording', e.target.checked)}
+                                      />
+                                      <label htmlFor={`audio-${question.id}`} className="options-switcher-label"></label>
+                                    </td>
+                                    <td className="actions-cell">
+                                      <button
+                                        className="settings-dots-btn"
+                                        onClick={(e) => handleSettingsMenuClick(e, question.id)}
+                                      >
+                                        <svg width="20px" height="20px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                          <circle cx="12" cy="12" r="1.5" fill="#080341"></circle>
+                                          <circle cx="12" cy="6" r="1.5" fill="#080341"></circle>
+                                          <circle cx="12" cy="18" r="1.5" fill="#080341"></circle>
+                                        </svg>
+                                      </button>
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    )
+                  ))}
+
+                  {/* Если нет вопросов */}
+                  {questions.length === 0 && passportQuestions.length === 0 && additionalBlocks.filter(b => b.questions.length > 0).length === 0 && (
+                    <div className="settings-empty-message">
+                      <p>Добавьте вопросы, чтобы настроить их параметры</p>
+                    </div>
+                  )}
+                </div>
               </>
             )}
 
@@ -1321,6 +1662,52 @@ export default function Questionnaires() {
                 onClick={handleBlockDelete}
               >
                 Удалить блок
+              </li>
+            </ul>
+          </div>
+        </>
+      )}
+
+      {settingsMenuOpen && (
+        <>
+          <div
+            className="question-menu-bg"
+            onClick={() => setSettingsMenuOpen(false)}
+          ></div>
+          <div
+            className="question-menu"
+            style={{
+              left: `${settingsMenuPosition.x}px`,
+              top: `${settingsMenuPosition.y}px`
+            }}
+          >
+            <ul className="question-menu-list">
+              <li
+                className="question-menu-item"
+                onClick={() => {
+                  setSettingsMenuOpen(false);
+                  alert('Правило перехода для вопроса');
+                }}
+              >
+                Правило перехода
+              </li>
+              <li
+                className="question-menu-item"
+                onClick={() => {
+                  setSettingsMenuOpen(false);
+                  alert('Правило скрытия для вопроса');
+                }}
+              >
+                Правило скрытия
+              </li>
+              <li
+                className="question-menu-item"
+                onClick={() => {
+                  setSettingsMenuOpen(false);
+                  alert('Противоречия для вопроса');
+                }}
+              >
+                Противоречия
               </li>
             </ul>
           </div>
@@ -1394,7 +1781,7 @@ export default function Questionnaires() {
                             onClick={() => handleRemoveAnswer(answer.id)}
                           >
                             <svg width="16px" height="16px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                              <path d="M7 7.00006L17 17.0001M7 17.0001L17 7.00006" stroke="#ff4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+                              <path d="M7 7.00006L17 17.0001M7 17.0001L17 7.00006" stroke="#ff4444" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                             </svg>
                           </button>
                         </div>
@@ -1415,7 +1802,7 @@ export default function Questionnaires() {
 
               <div className="question-form-sidebar">
                 <h5>Свойства вопроса</h5>
-                
+
                 <div className="property-group">
                   <label>Максимум ответов</label>
                   <input
