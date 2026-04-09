@@ -768,23 +768,23 @@
 
 .question-form-container {
   display: flex;
-  padding: 1%;
-  align-items: center;
+  flex-direction: row;
   gap: 1vw;
-  margin-bottom: calc(var(--index) * 0.5);
+  padding: 1%;
 }
 
 .question-form-main {
   flex: 1;
-  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1vh;
 }
 
 .question-form-header {
   display: flex;
-  padding: 1%;
   justify-content: space-between;
+  padding-left: 2%;
   align-items: center;
-  border-bottom: 1px solid #eee;
 }
 
 .question-form-header h4 {
@@ -795,21 +795,22 @@
 
 .question-form-sidebar {
   width: 280px;
-  background-color: #f9f9f9;
-  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: .5vh;
   padding: 1%;
   font-family: main;
-  border: 1px solid #e0e0e0;
 }
 
 .question-form-sidebar h5 {
   font-size: clamp(0.6rem, 0.8rem, 1rem);
   color: #333;
-  border-bottom: 1px solid #ddd;
 }
 
 .property-group {
-  margin-bottom: calc(var(--index) * 0.5);
+  display: flex;
+  flex-direction: column;
+  gap: .5vh;
 }
 
 .property-group label {
@@ -876,19 +877,18 @@
 }
 
 .answers-section {
-  margin-top: calc(var(--index) * 0.2);
-  padding: calc(var(--index) * 0.3);
+  margin-top: 1vh;
+  padding: 1%;
 }
 
 .answers-header {
   display: flex;
   justify-content: end;
   align-items: center;
-  margin-bottom: calc(var(--index) * 0.2);
 }
 
 .answers-header h5 {
-  font-size: 0.95rem;
+  font-size: clamp(.6rem, .8rem, 1rem);
   color: #333;
   font-weight: 600;
 }
@@ -911,12 +911,12 @@
 .answers-list {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 1vh;
 }
 
 .no-answers-text {
   color: #999;
-  font-size: 0.85rem;
+  font-size: clamp(.6rem, .8rem, 1rem);
   font-style: italic;
   text-align: center;
   padding: 1rem;
@@ -925,20 +925,21 @@
 .answer-item {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem;
-  background-color: white;
-  border: solid 1px #ddd;
-  border-radius: 4px;
+  gap: 1vw;
+  width: 102%;
+  padding: 1% 2%;
+  border-left: solid grey 1px;
+  font-family: main;
+  font-size: clamp(.6rem, .7rem, .9rem);
 }
 
 .answer-text-input {
   flex: 1;
-  border: solid 1px #ccc;
+  border: solid 1px grey;
   border-radius: 4px;
-  padding: 0.4rem 0.6rem;
+  padding: 1%;
   font-family: main;
-  font-size: 0.9rem;
+  font-size: clamp(.6rem, .8rem, 1rem);
   outline: none;
 }
 
@@ -948,7 +949,7 @@
 
 .answer-label {
   flex: 1;
-  font-size: 0.9rem;
+  font-size: clamp(.6rem, .8rem, 1rem);
   color: #333;
 }
 
@@ -956,16 +957,9 @@
   background: transparent;
   border: none;
   cursor: pointer;
-  padding: 0.3rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 4px;
-  transition: background-color 0.2s;
-}
-
-.remove-answer-btn:hover {
-  background-color: #ffe6e6;
 }
 
 /* Стили для списка вопросов */
