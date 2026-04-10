@@ -357,9 +357,10 @@ span {
   top: 50%;
   transform: translate(-50%, -50%);
   background-color: white;
-  width: 70vw;
-  max-width: 900px;
-  max-height: 70vh;
+  width: 75vw;
+  min-width: 600px;
+  max-width: 1000px;
+  max-height: 75vh;
   border-radius: 8px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
   display: flex;
@@ -451,6 +452,15 @@ span {
     border: solid grey 1px;
     text-align: center;
     vertical-align: middle;
+    white-space: nowrap;
+  }
+
+  & th:nth-child(2),
+  & td:nth-child(2) {
+    white-space: normal;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    max-width: 300px;
   }
 
   & tbody tr {
@@ -471,6 +481,12 @@ span {
   & td:last-child,
   & th:last-child {
     width: 50px;
+    text-align: center;
+  }
+
+  & td:nth-child(4),
+  & th:nth-child(4) {
+    width: 100px;
     text-align: center;
   }
 }
