@@ -30,6 +30,14 @@ export default function Questionnaires() {
     questionId: null,
     conditions: [] // [{questionId, type: 'selected'|'not_selected', answers: []}]
   });
+  const [isTransitionRuleModalOpen, setIsTransitionRuleModalOpen] = useState(false);
+  const [transitionRuleData, setTransitionRuleData] = useState({
+    questionId: null,
+    conditions: [], // [{type: 'selected'|'not_selected', answers: []}]
+    action: 'end', // 'question', 'block', 'end'
+    targetQuestionId: null,
+    targetBlockId: null
+  });
   const [isQuestionFormOpen, setIsQuestionFormOpen] = useState(false);
   const [currentQuestionType, setCurrentQuestionType] = useState(null);
   const [questionData, setQuestionData] = useState({ text: '', explanation: '', answers: [] });
@@ -832,6 +840,67 @@ export default function Questionnaires() {
   const closeHideRuleModal = () => {
     setIsHideRuleModalOpen(false);
     // Не сбрасываем hideRuleData полностью, просто закрываем окно
+  };
+
+  // Функции для правил перехода
+  const openTransitionRuleModal = (questionId) => {
+    setTransitionRuleData({
+      questionId: questionId,
+      conditions: [{ type: 'selected', answers: [''] }],
+      action: 'end',
+      targetQuestionId: null,
+      targetBlockId: null
+    });
+    setSettingsMenuOpen(false);
+    setIsTransitionRuleModalOpen(true);
+  };
+
+  const closeTransitionRuleModal = () => {
+    setIsTransitionRuleModalOpen(false);
+  };
+
+  const addTransitionCondition = () => {
+    setTransitionRuleData(prev => ({
+      ...prev,
+      conditions: [...prev.conditions, { type: 'selected', answers: [''] }]
+    }));
+  };
+
+  const removeTransitionCondition = (index) => {
+    setTransitionRuleData(prev => ({
+      ...prev,
+      conditions: prev.conditions.filter((_, i) => i !== index)
+    }));
+  };
+
+  const updateTransitionCondition = (index, field, value) => {
+    setTransitionRuleData(prev => ({
+      ...prev,
+      conditions: prev.conditions.map((cond, i) => 
+        i === index ? { ...cond, [field]: value } : cond
+      )
+    }));
+  };
+
+  const addAnswerToTransitionCondition = (index) => {
+    setTransitionRuleData(prev => ({
+      ...prev,
+      conditions: prev.conditions.map((cond, i) => 
+        i === index ? { ...cond, answers: [...cond.answers, ''] } : cond
+      )
+    }));
+  };
+
+  const updateTransitionConditionAnswer = (conditionIndex, answerIndex, value) => {
+    setTransitionRuleData(prev => ({
+      ...prev,
+      conditions: prev.conditions.map((cond, i) => 
+        i === conditionIndex ? {
+          ...cond,
+          answers: cond.answers.map((a, j) => j === answerIndex ? value : a)
+        } : cond
+      )
+    }));
   };
 
   const addCondition = () => {
@@ -1940,6 +2009,222 @@ export default function Questionnaires() {
         </>
       )}
 
+      {/* Модальное окно правила перехода */}
+      {isTransitionRuleModalOpen && (
+        <>
+          <div className="modal-bg" onClick={closeTransitionRuleModal}></div>
+          <div className="transition-rule-modal">
+            <div className="transition-rule-modal-header">
+              <h4>Настройка правила перехода</h4>
+              <div className="close-btn" onClick={closeTransitionRuleModal}>
+                <svg width="24px" height="24px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M7 7.00006L17 17.0001M7 17.0001L17 7.00006" stroke="#292929" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+            </div>
+
+            <div className="transition-rule-modal-body">
+              {/* Вопрос, для которого настраивается правило */}
+              {transitionRuleData.questionId && (
+                <div className="transition-rule-question-info">
+                  <p className="transition-rule-question-label">
+                    Вопрос: <strong>{[...questions, ...passportQuestions, ...additionalBlocks.flatMap(b => b.questions)].find(q => q.id === transitionRuleData.questionId)?.text || 'Не найден'}</strong>
+                  </p>
+                </div>
+              )}
+
+              {/* Карточка условия */}
+              <div className="transition-rule-condition-card">
+                <div className="transition-rule-card-header">
+                  <h5>Если респондент:</h5>
+                  {transitionRuleData.conditions.length > 1 && (
+                    <button
+                      className="remove-transition-condition-btn"
+                      onClick={() => {
+                        if (confirm('Удалить все условия?')) {
+                          setTransitionRuleData(prev => ({
+                            ...prev,
+                            conditions: [{ type: 'selected', answers: [''] }]
+                          }));
+                        }
+                      }}
+                    >
+                      <svg width="18px" height="18px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M7 7.00006L17 17.0001M7 17.0001L17 7.00006" stroke="#ff4444" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
+
+                {transitionRuleData.conditions.map((condition, index) => {
+                  const currentQuestion = [...questions, ...passportQuestions, ...additionalBlocks.flatMap(b => b.questions)].find(q => q.id === transitionRuleData.questionId);
+
+                  return (
+                    <div key={index} className="transition-rule-condition">
+                      <div className="transition-condition-header">
+                        <span className="transition-condition-number">Условие {index + 1}</span>
+                        {transitionRuleData.conditions.length > 1 && (
+                          <button
+                            className="remove-transition-condition-btn"
+                            onClick={() => removeTransitionCondition(index)}
+                          >
+                            <svg width="16px" height="16px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M7 7.00006L17 17.0001M7 17.0001L17 7.00006" stroke="#ff4444" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="transition-type-buttons">
+                        <button
+                          className={`transition-type-btn ${condition.type === 'selected' ? 'active' : ''}`}
+                          onClick={() => updateTransitionCondition(index, 'type', 'selected')}
+                        >
+                          Выбрал
+                        </button>
+                        <button
+                          className={`transition-type-btn ${condition.type === 'not_selected' ? 'active' : ''}`}
+                          onClick={() => updateTransitionCondition(index, 'type', 'not_selected')}
+                        >
+                          Не выбрал
+                        </button>
+
+                        {currentQuestion && currentQuestion.answers && currentQuestion.answers.length > 0 && (
+                          <div className="transition-answers-container">
+                            {condition.answers.map((answer, ansIdx) => (
+                              <div key={ansIdx} className="transition-answer-row">
+                                <select
+                                  className="transition-answer-select"
+                                  value={answer}
+                                  onChange={(e) => updateTransitionConditionAnswer(index, ansIdx, e.target.value)}
+                                >
+                                  <option value="" disabled>Выберите ответ</option>
+                                  {currentQuestion.answers.map((a, aIdx) => (
+                                    <option key={a.id || aIdx} value={a.text || a.type}>
+                                      {a.text || a.type}
+                                    </option>
+                                  ))}
+                                </select>
+                                {ansIdx > 0 && (
+                                  <button 
+                                    className="remove-transition-answer-btn"
+                                    onClick={() => {
+                                      setTransitionRuleData(prev => ({
+                                        ...prev,
+                                        conditions: prev.conditions.map((c, i) => 
+                                          i === index ? { ...c, answers: c.answers.filter((_, j) => j !== ansIdx) } : c
+                                        )
+                                      }));
+                                    }}
+                                  >
+                                    <svg width="14px" height="14px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                      <path d="M7 7.00006L17 17.0001M7 17.0001L17 7.00006" stroke="#ff4444" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                                    </svg>
+                                  </button>
+                                )}
+                              </div>
+                            ))}
+                            <button 
+                              className="add-transition-answer-btn"
+                              onClick={() => addAnswerToTransitionCondition(index)}
+                            >
+                              + Ответ
+                            </button>
+                          </div>
+                        )}
+                        {currentQuestion && (!currentQuestion.answers || currentQuestion.answers.length === 0) && (
+                          <p className="no-answers-message">У вопроса нет ответов</p>
+                        )}
+                        {!currentQuestion && (
+                          <p className="no-answers-message">Выберите вопрос для настройки ответов</p>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+
+                <button className="add-transition-condition-btn" onClick={addTransitionCondition}>
+                  + Добавить условие
+                </button>
+              </div>
+
+              {/* Действие после условия */}
+              <div className="transition-action-card">
+                <h5>Действие:</h5>
+                <select
+                  className="transition-action-select"
+                  value={transitionRuleData.action}
+                  onChange={(e) => setTransitionRuleData(prev => ({
+                    ...prev,
+                    action: e.target.value,
+                    targetQuestionId: null,
+                    targetBlockId: null
+                  }))}
+                >
+                  <option value="question">Переход к вопросу</option>
+                  <option value="block">Переход к блоку вопросов</option>
+                  <option value="end">Завершение опроса</option>
+                </select>
+
+                {transitionRuleData.action === 'question' && (
+                  <select
+                    className="transition-target-select"
+                    value={transitionRuleData.targetQuestionId || ''}
+                    onChange={(e) => setTransitionRuleData(prev => ({
+                      ...prev,
+                      targetQuestionId: e.target.value
+                    }))}
+                  >
+                    <option value="" disabled>Выберите вопрос</option>
+                    {[...questions, ...passportQuestions, ...additionalBlocks.flatMap(b => b.questions)]
+                      .filter(q => q.id !== transitionRuleData.questionId)
+                      .map((q, idx) => (
+                        <option key={q.id} value={q.id}>{idx + 1}. {q.text}</option>
+                      ))}
+                  </select>
+                )}
+
+                {transitionRuleData.action === 'block' && (
+                  <select
+                    className="transition-target-select"
+                    value={transitionRuleData.targetBlockId || ''}
+                    onChange={(e) => setTransitionRuleData(prev => ({
+                      ...prev,
+                      targetBlockId: e.target.value
+                    }))}
+                  >
+                    <option value="" disabled>Выберите блок</option>
+                    <option value="main">Основной блок</option>
+                    <option value="passport">Паспортичка</option>
+                    {additionalBlocks.map(block => (
+                      <option key={block.id} value={block.id}>{block.name}</option>
+                    ))}
+                  </select>
+                )}
+
+                {transitionRuleData.action === 'end' && (
+                  <select className="transition-target-select" disabled>
+                    <option>Завершение опроса</option>
+                  </select>
+                )}
+              </div>
+            </div>
+
+            <div className="submit-form">
+              <button className="cancel-btn" onClick={closeTransitionRuleModal}>
+                Отменить
+              </button>
+              <button className="save-btn" onClick={() => {
+                alert('Правило перехода сохранено');
+                closeTransitionRuleModal();
+              }}>
+                Сохранить
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
       {questionMenuOpen && (
         <>
           <div
@@ -2011,8 +2296,7 @@ export default function Questionnaires() {
               <li
                 className="question-menu-item"
                 onClick={() => {
-                  setSettingsMenuOpen(false);
-                  alert('Правило перехода для вопроса');
+                  openTransitionRuleModal(selectedQuestionForSettings);
                 }}
               >
                 Правило перехода
