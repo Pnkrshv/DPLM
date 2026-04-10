@@ -46,7 +46,7 @@ export default function Questionnaires() {
     type: 'selected', // 'selected' | 'not_selected'
     answers: [''],
     contradictQuestionId: null,
-    contradictAnswers: [''],
+    contradictAnswers: [],
     forbidContradictions: false
   });
   const [isQuestionFormOpen, setIsQuestionFormOpen] = useState(false);
@@ -226,11 +226,11 @@ export default function Questionnaires() {
     try {
       const response = await axios.get(`http://localhost:8080/questionnaire/${questionnaireId}/questions`);
       const allQuestions = response.data;
-      
+
       // Разделяем вопросы на основные, паспортичку и дополнительные блоки
       const mainQ = allQuestions.filter(q => q.block_type === 'main');
       const passportQ = allQuestions.filter(q => q.block_type === 'passport');
-      
+
       // Группируем дополнительные блоки
       const additionalBlocksMap = {};
       allQuestions.forEach(q => {
@@ -241,14 +241,14 @@ export default function Questionnaires() {
           additionalBlocksMap[q.block_type].push(q);
         }
       });
-      
+
       // Создаем массив дополнительных блоков
       const additionalBlocksArr = Object.keys(additionalBlocksMap).map((blockId, index) => ({
         id: blockId,
         name: `Дополнительный блок ${index + 1}`,
         questions: additionalBlocksMap[blockId]
       }));
-      
+
       // Загружаем правила скрытия для каждого вопроса
       const hideRulesData = {};
       // Загружаем правила перехода для каждого вопроса
@@ -290,7 +290,7 @@ export default function Questionnaires() {
       setHideRules(hideRulesData);
       setTransitionRules(transitionRulesData);
       setContradictionRules(contradictionRulesData);
-      
+
       setQuestions(mainQ);
       setPassportQuestions(passportQ);
       setAdditionalBlocks(additionalBlocksArr);
@@ -865,7 +865,7 @@ export default function Questionnaires() {
     const conditions = savedRules && savedRules.conditions && savedRules.conditions.length > 0
       ? savedRules.conditions
       : [{ questionId: null, type: 'selected', answers: [''] }];
-    
+
     setHideRuleData({
       questionId: questionId,
       conditions: conditions
@@ -886,7 +886,7 @@ export default function Questionnaires() {
     const conditions = savedRules && savedRules.conditions && savedRules.conditions.length > 0
       ? savedRules.conditions
       : [{ type: 'selected', answers: [''] }];
-    
+
     setTransitionRuleData({
       questionId: questionId,
       conditions: conditions,
@@ -909,9 +909,9 @@ export default function Questionnaires() {
     setContradictionData({
       questionId: questionId,
       type: savedRules?.type || 'selected',
-      answers: savedRules?.answers && savedRules.answers.length > 0 ? savedRules.answers : [''],
+      answers: [''],
       contradictQuestionId: savedRules?.contradictQuestionId || null,
-      contradictAnswers: savedRules?.contradictAnswers && savedRules.contradictAnswers.length > 0 ? savedRules.contradictAnswers : [''],
+      contradictAnswers: savedRules?.contradictAnswers && savedRules.contradictAnswers.length > 0 ? savedRules.contradictAnswers : [],
       forbidContradictions: savedRules?.forbidContradictions || false
     });
     setSettingsMenuOpen(false);
@@ -960,7 +960,7 @@ export default function Questionnaires() {
   const updateTransitionCondition = (index, field, value) => {
     setTransitionRuleData(prev => ({
       ...prev,
-      conditions: prev.conditions.map((cond, i) => 
+      conditions: prev.conditions.map((cond, i) =>
         i === index ? { ...cond, [field]: value } : cond
       )
     }));
@@ -969,7 +969,7 @@ export default function Questionnaires() {
   const addAnswerToTransitionCondition = (index) => {
     setTransitionRuleData(prev => ({
       ...prev,
-      conditions: prev.conditions.map((cond, i) => 
+      conditions: prev.conditions.map((cond, i) =>
         i === index ? { ...cond, answers: [...cond.answers, ''] } : cond
       )
     }));
@@ -978,7 +978,7 @@ export default function Questionnaires() {
   const updateTransitionConditionAnswer = (conditionIndex, answerIndex, value) => {
     setTransitionRuleData(prev => ({
       ...prev,
-      conditions: prev.conditions.map((cond, i) => 
+      conditions: prev.conditions.map((cond, i) =>
         i === conditionIndex ? {
           ...cond,
           answers: cond.answers.map((a, j) => j === answerIndex ? value : a)
@@ -1004,7 +1004,7 @@ export default function Questionnaires() {
   const updateCondition = (index, field, value) => {
     setHideRuleData(prev => ({
       ...prev,
-      conditions: prev.conditions.map((cond, i) => 
+      conditions: prev.conditions.map((cond, i) =>
         i === index ? { ...cond, [field]: value } : cond
       )
     }));
@@ -1013,7 +1013,7 @@ export default function Questionnaires() {
   const addAnswerToCondition = (index) => {
     setHideRuleData(prev => ({
       ...prev,
-      conditions: prev.conditions.map((cond, i) => 
+      conditions: prev.conditions.map((cond, i) =>
         i === index ? { ...cond, answers: [...cond.answers, ''] } : cond
       )
     }));
@@ -1022,7 +1022,7 @@ export default function Questionnaires() {
   const updateConditionAnswer = (conditionIndex, answerIndex, value) => {
     setHideRuleData(prev => ({
       ...prev,
-      conditions: prev.conditions.map((cond, i) => 
+      conditions: prev.conditions.map((cond, i) =>
         i === conditionIndex ? {
           ...cond,
           answers: cond.answers.map((a, j) => j === answerIndex ? value : a)
@@ -1633,7 +1633,7 @@ export default function Questionnaires() {
                                     </div>
                                   </td>
                                   <td className="actions-cell">
-                                    <button 
+                                    <button
                                       className="settings-dots-btn"
                                       onClick={(e) => handleSettingsMenuClick(e, question.id)}
                                     >
@@ -1743,7 +1743,7 @@ export default function Questionnaires() {
                                     </div>
                                   </td>
                                   <td className="actions-cell">
-                                    <button 
+                                    <button
                                       className="settings-dots-btn"
                                       onClick={(e) => handleSettingsMenuClick(e, question.id)}
                                     >
@@ -1854,7 +1854,7 @@ export default function Questionnaires() {
                                       </div>
                                     </td>
                                     <td className="actions-cell">
-                                      <button 
+                                      <button
                                         className="settings-dots-btn"
                                         onClick={(e) => handleSettingsMenuClick(e, question.id)}
                                       >
@@ -2006,12 +2006,12 @@ export default function Questionnaires() {
                                           ))}
                                         </select>
                                         {ansIdx > 0 && (
-                                          <button 
+                                          <button
                                             className="remove-answer-btn-small"
                                             onClick={() => {
                                               setHideRuleData(prev => ({
                                                 ...prev,
-                                                conditions: prev.conditions.map((c, i) => 
+                                                conditions: prev.conditions.map((c, i) =>
                                                   i === index ? { ...c, answers: c.answers.filter((_, j) => j !== ansIdx) } : c
                                                 )
                                               }));
@@ -2026,7 +2026,7 @@ export default function Questionnaires() {
                                     ))}
                                   </div>
                                 )}
-                                <button 
+                                <button
                                   className="add-answer-to-condition-btn"
                                   onClick={() => addAnswerToCondition(index)}
                                 >
@@ -2064,12 +2064,12 @@ export default function Questionnaires() {
                     // Фильтруем пустые условия
                     const validConditions = hideRuleData.conditions.filter(c => c.questionId);
                     const hideRulesJson = JSON.stringify({ conditions: validConditions });
-                    
+
                     await axios.put(
                       `http://localhost:8080/question/${hideRuleData.questionId}/hide-rules`,
                       { hide_rules: hideRulesJson }
                     );
-                    
+
                     // Обновляем локальное состояние
                     setHideRules(prev => ({
                       ...prev,
@@ -2190,12 +2190,12 @@ export default function Questionnaires() {
                                   ))}
                                 </select>
                                 {ansIdx > 0 && (
-                                  <button 
+                                  <button
                                     className="remove-transition-answer-btn"
                                     onClick={() => {
                                       setTransitionRuleData(prev => ({
                                         ...prev,
-                                        conditions: prev.conditions.map((c, i) => 
+                                        conditions: prev.conditions.map((c, i) =>
                                           i === index ? { ...c, answers: c.answers.filter((_, j) => j !== ansIdx) } : c
                                         )
                                       }));
@@ -2208,7 +2208,7 @@ export default function Questionnaires() {
                                 )}
                               </div>
                             ))}
-                            <button 
+                            <button
                               className="add-transition-answer-btn"
                               onClick={() => addAnswerToTransitionCondition(index)}
                             >
@@ -2311,12 +2311,12 @@ export default function Questionnaires() {
                       targetBlockId: transitionRuleData.targetBlockId
                     };
                     const transitionRulesJson = JSON.stringify(transitionRulesData);
-                    
+
                     await axios.put(
                       `http://localhost:8080/question/${transitionRuleData.questionId}/transition-rules`,
                       { transition_rules: transitionRulesJson }
                     );
-                    
+
                     // Обновляем локальное состояние
                     setTransitionRules(prev => ({
                       ...prev,
@@ -2402,32 +2402,8 @@ export default function Questionnaires() {
                                   </option>
                                 ))}
                               </select>
-                              {contradictionData.answers.length > 1 && ansIdx > 0 && (
-                                <button 
-                                  className="remove-contradiction-answer-btn"
-                                  onClick={() => {
-                                    setContradictionData(prev => ({
-                                      ...prev,
-                                      answers: prev.answers.filter((_, i) => i !== ansIdx)
-                                    }));
-                                  }}
-                                >
-                                  <svg width="14px" height="14px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M7 7.00006L17 17.0001M7 17.0001L17 7.00006" stroke="#ff4444" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                                  </svg>
-                                </button>
-                              )}
                             </div>
                           ))}
-                          <button 
-                            className="add-contradiction-answer-btn"
-                            onClick={() => setContradictionData(prev => ({
-                              ...prev,
-                              answers: [...prev.answers, '']
-                            }))}
-                          >
-                            + Ответ
-                          </button>
                         </div>
                       );
                     }
@@ -2451,7 +2427,7 @@ export default function Questionnaires() {
                   onChange={(e) => setContradictionData(prev => ({
                     ...prev,
                     contradictQuestionId: e.target.value,
-                    contradictAnswers: ['']
+                    contradictAnswers: [] // Сбрасываем ответы при выборе нового вопроса
                   }))}
                 >
                   <option value="" disabled>Выберите вопрос</option>
@@ -2470,33 +2446,39 @@ export default function Questionnaires() {
                       if (contradictQuestion && contradictQuestion.answers && contradictQuestion.answers.length > 0) {
                         return (
                           <>
-                            {contradictionData.contradictAnswers.map((answer, ansIdx) => (
-                              <div key={ansIdx} className="contradict-answer-row">
-                                <select
-                                  className="contradict-answer-select"
-                                  value={answer}
-                                  onChange={(e) => updateContradictionAnswer(ansIdx, e.target.value)}
-                                >
-                                  <option value="" disabled>Выберите ответ</option>
-                                  {contradictQuestion.answers.map((a, aIdx) => (
-                                    <option key={a.id || aIdx} value={a.text || a.type}>
-                                      {a.text || a.type}
-                                    </option>
-                                  ))}
-                                </select>
-                                {contradictionData.contradictAnswers.length > 1 && ansIdx > 0 && (
-                                  <button 
-                                    className="remove-contradict-answer-btn"
-                                    onClick={() => removeContradictionAnswer(ansIdx)}
-                                  >
-                                    <svg width="14px" height="14px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                      <path d="M7 7.00006L17 17.0001M7 17.0001L17 7.00006" stroke="#ff4444" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                                    </svg>
-                                  </button>
-                                )}
-                              </div>
-                            ))}
-                            <button 
+                            {contradictionData.contradictAnswers.length > 0 ? (
+                              <>
+                                {contradictionData.contradictAnswers.map((answer, ansIdx) => (
+                                  <div key={ansIdx} className="contradict-answer-row">
+                                    <select
+                                      className="contradict-answer-select"
+                                      value={answer}
+                                      onChange={(e) => updateContradictionAnswer(ansIdx, e.target.value)}
+                                    >
+                                      <option value="" disabled>Выберите ответ</option>
+                                      {contradictQuestion.answers.map((a, aIdx) => (
+                                        <option key={a.id || aIdx} value={a.text || a.type}>
+                                          {a.text || a.type}
+                                        </option>
+                                      ))}
+                                    </select>
+                                    {contradictionData.contradictAnswers.length > 1 && ansIdx > 0 && (
+                                      <button
+                                        className="remove-contradict-answer-btn"
+                                        onClick={() => removeContradictionAnswer(ansIdx)}
+                                      >
+                                        <svg width="14px" height="14px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                          <path d="M7 7.00006L17 17.0001M7 17.0001L17 7.00006" stroke="#ff4444" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                                        </svg>
+                                      </button>
+                                    )}
+                                  </div>
+                                ))}
+                              </>
+                            ) : (
+                              ''
+                            )}
+                            <button
                               className="add-contradict-answer-btn"
                               onClick={addContradictionAnswer}
                             >
@@ -2542,21 +2524,21 @@ export default function Questionnaires() {
                     // Фильтруем пустые ответы
                     const validAnswers = contradictionData.answers.filter(a => a !== '');
                     const validContradictAnswers = contradictionData.contradictAnswers.filter(a => a !== '');
-                    
+
                     const contradictionRulesData = {
                       type: contradictionData.type,
-                      answers: validAnswers,
+                      answers: validAnswers.length > 0 ? validAnswers : contradictionData.answers,
                       contradictQuestionId: contradictionData.contradictQuestionId,
                       contradictAnswers: validContradictAnswers,
                       forbidContradictions: contradictionData.forbidContradictions
                     };
                     const contradictionRulesJson = JSON.stringify(contradictionRulesData);
-                    
+
                     await axios.put(
                       `http://localhost:8080/question/${contradictionData.questionId}/contradiction-rules`,
                       { contradiction_rules: contradictionRulesJson }
                     );
-                    
+
                     // Обновляем локальное состояние
                     setContradictionRules(prev => ({
                       ...prev,

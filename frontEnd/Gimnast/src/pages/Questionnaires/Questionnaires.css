@@ -2048,24 +2048,6 @@ button.contradiction-type-btn {
   flex-shrink: 0;
 }
 
-.add-contradiction-answer-btn {
-  background-color: #f0f0f0;
-  color: #555;
-  border: 1px solid #ccc;
-  padding: 1% 3%;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: clamp(.6rem, .8rem, 1rem);
-  font-family: main;
-  transition: all 0.2s;
-  align-self: flex-start;
-  margin-top: 1vh;
-}
-
-.add-contradiction-answer-btn:hover {
-  background-color: #e0e0e0;
-}
-
 /* Разделитель "Противоречит" */
 .contradiction-divider {
   display: flex;
