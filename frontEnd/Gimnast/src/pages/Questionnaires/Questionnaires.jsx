@@ -25,6 +25,7 @@ export default function Questionnaires() {
   const [selectedQuestionForSettings, setSelectedQuestionForSettings] = useState(null);
   const [questionSettings, setQuestionSettings] = useState({}); // {questionId: {allow_adaptation: bool, allow_answer_adaptation: bool, required: bool, no_contradictions: bool, audio_recording: bool}}
   const [hideRules, setHideRules] = useState({}); // {questionId: {conditions: [{questionId, type, answers: []}]}}
+  const [transitionRules, setTransitionRules] = useState({}); // {questionId: {conditions, action, targetQuestionId, targetBlockId}}
   const [isHideRuleModalOpen, setIsHideRuleModalOpen] = useState(false);
   const [hideRuleData, setHideRuleData] = useState({
     questionId: null,
@@ -240,6 +241,8 @@ export default function Questionnaires() {
       
       // Загружаем правила скрытия для каждого вопроса
       const hideRulesData = {};
+      // Загружаем правила перехода для каждого вопроса
+      const transitionRulesData = {};
       allQuestions.forEach(q => {
         if (q.hide_rules && q.hide_rules.trim()) {
           try {
@@ -251,8 +254,19 @@ export default function Questionnaires() {
             console.error('Ошибка парсинга правил скрытия:', e);
           }
         }
+        if (q.transition_rules && q.transition_rules.trim()) {
+          try {
+            const parsed = JSON.parse(q.transition_rules);
+            if (parsed && parsed.conditions) {
+              transitionRulesData[q.id] = parsed;
+            }
+          } catch (e) {
+            console.error('Ошибка парсинга правил перехода:', e);
+          }
+        }
       });
       setHideRules(hideRulesData);
+      setTransitionRules(transitionRulesData);
       
       setQuestions(mainQ);
       setPassportQuestions(passportQ);
@@ -844,12 +858,18 @@ export default function Questionnaires() {
 
   // Функции для правил перехода
   const openTransitionRuleModal = (questionId) => {
+    // Загружаем сохраненные правила для этого вопроса, если они есть
+    const savedRules = transitionRules[questionId];
+    const conditions = savedRules && savedRules.conditions && savedRules.conditions.length > 0
+      ? savedRules.conditions
+      : [{ type: 'selected', answers: [''] }];
+    
     setTransitionRuleData({
       questionId: questionId,
-      conditions: [{ type: 'selected', answers: [''] }],
-      action: 'end',
-      targetQuestionId: null,
-      targetBlockId: null
+      conditions: conditions,
+      action: savedRules?.action || 'end',
+      targetQuestionId: savedRules?.targetQuestionId || null,
+      targetBlockId: savedRules?.targetBlockId || null
     });
     setSettingsMenuOpen(false);
     setIsTransitionRuleModalOpen(true);
@@ -857,6 +877,7 @@ export default function Questionnaires() {
 
   const closeTransitionRuleModal = () => {
     setIsTransitionRuleModalOpen(false);
+    // Не сбрасываем transitionRuleData полностью, просто закрываем окно
   };
 
   const addTransitionCondition = () => {
@@ -2017,7 +2038,7 @@ export default function Questionnaires() {
             <div className="transition-rule-modal-header">
               <h4>Настройка правила перехода</h4>
               <div className="close-btn" onClick={closeTransitionRuleModal}>
-                <svg width="24px" height="24px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <svg width="18px" height="18px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M7 7.00006L17 17.0001M7 17.0001L17 7.00006" stroke="#292929" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </div>
@@ -2077,13 +2098,13 @@ export default function Questionnaires() {
 
                       <div className="transition-type-buttons">
                         <button
-                          className={`transition-type-btn ${condition.type === 'selected' ? 'active' : ''}`}
+                          className={`transition-type-btn ${condition.type === 'selected' ? 'activated' : ''}`}
                           onClick={() => updateTransitionCondition(index, 'type', 'selected')}
                         >
                           Выбрал
                         </button>
                         <button
-                          className={`transition-type-btn ${condition.type === 'not_selected' ? 'active' : ''}`}
+                          className={`transition-type-btn ${condition.type === 'not_selected' ? 'activated' : ''}`}
                           onClick={() => updateTransitionCondition(index, 'type', 'not_selected')}
                         >
                           Не выбрал
@@ -2214,7 +2235,36 @@ export default function Questionnaires() {
               <button className="cancel-btn" onClick={closeTransitionRuleModal}>
                 Отменить
               </button>
-              <button className="save-btn" onClick={() => {
+              <button className="save-btn" onClick={async () => {
+                // Сохраняем правила перехода для этого вопроса
+                if (transitionRuleData.questionId) {
+                  try {
+                    // Фильтруем пустые условия
+                    const validConditions = transitionRuleData.conditions.filter(c => c.answers && c.answers.length > 0 && c.answers[0] !== '');
+                    const transitionRulesData = {
+                      conditions: validConditions,
+                      action: transitionRuleData.action,
+                      targetQuestionId: transitionRuleData.targetQuestionId,
+                      targetBlockId: transitionRuleData.targetBlockId
+                    };
+                    const transitionRulesJson = JSON.stringify(transitionRulesData);
+                    
+                    await axios.put(
+                      `http://localhost:8080/question/${transitionRuleData.questionId}/transition-rules`,
+                      { transition_rules: transitionRulesJson }
+                    );
+                    
+                    // Обновляем локальное состояние
+                    setTransitionRules(prev => ({
+                      ...prev,
+                      [transitionRuleData.questionId]: transitionRulesData
+                    }));
+                  } catch (err) {
+                    console.error('Ошибка при сохранении правил перехода:', err);
+                    alert('Ошибка при сохранении правил перехода: ' + (err.response?.data?.error || err.message));
+                    return;
+                  }
+                }
                 alert('Правило перехода сохранено');
                 closeTransitionRuleModal();
               }}>

@@ -1690,6 +1690,7 @@ button.add-rule-condition-btn {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1vh;
+  padding: 1%;
   border-bottom: 1px solid var(--active);
 }
 
@@ -1724,16 +1725,11 @@ button.add-rule-condition-btn {
   background: transparent;
   border: none;
   cursor: pointer;
-  padding: 0.2rem;
+  padding: 1%;
   border-radius: 4px;
-  transition: background-color 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.remove-transition-condition-btn:hover {
-  background-color: #ffe6e6;
 }
 
 .remove-transition-condition-btn svg {
@@ -1743,16 +1739,15 @@ button.add-rule-condition-btn {
 
 .transition-type-buttons {
   display: flex;
-  gap: 0.5rem;
+  gap: 0;
   align-items: center;
   flex-wrap: wrap;
-  margin-bottom: 0.5rem;
+  margin-bottom: 1vh;
 }
 
 .transition-type-btn {
-  padding: 0.4rem 0.8rem;
+  padding: 1% 3%;
   border: 1px solid #ccc;
-  border-radius: 4px;
   background-color: white;
   color: #555;
   cursor: pointer;
@@ -1765,7 +1760,7 @@ button.add-rule-condition-btn {
   background-color: #f0f0f0;
 }
 
-.transition-type-btn.active {
+.transition-type-btn.activated {
   background-color: var(--active);
   color: white;
   border-color: var(--active);
@@ -1774,17 +1769,17 @@ button.add-rule-condition-btn {
 .transition-answers-container {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 1vh;
   width: 100%;
-  margin-top: 0.5rem;
-  padding: 0.3rem 0;
+  margin-top: 1vh;
+  padding: 1% 0%;
 }
 
 .transition-answer-row {
   display: flex;
-  gap: 0.5rem;
+  gap: 1vw;
   align-items: center;
-  margin-bottom: 0.4rem;
+  margin-bottom: 1vh;
 }
 
 .transition-answer-row:last-child {
@@ -1794,7 +1789,7 @@ button.add-rule-condition-btn {
 .transition-answer-select {
   flex: 1;
   min-width: 0;
-  padding: 0.5rem;
+  padding: 1%;
   border: 1px solid #ccc;
   border-radius: 4px;
   font-family: main;
@@ -1813,7 +1808,7 @@ button.add-rule-condition-btn {
   background: transparent;
   border: none;
   cursor: pointer;
-  padding: 0.2rem;
+  padding: 1%;
   border-radius: 4px;
   transition: background-color 0.2s;
   display: flex;
@@ -1830,14 +1825,14 @@ button.add-rule-condition-btn {
   background-color: #f0f0f0;
   color: #555;
   border: 1px solid #ccc;
-  padding: 0.3rem 0.6rem;
+  padding: 1% 3%;
   border-radius: 4px;
   cursor: pointer;
   font-size: clamp(.6rem, .8rem, 1rem);
   font-family: main;
   transition: all 0.2s;
   align-self: flex-start;
-  margin-top: 0.3rem;
+  margin-top: 1vh;
 }
 
 .add-transition-answer-btn:hover {
@@ -1848,13 +1843,13 @@ button.add-rule-condition-btn {
   background-color: rgb(216, 245, 216);
   color: rgb(72, 186, 72);
   border: solid 1px lightgreen;
-  padding: 0.5rem 1rem;
+  padding: 1%;
   border-radius: 4px;
   cursor: pointer;
   font-size: clamp(.6rem, .8rem, 1rem);
   font-family: main;
   transition: all 0.2s;
-  margin-top: 0.5rem;
+  margin-top: 1vh;
   width: 100%;
 }
 
@@ -1874,6 +1869,7 @@ button.add-rule-condition-btn {
   font-size: clamp(.6rem, .8rem, 1rem);
   color: #333;
   font-weight: 600;
+  padding: 1%;
   margin-bottom: 1vh;
   border-bottom: 1px solid var(--active);
 }
@@ -1890,7 +1886,7 @@ button.add-rule-condition-btn {
   background-color: white;
   cursor: pointer;
   transition: border-color 0.2s;
-  margin-bottom: 0.5rem;
+  margin-bottom: 1vh;
 }
 
 .transition-action-select:focus,

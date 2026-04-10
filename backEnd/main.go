@@ -89,6 +89,7 @@ type Question struct {
 	MaxAnswers      int       `gorm:"default:0" json:"max_answers"`                       // максимум ответов (0 = неограниченно)
 	RegionScope     string    `gorm:"type:varchar(50);default:'all'" json:"region_scope"` // для каких регионов
 	HideRules       string    `gorm:"type:text" json:"hide_rules"`                        // правила скрытия (JSON)
+	TransitionRules string    `gorm:"type:text" json:"transition_rules"`                  // правила перехода (JSON)
 	Answers         []Answer  `gorm:"foreignKey:QuestionID" json:"answers,omitempty"`
 	CreatedAt       time.Time `json:"created_at"`
 	UpdatedAt       time.Time `json:"updated_at"`
@@ -878,16 +879,17 @@ func createQuestion(c echo.Context) error {
 	}
 
 	type QuestionRequest struct {
-		Type         string          `json:"type"`
-		Text         string          `json:"text"`
-		Explanation  string          `json:"explanation"`
-		OrderIndex   int             `json:"order_index"`
-		BlockType    string          `json:"block_type"`
-		IsRandomized bool            `json:"is_randomized"`
-		MaxAnswers   int             `json:"max_answers"`
-		RegionScope  string          `json:"region_scope"`
-		HideRules    string          `json:"hide_rules"`
-		Answers      []AnswerPayload `json:"answers"`
+		Type            string          `json:"type"`
+		Text            string          `json:"text"`
+		Explanation     string          `json:"explanation"`
+		OrderIndex      int             `json:"order_index"`
+		BlockType       string          `json:"block_type"`
+		IsRandomized    bool            `json:"is_randomized"`
+		MaxAnswers      int             `json:"max_answers"`
+		RegionScope     string          `json:"region_scope"`
+		HideRules       string          `json:"hide_rules"`
+		TransitionRules string          `json:"transition_rules"`
+		Answers         []AnswerPayload `json:"answers"`
 	}
 
 	var req QuestionRequest
@@ -916,6 +918,7 @@ func createQuestion(c echo.Context) error {
 		MaxAnswers:      req.MaxAnswers,
 		RegionScope:     req.RegionScope,
 		HideRules:       req.HideRules,
+		TransitionRules: req.TransitionRules,
 		CreatedAt:       time.Now(),
 		UpdatedAt:       time.Now(),
 	}
@@ -1073,6 +1076,41 @@ func updateHideRules(c echo.Context) error {
 	})
 }
 
+// Обновление правил перехода для вопроса
+func updateTransitionRules(c echo.Context) error {
+	questionID := c.Param("question_id")
+
+	type TransitionRulesRequest struct {
+		TransitionRules string `json:"transition_rules"`
+	}
+
+	var req TransitionRulesRequest
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, echo.Map{
+			"error": "Неверный формат данных",
+		})
+	}
+
+	// Проверяем существование вопроса
+	var question Question
+	if err := db.First(&question, "id = ?", questionID).Error; err != nil {
+		return c.JSON(http.StatusNotFound, echo.Map{
+			"error": "Вопрос не найден",
+		})
+	}
+
+	if err := db.Model(&Question{}).Where("id = ?", questionID).Update("transition_rules", req.TransitionRules).Error; err != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{
+			"error": "Не удалось обновить правила перехода",
+		})
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"id":      questionID,
+		"message": "Правила перехода успешно обновлены",
+	})
+}
+
 // Добавление ответа к вопросу
 func createAnswer(c echo.Context) error {
 	questionID := c.Param("question_id")
@@ -1167,6 +1205,7 @@ func main() {
 	e.GET("/questionnaire/:id/questions", getQuestionsByQuestionnaireID)
 	e.PUT("/questionnaire/:questionnaire_id/questions/:question_id", updateQuestion)
 	e.PUT("/question/:question_id/hide-rules", updateHideRules)
+	e.PUT("/question/:question_id/transition-rules", updateTransitionRules)
 	e.DELETE("/questionnaire/:questionnaire_id/questions/:question_id", deleteQuestion)
 	// Эндпоинты для ответов:
 	e.POST("/question/:question_id/answers", createAnswer)
