@@ -755,3 +755,61 @@
     font-size: 0.9rem;
     color: #333;
 }
+
+@media (max-width: 768px) {
+
+    .create-map-window,
+    .modal-map,
+    .add-window {
+        width: 95vw;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    .modal-map-body {
+        flex-direction: column;
+    }
+
+    .modal-map-cities {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid #ccc;
+        max-height: 30vh;
+    }
+
+    .main-modal-map {
+        padding-left: 0;
+    }
+
+    .add-window-main {
+        flex-direction: column;
+    }
+
+    .main-find,
+    .main-add-form,
+    .main-map {
+        width: 100%;
+    }
+
+    .main-map {
+        height: 200px;
+    }
+
+    .map-table,
+    .modal-map-table {
+        overflow-x: auto;
+
+        table {
+            min-width: 600px;
+        }
+    }
+
+    .buttons {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .pagination {
+        flex-wrap: wrap;
+    }
+}

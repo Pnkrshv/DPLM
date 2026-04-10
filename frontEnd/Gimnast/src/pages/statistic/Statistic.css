@@ -162,3 +162,26 @@
         position: relative;
     }
 }
+
+@media (max-width: 768px) {
+    .statistic-main-content {
+        flex-direction: column;
+    }
+
+    .statistic-regions {
+        max-height: 30vh;
+        flex: 0 0 auto;
+    }
+
+    .statistic-top-row {
+        flex-direction: column;
+    }
+
+    .statistic-form {
+        width: 100%;
+    }
+
+    .control-date {
+        justify-content: flex-start;
+    }
+}

@@ -76,3 +76,30 @@
         }
     }
 }
+
+@media (max-width: 768px) {
+    .authWindow {
+        max-width: 90vw;
+        margin-top: 20vh;
+    }
+
+    .authForm {
+        padding: 20px 15px;
+    }
+
+    .loginField input,
+    .passwordField input {
+        width: 100%;
+        max-width: 250px;
+    }
+
+    .formBtn {
+        width: 80%;
+        font-size: 16px;
+    }
+
+    .errorText {
+        font-size: 14px;
+        bottom: 5%;
+    }
+}

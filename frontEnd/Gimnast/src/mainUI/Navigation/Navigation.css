@@ -44,11 +44,9 @@
   }
 
   &:hover {
-    background: linear-gradient(
-      180deg,
-      rgba(0, 96, 100, 1) 0%,
-      rgba(56, 131, 134, 1) 64%
-    );
+    background: linear-gradient(180deg,
+        rgba(0, 96, 100, 1) 0%,
+        rgba(56, 131, 134, 1) 64%);
     border-bottom: solid white 1px;
     border-top: solid white 1px;
   }
@@ -66,9 +64,34 @@
 }
 
 .active {
-  background: linear-gradient(
-    180deg,
-    rgba(0, 96, 100, 1) 0%,
-    rgba(56, 131, 134, 1) 64%
-  );
+  background: linear-gradient(180deg,
+      rgba(0, 96, 100, 1) 0%,
+      rgba(56, 131, 134, 1) 64%);
+}
+
+@media (max-width: 768px) {
+  .navBarCol {
+    max-width: 60px;
+    /* уменьшаем ширину */
+  }
+
+  .navBarRoute {
+    width: 60px;
+    padding: 8px 0;
+    font-size: 10px;
+
+    & svg {
+      width: 24px;
+      height: 24px;
+    }
+  }
+
+  .navBarRoute.power {
+    margin-top: auto;
+  }
+
+  .underRoute {
+    display: none;
+    /* скрываем текст под иконкой на мобильных */
+  }
 }
