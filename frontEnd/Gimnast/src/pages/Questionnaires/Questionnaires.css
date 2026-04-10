@@ -1337,46 +1337,47 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: calc(var(--index) * 0.5) calc(var(--index) * 0.6);
+  padding: 1%;
+  background-color: #e2f0ff;
   border-bottom: 1px solid #eee;
 }
 
 .hide-rule-modal-header h4 {
-  font-size: 1.1rem;
+  font-size: clamp(.6rem, .8rem, 1rem);
   color: #333;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .hide-rule-modal-body {
   flex: 1;
   overflow-y: auto;
-  padding: calc(var(--index) * 0.6);
+  scrollbar-width: thin;
+  padding: 1%;
 }
 
 .hide-rule-question-info {
-  margin-bottom: calc(var(--index) * 0.5);
-  padding: calc(var(--index) * 0.4);
+  margin-bottom: 1vh;
+  padding: 1%;
   background-color: #f5f5f5;
-  border-radius: 6px;
+  border-radius: 4px;
   border: 1px solid #e0e0e0;
 }
 
 .hide-rule-question-label {
-  font-size: 0.95rem;
+  font-size: clamp(.6rem, .8rem, 1rem);
   color: #333;
-  margin: 0;
   line-height: 1.5;
 }
 
 .hide-rule-question-label strong {
-  color: #006064;
+  color: grey;
 }
 
 .hide-rule-condition-card {
   background-color: white;
   border: 1px solid #e0e0e0;
-  border-radius: 6px;
-  padding: calc(var(--index) * 0.5);
+  border-radius: 4px;
+  padding: 1%;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
@@ -1384,34 +1385,25 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: calc(var(--index) * 0.4);
-  padding-bottom: calc(var(--index) * 0.2);
-  border-bottom: 2px solid var(--active);
+  margin-bottom: 1vh;
+  border-bottom: 1px solid var(--active);
 }
 
 .condition-card-header h5 {
-  font-size: 1rem;
+  font-size: clamp(.6rem, .8rem, 1rem);
   color: #333;
   font-weight: 600;
-  margin: 0;
-  padding: 0;
-  border: none;
 }
 
 .remove-all-conditions-btn {
   background: transparent;
   border: none;
   cursor: pointer;
-  padding: 0.3rem;
-  border-radius: 4px;
+  padding: 1%;
   transition: background-color 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.remove-all-conditions-btn:hover {
-  background-color: #ffe6e6;
 }
 
 .remove-all-conditions-btn svg {
@@ -1420,9 +1412,9 @@
 }
 
 .hide-rule-condition {
-  margin-bottom: calc(var(--index) * 0.4);
-  padding: calc(var(--index) * 0.3);
-  background-color: #fafafa;
+  margin-bottom: 1vh;
+  padding: 1%;
+  background-color: white;
   border-radius: 4px;
   border: 1px solid #e8e8e8;
 }
@@ -1431,11 +1423,11 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 0.5rem;
+  margin-bottom: 1vh;
 }
 
 .condition-number {
-  font-size: 0.85rem;
+  font-size: clamp(.6rem, .8rem, 1rem);
   font-weight: 600;
   color: #666;
 }
@@ -1462,17 +1454,17 @@
 }
 
 .condition-row {
-  margin-bottom: 0.5rem;
+  margin-bottom: 1vh;
 }
 
 .condition-select,
 .answer-select {
   width: 100%;
-  padding: 0.5rem;
+  padding: 1%;
   border: 1px solid #ccc;
   border-radius: 4px;
   font-family: main;
-  font-size: 0.85rem;
+  font-size: clamp(.6rem, .8rem, 1rem);
   outline: none;
   background-color: white;
   cursor: pointer;
@@ -1486,32 +1478,36 @@
 
 .condition-type-buttons {
   display: flex;
-  gap: 0.5rem;
+  gap: 0;
   align-items: center;
   flex-wrap: wrap;
-  margin-bottom: 0.5rem;
+  margin-bottom: 1vh;
+
+  & button {
+    border-radius: 0;
+  }
 }
 
-.condition-type-buttons + .answers-container {
-  margin-top: 0.8rem;
-  padding-top: 0.5rem;
+.condition-type-buttons+.answers-container {
+  margin-top: 1vh;
+  padding-top: 1%;
   border-top: 1px solid #e8e8e8;
 }
 
 .answers-container {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 1vh;
   width: 100%;
-  margin-top: 0.5rem;
-  padding: 0.3rem 0;
+  margin-top: 1vh;
+  padding: 1% 0%;
 }
 
 .answer-row {
   display: flex;
-  gap: 0.5rem;
+  gap: .5vw;
   align-items: center;
-  margin-bottom: 0.4rem;
+  margin-bottom: 1vh;
 }
 
 .answer-row:last-child {
@@ -1527,31 +1523,25 @@
   background: transparent;
   border: none;
   cursor: pointer;
-  padding: 0.2rem;
-  border-radius: 4px;
-  transition: background-color 0.2s;
+  padding: .5%;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
 
-.remove-answer-btn-small:hover {
-  background-color: #ffe6e6;
-}
-
-.add-answer-to-condition-btn {
+button.add-answer-to-condition-btn {
   background-color: #f0f0f0;
   color: #555;
   border: 1px solid #ccc;
-  padding: 0.3rem 0.6rem;
-  border-radius: 4px;
+  padding: 1% 4%;
   cursor: pointer;
-  font-size: 0.75rem;
+  border-radius: 4px;
+  font-size: clamp(.6rem, .8rem, 1rem);
   font-family: main;
   transition: all 0.2s;
   align-self: flex-start;
-  margin-top: 0.3rem;
+  margin-top: 1vh;
 }
 
 .add-answer-to-condition-btn:hover {
@@ -1561,22 +1551,21 @@
 .no-answers-message {
   text-align: center;
   color: #999;
-  font-size: 0.8rem;
-  padding: 0.4rem;
-  margin: 0.3rem 0 0 0;
+  font-size: clamp(.6rem, .8rem, 1rem);
+  padding: 1%;
+  margin-left: 1vw;
   background-color: #f9f9f9;
   border-radius: 4px;
   border: 1px dashed #ddd;
 }
 
-.condition-type-btn {
-  padding: 0.4rem 0.8rem;
+button.condition-type-btn {
+  padding: 1% 3%;
   border: 1px solid #ccc;
-  border-radius: 4px;
   background-color: white;
   color: #555;
   cursor: pointer;
-  font-size: 0.85rem;
+  font-size: clamp(.6rem, .8rem, 1rem);
   font-family: main;
   transition: all 0.2s;
 }
@@ -1585,13 +1574,13 @@
   background-color: #f0f0f0;
 }
 
-.condition-type-btn.active {
+button.condition-type-btn.activated {
   background-color: var(--active);
   color: white;
-  border-color: var(--active);
+  border: solid 1px var(--active);
 }
 
-.add-condition-btn {
+button.add-condition-btn {
   background-color: rgb(216, 245, 216);
   color: rgb(72, 186, 72);
   border: solid 1px lightgreen;
@@ -1609,17 +1598,17 @@
   background-color: rgb(196, 235, 196);
 }
 
-.add-rule-condition-btn {
+button.add-rule-condition-btn {
   background-color: #e3f2fd;
   color: #1976d2;
   border: solid 1px #bbdefb;
-  padding: 0.5rem 1rem;
+  padding: 1%;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 0.85rem;
+  font-size: clamp(.7rem, .85rem, 1rem);
   font-family: main;
   transition: all 0.2s;
-  margin-top: 0.5rem;
+  margin-top: 1vh;
   width: 100%;
 }
 

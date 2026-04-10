@@ -1747,8 +1747,8 @@ export default function Questionnaires() {
             <div className="hide-rule-modal-header">
               <h4>Настройка правила скрытия</h4>
               <div className="close-btn" onClick={closeHideRuleModal}>
-                <svg width="24px" height="24px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M7 7.00006L17 17.0001M7 17.0001L17 7.00006" stroke="#292929" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                <svg width="18px" height="18px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M7 7.00006L17 17.0001M7 17.0001L17 7.00006" stroke="#292929" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </div>
             </div>
@@ -1822,13 +1822,13 @@ export default function Questionnaires() {
                         <>
                           <div className="condition-type-buttons">
                             <button
-                              className={`condition-type-btn ${condition.type === 'selected' ? 'active' : ''}`}
+                              className={`condition-type-btn ${condition.type === 'selected' ? 'activated' : ''}`}
                               onClick={() => updateCondition(index, 'type', 'selected')}
                             >
                               Выбрал
                             </button>
                             <button
-                              className={`condition-type-btn ${condition.type === 'not_selected' ? 'active' : ''}`}
+                              className={`condition-type-btn ${condition.type === 'not_selected' ? 'activated' : ''}`}
                               onClick={() => updateCondition(index, 'type', 'not_selected')}
                             >
                               Не выбрал
