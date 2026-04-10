@@ -78,21 +78,22 @@ type QuestionnaireData struct {
 
 // Модель для вопроса анкеты
 type Question struct {
-	ID              string    `gorm:"primaryKey" json:"id"`
-	QuestionnaireID string    `gorm:"type:uuid;not null" json:"questionnaire_id"`
-	Type            string    `gorm:"type:varchar(50);not null" json:"type"` // open, closed, mixed, scale, dichotomous
-	Text            string    `gorm:"type:text;not null" json:"text"`
-	Explanation     string    `gorm:"type:text" json:"explanation"`
-	OrderIndex      int       `gorm:"not null;default:0" json:"order_index"`
-	BlockType       string    `gorm:"type:varchar(50);default:'main'" json:"block_type"`  // main, passport
-	IsRandomized    bool      `gorm:"default:false" json:"is_randomized"`                 // перемешивать ответы
-	MaxAnswers      int       `gorm:"default:0" json:"max_answers"`                       // максимум ответов (0 = неограниченно)
-	RegionScope     string    `gorm:"type:varchar(50);default:'all'" json:"region_scope"` // для каких регионов
-	HideRules       string    `gorm:"type:text" json:"hide_rules"`                        // правила скрытия (JSON)
-	TransitionRules string    `gorm:"type:text" json:"transition_rules"`                  // правила перехода (JSON)
-	Answers         []Answer  `gorm:"foreignKey:QuestionID" json:"answers,omitempty"`
-	CreatedAt       time.Time `json:"created_at"`
-	UpdatedAt       time.Time `json:"updated_at"`
+	ID                 string    `gorm:"primaryKey" json:"id"`
+	QuestionnaireID    string    `gorm:"type:uuid;not null" json:"questionnaire_id"`
+	Type               string    `gorm:"type:varchar(50);not null" json:"type"` // open, closed, mixed, scale, dichotomous
+	Text               string    `gorm:"type:text;not null" json:"text"`
+	Explanation        string    `gorm:"type:text" json:"explanation"`
+	OrderIndex         int       `gorm:"not null;default:0" json:"order_index"`
+	BlockType          string    `gorm:"type:varchar(50);default:'main'" json:"block_type"`  // main, passport
+	IsRandomized       bool      `gorm:"default:false" json:"is_randomized"`                 // перемешивать ответы
+	MaxAnswers         int       `gorm:"default:0" json:"max_answers"`                       // максимум ответов (0 = неограниченно)
+	RegionScope        string    `gorm:"type:varchar(50);default:'all'" json:"region_scope"` // для каких регионов
+	HideRules          string    `gorm:"type:text" json:"hide_rules"`                        // правила скрытия (JSON)
+	TransitionRules    string    `gorm:"type:text" json:"transition_rules"`                  // правила перехода (JSON)
+	ContradictionRules string    `gorm:"type:text" json:"contradiction_rules"`               // правила противоречий (JSON)
+	Answers            []Answer  `gorm:"foreignKey:QuestionID" json:"answers,omitempty"`
+	CreatedAt          time.Time `json:"created_at"`
+	UpdatedAt          time.Time `json:"updated_at"`
 }
 
 // Модель для варианта ответа
@@ -879,17 +880,18 @@ func createQuestion(c echo.Context) error {
 	}
 
 	type QuestionRequest struct {
-		Type            string          `json:"type"`
-		Text            string          `json:"text"`
-		Explanation     string          `json:"explanation"`
-		OrderIndex      int             `json:"order_index"`
-		BlockType       string          `json:"block_type"`
-		IsRandomized    bool            `json:"is_randomized"`
-		MaxAnswers      int             `json:"max_answers"`
-		RegionScope     string          `json:"region_scope"`
-		HideRules       string          `json:"hide_rules"`
-		TransitionRules string          `json:"transition_rules"`
-		Answers         []AnswerPayload `json:"answers"`
+		Type               string          `json:"type"`
+		Text               string          `json:"text"`
+		Explanation        string          `json:"explanation"`
+		OrderIndex         int             `json:"order_index"`
+		BlockType          string          `json:"block_type"`
+		IsRandomized       bool            `json:"is_randomized"`
+		MaxAnswers         int             `json:"max_answers"`
+		RegionScope        string          `json:"region_scope"`
+		HideRules          string          `json:"hide_rules"`
+		TransitionRules    string          `json:"transition_rules"`
+		ContradictionRules string          `json:"contradiction_rules"`
+		Answers            []AnswerPayload `json:"answers"`
 	}
 
 	var req QuestionRequest
@@ -907,20 +909,21 @@ func createQuestion(c echo.Context) error {
 
 	// Создаём вопрос
 	q := &Question{
-		ID:              uuid.NewString(),
-		QuestionnaireID: questionnaireID,
-		Type:            req.Type,
-		Text:            req.Text,
-		Explanation:     req.Explanation,
-		OrderIndex:      req.OrderIndex,
-		BlockType:       req.BlockType,
-		IsRandomized:    req.IsRandomized,
-		MaxAnswers:      req.MaxAnswers,
-		RegionScope:     req.RegionScope,
-		HideRules:       req.HideRules,
-		TransitionRules: req.TransitionRules,
-		CreatedAt:       time.Now(),
-		UpdatedAt:       time.Now(),
+		ID:                 uuid.NewString(),
+		QuestionnaireID:    questionnaireID,
+		Type:               req.Type,
+		Text:               req.Text,
+		Explanation:        req.Explanation,
+		OrderIndex:         req.OrderIndex,
+		BlockType:          req.BlockType,
+		IsRandomized:       req.IsRandomized,
+		MaxAnswers:         req.MaxAnswers,
+		RegionScope:        req.RegionScope,
+		HideRules:          req.HideRules,
+		TransitionRules:    req.TransitionRules,
+		ContradictionRules: req.ContradictionRules,
+		CreatedAt:          time.Now(),
+		UpdatedAt:          time.Now(),
 	}
 
 	if err := db.Create(q).Error; err != nil {
@@ -1111,6 +1114,41 @@ func updateTransitionRules(c echo.Context) error {
 	})
 }
 
+// Обновление правил противоречий для вопроса
+func updateContradictionRules(c echo.Context) error {
+	questionID := c.Param("question_id")
+
+	type ContradictionRulesRequest struct {
+		ContradictionRules string `json:"contradiction_rules"`
+	}
+
+	var req ContradictionRulesRequest
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, echo.Map{
+			"error": "Неверный формат данных",
+		})
+	}
+
+	// Проверяем существование вопроса
+	var question Question
+	if err := db.First(&question, "id = ?", questionID).Error; err != nil {
+		return c.JSON(http.StatusNotFound, echo.Map{
+			"error": "Вопрос не найден",
+		})
+	}
+
+	if err := db.Model(&Question{}).Where("id = ?", questionID).Update("contradiction_rules", req.ContradictionRules).Error; err != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{
+			"error": "Не удалось обновить правила противоречий",
+		})
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"id":      questionID,
+		"message": "Правила противоречий успешно обновлены",
+	})
+}
+
 // Добавление ответа к вопросу
 func createAnswer(c echo.Context) error {
 	questionID := c.Param("question_id")
@@ -1206,6 +1244,7 @@ func main() {
 	e.PUT("/questionnaire/:questionnaire_id/questions/:question_id", updateQuestion)
 	e.PUT("/question/:question_id/hide-rules", updateHideRules)
 	e.PUT("/question/:question_id/transition-rules", updateTransitionRules)
+	e.PUT("/question/:question_id/contradiction-rules", updateContradictionRules)
 	e.DELETE("/questionnaire/:questionnaire_id/questions/:question_id", deleteQuestion)
 	// Эндпоинты для ответов:
 	e.POST("/question/:question_id/answers", createAnswer)

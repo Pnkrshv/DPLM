@@ -26,6 +26,7 @@ export default function Questionnaires() {
   const [questionSettings, setQuestionSettings] = useState({}); // {questionId: {allow_adaptation: bool, allow_answer_adaptation: bool, required: bool, no_contradictions: bool, audio_recording: bool}}
   const [hideRules, setHideRules] = useState({}); // {questionId: {conditions: [{questionId, type, answers: []}]}}
   const [transitionRules, setTransitionRules] = useState({}); // {questionId: {conditions, action, targetQuestionId, targetBlockId}}
+  const [contradictionRules, setContradictionRules] = useState({}); // {questionId: {type, answers, contradictQuestionId, contradictAnswers, forbidContradictions}}
   const [isHideRuleModalOpen, setIsHideRuleModalOpen] = useState(false);
   const [hideRuleData, setHideRuleData] = useState({
     questionId: null,
@@ -38,6 +39,15 @@ export default function Questionnaires() {
     action: 'end', // 'question', 'block', 'end'
     targetQuestionId: null,
     targetBlockId: null
+  });
+  const [isContradictionModalOpen, setIsContradictionModalOpen] = useState(false);
+  const [contradictionData, setContradictionData] = useState({
+    questionId: null,
+    type: 'selected', // 'selected' | 'not_selected'
+    answers: [''],
+    contradictQuestionId: null,
+    contradictAnswers: [''],
+    forbidContradictions: false
   });
   const [isQuestionFormOpen, setIsQuestionFormOpen] = useState(false);
   const [currentQuestionType, setCurrentQuestionType] = useState(null);
@@ -243,6 +253,8 @@ export default function Questionnaires() {
       const hideRulesData = {};
       // Загружаем правила перехода для каждого вопроса
       const transitionRulesData = {};
+      // Загружаем правила противоречий для каждого вопроса
+      const contradictionRulesData = {};
       allQuestions.forEach(q => {
         if (q.hide_rules && q.hide_rules.trim()) {
           try {
@@ -264,9 +276,20 @@ export default function Questionnaires() {
             console.error('Ошибка парсинга правил перехода:', e);
           }
         }
+        if (q.contradiction_rules && q.contradiction_rules.trim()) {
+          try {
+            const parsed = JSON.parse(q.contradiction_rules);
+            if (parsed) {
+              contradictionRulesData[q.id] = parsed;
+            }
+          } catch (e) {
+            console.error('Ошибка парсинга правил противоречий:', e);
+          }
+        }
       });
       setHideRules(hideRulesData);
       setTransitionRules(transitionRulesData);
+      setContradictionRules(contradictionRulesData);
       
       setQuestions(mainQ);
       setPassportQuestions(passportQ);
@@ -878,6 +901,46 @@ export default function Questionnaires() {
   const closeTransitionRuleModal = () => {
     setIsTransitionRuleModalOpen(false);
     // Не сбрасываем transitionRuleData полностью, просто закрываем окно
+  };
+
+  // Функции для противоречий
+  const openContradictionModal = (questionId) => {
+    const savedRules = contradictionRules[questionId];
+    setContradictionData({
+      questionId: questionId,
+      type: savedRules?.type || 'selected',
+      answers: savedRules?.answers && savedRules.answers.length > 0 ? savedRules.answers : [''],
+      contradictQuestionId: savedRules?.contradictQuestionId || null,
+      contradictAnswers: savedRules?.contradictAnswers && savedRules.contradictAnswers.length > 0 ? savedRules.contradictAnswers : [''],
+      forbidContradictions: savedRules?.forbidContradictions || false
+    });
+    setSettingsMenuOpen(false);
+    setIsContradictionModalOpen(true);
+  };
+
+  const closeContradictionModal = () => {
+    setIsContradictionModalOpen(false);
+  };
+
+  const addContradictionAnswer = () => {
+    setContradictionData(prev => ({
+      ...prev,
+      contradictAnswers: [...prev.contradictAnswers, '']
+    }));
+  };
+
+  const removeContradictionAnswer = (index) => {
+    setContradictionData(prev => ({
+      ...prev,
+      contradictAnswers: prev.contradictAnswers.filter((_, i) => i !== index)
+    }));
+  };
+
+  const updateContradictionAnswer = (index, value) => {
+    setContradictionData(prev => ({
+      ...prev,
+      contradictAnswers: prev.contradictAnswers.map((a, i) => i === index ? value : a)
+    }));
   };
 
   const addTransitionCondition = () => {
@@ -2275,6 +2338,246 @@ export default function Questionnaires() {
         </>
       )}
 
+      {/* Модальное окно противоречий */}
+      {isContradictionModalOpen && (
+        <>
+          <div className="modal-bg" onClick={closeContradictionModal}></div>
+          <div className="contradiction-modal">
+            <div className="contradiction-modal-header">
+              <h4>Настройка противоречий</h4>
+              <div className="close-btn" onClick={closeContradictionModal}>
+                <svg width="18px" height="18px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M7 7.00006L17 17.0001M7 17.0001L17 7.00006" stroke="#292929" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+            </div>
+
+            <div className="contradiction-modal-body">
+              {/* Вопрос, для которого настраиваются противоречия */}
+              {contradictionData.questionId && (
+                <div className="contradiction-question-info">
+                  <p className="contradiction-question-label">
+                    Вопрос: <strong>{[...questions, ...passportQuestions, ...additionalBlocks.flatMap(b => b.questions)].find(q => q.id === contradictionData.questionId)?.text || 'Не найден'}</strong>
+                  </p>
+                </div>
+              )}
+
+              {/* Переключатель и ответы */}
+              <div className="contradiction-type-section">
+                <div className="contradiction-type-buttons">
+                  <button
+                    className={`contradiction-type-btn ${contradictionData.type === 'selected' ? 'activated' : ''}`}
+                    onClick={() => setContradictionData(prev => ({ ...prev, type: 'selected' }))}
+                  >
+                    Выбрал
+                  </button>
+                  <button
+                    className={`contradiction-type-btn ${contradictionData.type === 'not_selected' ? 'activated' : ''}`}
+                    onClick={() => setContradictionData(prev => ({ ...prev, type: 'not_selected' }))}
+                  >
+                    Не выбрал
+                  </button>
+
+                  {(() => {
+                    const currentQuestion = [...questions, ...passportQuestions, ...additionalBlocks.flatMap(b => b.questions)].find(q => q.id === contradictionData.questionId);
+                    if (currentQuestion && currentQuestion.answers && currentQuestion.answers.length > 0) {
+                      return (
+                        <div className="contradiction-answers-container">
+                          {contradictionData.answers.map((answer, ansIdx) => (
+                            <div key={ansIdx} className="contradiction-answer-row">
+                              <select
+                                className="contradiction-answer-select"
+                                value={answer}
+                                onChange={(e) => {
+                                  setContradictionData(prev => ({
+                                    ...prev,
+                                    answers: prev.answers.map((a, i) => i === ansIdx ? e.target.value : a)
+                                  }));
+                                }}
+                              >
+                                <option value="" disabled>Выберите ответ</option>
+                                {currentQuestion.answers.map((a, aIdx) => (
+                                  <option key={a.id || aIdx} value={a.text || a.type}>
+                                    {a.text || a.type}
+                                  </option>
+                                ))}
+                              </select>
+                              {contradictionData.answers.length > 1 && ansIdx > 0 && (
+                                <button 
+                                  className="remove-contradiction-answer-btn"
+                                  onClick={() => {
+                                    setContradictionData(prev => ({
+                                      ...prev,
+                                      answers: prev.answers.filter((_, i) => i !== ansIdx)
+                                    }));
+                                  }}
+                                >
+                                  <svg width="14px" height="14px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M7 7.00006L17 17.0001M7 17.0001L17 7.00006" stroke="#ff4444" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                                  </svg>
+                                </button>
+                              )}
+                            </div>
+                          ))}
+                          <button 
+                            className="add-contradiction-answer-btn"
+                            onClick={() => setContradictionData(prev => ({
+                              ...prev,
+                              answers: [...prev.answers, '']
+                            }))}
+                          >
+                            + Ответ
+                          </button>
+                        </div>
+                      );
+                    }
+                    return <p className="no-answers-message">У вопроса нет ответов</p>;
+                  })()}
+                </div>
+              </div>
+
+              {/* Разделитель "Противоречит" */}
+              <div className="contradiction-divider">
+                <span className="contradiction-divider-line"></span>
+                <span className="contradiction-divider-text">Противоречит</span>
+                <span className="contradiction-divider-line"></span>
+              </div>
+
+              {/* Выпадающий список вопросов */}
+              <div className="contradict-question-section">
+                <select
+                  className="contradict-question-select"
+                  value={contradictionData.contradictQuestionId || ''}
+                  onChange={(e) => setContradictionData(prev => ({
+                    ...prev,
+                    contradictQuestionId: e.target.value,
+                    contradictAnswers: ['']
+                  }))}
+                >
+                  <option value="" disabled>Выберите вопрос</option>
+                  {[...questions, ...passportQuestions, ...additionalBlocks.flatMap(b => b.questions)]
+                    .filter(q => q.id !== contradictionData.questionId)
+                    .map((q, idx) => (
+                      <option key={q.id} value={q.id}>{idx + 1}. {q.text}</option>
+                    ))}
+                </select>
+
+                {/* Ответы на противоречащий вопрос */}
+                {contradictionData.contradictQuestionId && (
+                  <div className="contradict-answers-container">
+                    {(() => {
+                      const contradictQuestion = [...questions, ...passportQuestions, ...additionalBlocks.flatMap(b => b.questions)].find(q => q.id === contradictionData.contradictQuestionId);
+                      if (contradictQuestion && contradictQuestion.answers && contradictQuestion.answers.length > 0) {
+                        return (
+                          <>
+                            {contradictionData.contradictAnswers.map((answer, ansIdx) => (
+                              <div key={ansIdx} className="contradict-answer-row">
+                                <select
+                                  className="contradict-answer-select"
+                                  value={answer}
+                                  onChange={(e) => updateContradictionAnswer(ansIdx, e.target.value)}
+                                >
+                                  <option value="" disabled>Выберите ответ</option>
+                                  {contradictQuestion.answers.map((a, aIdx) => (
+                                    <option key={a.id || aIdx} value={a.text || a.type}>
+                                      {a.text || a.type}
+                                    </option>
+                                  ))}
+                                </select>
+                                {contradictionData.contradictAnswers.length > 1 && ansIdx > 0 && (
+                                  <button 
+                                    className="remove-contradict-answer-btn"
+                                    onClick={() => removeContradictionAnswer(ansIdx)}
+                                  >
+                                    <svg width="14px" height="14px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                      <path d="M7 7.00006L17 17.0001M7 17.0001L17 7.00006" stroke="#ff4444" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                                    </svg>
+                                  </button>
+                                )}
+                              </div>
+                            ))}
+                            <button 
+                              className="add-contradict-answer-btn"
+                              onClick={addContradictionAnswer}
+                            >
+                              + Ответ
+                            </button>
+                          </>
+                        );
+                      }
+                      return <p className="no-answers-message">У вопроса нет ответов</p>;
+                    })()}
+                  </div>
+                )}
+              </div>
+
+              {/* Разделительная полоса */}
+              <div className="contradiction-section-divider"></div>
+
+              {/* Запрет противоречий */}
+              <div className="contradiction-forbid-section">
+                <label className="contradiction-forbid-label">Запрет противоречий</label>
+                <input
+                  type="checkbox"
+                  id="contradiction-forbid-switcher"
+                  className="options-switcher"
+                  checked={contradictionData.forbidContradictions}
+                  onChange={(e) => setContradictionData(prev => ({
+                    ...prev,
+                    forbidContradictions: e.target.checked
+                  }))}
+                />
+                <label htmlFor="contradiction-forbid-switcher" className="options-switcher-label"></label>
+              </div>
+            </div>
+
+            <div className="submit-form">
+              <button className="cancel-btn" onClick={closeContradictionModal}>
+                Отменить
+              </button>
+              <button className="save-btn" onClick={async () => {
+                // Сохраняем правила противоречий для этого вопроса
+                if (contradictionData.questionId) {
+                  try {
+                    // Фильтруем пустые ответы
+                    const validAnswers = contradictionData.answers.filter(a => a !== '');
+                    const validContradictAnswers = contradictionData.contradictAnswers.filter(a => a !== '');
+                    
+                    const contradictionRulesData = {
+                      type: contradictionData.type,
+                      answers: validAnswers,
+                      contradictQuestionId: contradictionData.contradictQuestionId,
+                      contradictAnswers: validContradictAnswers,
+                      forbidContradictions: contradictionData.forbidContradictions
+                    };
+                    const contradictionRulesJson = JSON.stringify(contradictionRulesData);
+                    
+                    await axios.put(
+                      `http://localhost:8080/question/${contradictionData.questionId}/contradiction-rules`,
+                      { contradiction_rules: contradictionRulesJson }
+                    );
+                    
+                    // Обновляем локальное состояние
+                    setContradictionRules(prev => ({
+                      ...prev,
+                      [contradictionData.questionId]: contradictionRulesData
+                    }));
+                  } catch (err) {
+                    console.error('Ошибка при сохранении правил противоречий:', err);
+                    alert('Ошибка при сохранении правил противоречий: ' + (err.response?.data?.error || err.message));
+                    return;
+                  }
+                }
+                alert('Правила противоречий сохранены');
+                closeContradictionModal();
+              }}>
+                Сохранить
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
       {questionMenuOpen && (
         <>
           <div
@@ -2362,8 +2665,7 @@ export default function Questionnaires() {
               <li
                 className="question-menu-item"
                 onClick={() => {
-                  setSettingsMenuOpen(false);
-                  alert('Противоречия для вопроса');
+                  openContradictionModal(selectedQuestionForSettings);
                 }}
               >
                 Противоречия
