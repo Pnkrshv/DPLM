@@ -1266,6 +1266,24 @@
   background-color: rgba(0, 0, 0, 0.05);
 }
 
+.hide-rule-indicator {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background-color: #ff9800;
+  border-radius: 50%;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
+.actions-cell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
 /* Стили для секций блоков в настройках */
 .settings-block-section {
   margin-bottom: calc(var(--index) * 0.8);
@@ -1293,6 +1311,320 @@
   background-color: #f9f9f9;
   border-radius: 6px;
   border: 1px dashed #ddd;
+}
+
+/* Модальное окно правила скрытия */
+.hide-rule-modal {
+  position: fixed;
+  z-index: 1003;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  background-color: white;
+  border: solid 1px grey;
+  border-radius: 8px;
+  width: 60%;
+  min-width: 500px;
+  max-width: 700px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 4px 4px 12px rgba(34, 60, 80, 0.25);
+  font-family: main;
+}
+
+.hide-rule-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: calc(var(--index) * 0.5) calc(var(--index) * 0.6);
+  border-bottom: 1px solid #eee;
+}
+
+.hide-rule-modal-header h4 {
+  font-size: 1.1rem;
+  color: #333;
+  font-weight: 600;
+}
+
+.hide-rule-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: calc(var(--index) * 0.6);
+}
+
+.hide-rule-question-info {
+  margin-bottom: calc(var(--index) * 0.5);
+  padding: calc(var(--index) * 0.4);
+  background-color: #f5f5f5;
+  border-radius: 6px;
+  border: 1px solid #e0e0e0;
+}
+
+.hide-rule-question-label {
+  font-size: 0.95rem;
+  color: #333;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.hide-rule-question-label strong {
+  color: #006064;
+}
+
+.hide-rule-condition-card {
+  background-color: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: calc(var(--index) * 0.5);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.condition-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: calc(var(--index) * 0.4);
+  padding-bottom: calc(var(--index) * 0.2);
+  border-bottom: 2px solid var(--active);
+}
+
+.condition-card-header h5 {
+  font-size: 1rem;
+  color: #333;
+  font-weight: 600;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.remove-all-conditions-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.3rem;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.remove-all-conditions-btn:hover {
+  background-color: #ffe6e6;
+}
+
+.remove-all-conditions-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.hide-rule-condition {
+  margin-bottom: calc(var(--index) * 0.4);
+  padding: calc(var(--index) * 0.3);
+  background-color: #fafafa;
+  border-radius: 4px;
+  border: 1px solid #e8e8e8;
+}
+
+.condition-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.condition-number {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #666;
+}
+
+.remove-condition-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.2rem;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.remove-condition-btn:hover {
+  background-color: #ffe6e6;
+}
+
+.remove-condition-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.condition-row {
+  margin-bottom: 0.5rem;
+}
+
+.condition-select,
+.answer-select {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-family: main;
+  font-size: 0.85rem;
+  outline: none;
+  background-color: white;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.condition-select:focus,
+.answer-select:focus {
+  border-color: var(--active);
+}
+
+.condition-type-buttons {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 0.5rem;
+}
+
+.condition-type-buttons + .answers-container {
+  margin-top: 0.8rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid #e8e8e8;
+}
+
+.answers-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+  margin-top: 0.5rem;
+  padding: 0.3rem 0;
+}
+
+.answer-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 0.4rem;
+}
+
+.answer-row:last-child {
+  margin-bottom: 0;
+}
+
+.answer-row .answer-select {
+  flex: 1;
+  min-width: 0;
+}
+
+.remove-answer-btn-small {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.2rem;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.remove-answer-btn-small:hover {
+  background-color: #ffe6e6;
+}
+
+.add-answer-to-condition-btn {
+  background-color: #f0f0f0;
+  color: #555;
+  border: 1px solid #ccc;
+  padding: 0.3rem 0.6rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-family: main;
+  transition: all 0.2s;
+  align-self: flex-start;
+  margin-top: 0.3rem;
+}
+
+.add-answer-to-condition-btn:hover {
+  background-color: #e0e0e0;
+}
+
+.no-answers-message {
+  text-align: center;
+  color: #999;
+  font-size: 0.8rem;
+  padding: 0.4rem;
+  margin: 0.3rem 0 0 0;
+  background-color: #f9f9f9;
+  border-radius: 4px;
+  border: 1px dashed #ddd;
+}
+
+.condition-type-btn {
+  padding: 0.4rem 0.8rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: white;
+  color: #555;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-family: main;
+  transition: all 0.2s;
+}
+
+.condition-type-btn:hover {
+  background-color: #f0f0f0;
+}
+
+.condition-type-btn.active {
+  background-color: var(--active);
+  color: white;
+  border-color: var(--active);
+}
+
+.add-condition-btn {
+  background-color: rgb(216, 245, 216);
+  color: rgb(72, 186, 72);
+  border: solid 1px lightgreen;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-family: main;
+  transition: all 0.2s;
+  margin-top: 0.5rem;
+  width: 100%;
+}
+
+.add-condition-btn:hover {
+  background-color: rgb(196, 235, 196);
+}
+
+.add-rule-condition-btn {
+  background-color: #e3f2fd;
+  color: #1976d2;
+  border: solid 1px #bbdefb;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-family: main;
+  transition: all 0.2s;
+  margin-top: 0.5rem;
+  width: 100%;
+}
+
+.add-rule-condition-btn:hover {
+  background-color: #bbdefb;
 }
 
 @media (max-width: 768px) {

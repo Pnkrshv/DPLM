@@ -24,6 +24,12 @@ export default function Questionnaires() {
   const [settingsMenuPosition, setSettingsMenuPosition] = useState({ x: 0, y: 0 });
   const [selectedQuestionForSettings, setSelectedQuestionForSettings] = useState(null);
   const [questionSettings, setQuestionSettings] = useState({}); // {questionId: {allow_adaptation: bool, allow_answer_adaptation: bool, required: bool, no_contradictions: bool, audio_recording: bool}}
+  const [hideRules, setHideRules] = useState({}); // {questionId: {conditions: [{questionId, type, answers: []}]}}
+  const [isHideRuleModalOpen, setIsHideRuleModalOpen] = useState(false);
+  const [hideRuleData, setHideRuleData] = useState({
+    questionId: null,
+    conditions: [] // [{questionId, type: 'selected'|'not_selected', answers: []}]
+  });
   const [isQuestionFormOpen, setIsQuestionFormOpen] = useState(false);
   const [currentQuestionType, setCurrentQuestionType] = useState(null);
   const [questionData, setQuestionData] = useState({ text: '', explanation: '', answers: [] });
@@ -792,6 +798,68 @@ export default function Questionnaires() {
     };
   };
 
+  const openHideRuleModal = (questionId) => {
+    // Загружаем сохраненные правила для этого вопроса, если они есть
+    const savedRules = hideRules[questionId];
+    setHideRuleData({
+      questionId: questionId,
+      conditions: savedRules && savedRules.conditions && savedRules.conditions.length > 0 
+        ? savedRules.conditions 
+        : [{ questionId: null, type: 'selected', answers: [''] }]
+    });
+    setSettingsMenuOpen(false);
+    setIsHideRuleModalOpen(true);
+  };
+
+  const closeHideRuleModal = () => {
+    setIsHideRuleModalOpen(false);
+    // Не сбрасываем hideRuleData полностью, просто закрываем окно
+  };
+
+  const addCondition = () => {
+    setHideRuleData(prev => ({
+      ...prev,
+      conditions: [...prev.conditions, { questionId: null, type: 'selected', answers: [''] }]
+    }));
+  };
+
+  const removeCondition = (index) => {
+    setHideRuleData(prev => ({
+      ...prev,
+      conditions: prev.conditions.filter((_, i) => i !== index)
+    }));
+  };
+
+  const updateCondition = (index, field, value) => {
+    setHideRuleData(prev => ({
+      ...prev,
+      conditions: prev.conditions.map((cond, i) => 
+        i === index ? { ...cond, [field]: value } : cond
+      )
+    }));
+  };
+
+  const addAnswerToCondition = (index) => {
+    setHideRuleData(prev => ({
+      ...prev,
+      conditions: prev.conditions.map((cond, i) => 
+        i === index ? { ...cond, answers: [...cond.answers, ''] } : cond
+      )
+    }));
+  };
+
+  const updateConditionAnswer = (conditionIndex, answerIndex, value) => {
+    setHideRuleData(prev => ({
+      ...prev,
+      conditions: prev.conditions.map((cond, i) => 
+        i === conditionIndex ? {
+          ...cond,
+          answers: cond.answers.map((a, j) => j === answerIndex ? value : a)
+        } : cond
+      )
+    }));
+  };
+
   const questionTypes = [
     { id: 'open', label: 'Открытый' },
     { id: 'closed', label: 'Закрытый' },
@@ -1394,7 +1462,7 @@ export default function Questionnaires() {
                                     </div>
                                   </td>
                                   <td className="actions-cell">
-                                    <button
+                                    <button 
                                       className="settings-dots-btn"
                                       onClick={(e) => handleSettingsMenuClick(e, question.id)}
                                     >
@@ -1404,6 +1472,9 @@ export default function Questionnaires() {
                                         <circle cx="12" cy="18" r="1.5" fill="#080341"></circle>
                                       </svg>
                                     </button>
+                                    {hideRules[question.id] && hideRules[question.id].conditions && hideRules[question.id].conditions.length > 0 && (
+                                      <span className="hide-rule-indicator" title="Есть правило скрытия"></span>
+                                    )}
                                   </td>
                                 </tr>
                               );
@@ -1501,7 +1572,7 @@ export default function Questionnaires() {
                                     </div>
                                   </td>
                                   <td className="actions-cell">
-                                    <button
+                                    <button 
                                       className="settings-dots-btn"
                                       onClick={(e) => handleSettingsMenuClick(e, question.id)}
                                     >
@@ -1511,6 +1582,9 @@ export default function Questionnaires() {
                                         <circle cx="12" cy="18" r="1.5" fill="#080341"></circle>
                                       </svg>
                                     </button>
+                                    {hideRules[question.id] && hideRules[question.id].conditions && hideRules[question.id].conditions.length > 0 && (
+                                      <span className="hide-rule-indicator" title="Есть правило скрытия"></span>
+                                    )}
                                   </td>
                                 </tr>
                               );
@@ -1609,7 +1683,7 @@ export default function Questionnaires() {
                                       </div>
                                     </td>
                                     <td className="actions-cell">
-                                      <button
+                                      <button 
                                         className="settings-dots-btn"
                                         onClick={(e) => handleSettingsMenuClick(e, question.id)}
                                       >
@@ -1619,6 +1693,9 @@ export default function Questionnaires() {
                                           <circle cx="12" cy="18" r="1.5" fill="#080341"></circle>
                                         </svg>
                                       </button>
+                                      {hideRules[question.id] && hideRules[question.id].conditions && hideRules[question.id].conditions.length > 0 && (
+                                        <span className="hide-rule-indicator" title="Есть правило скрытия"></span>
+                                      )}
                                     </td>
                                   </tr>
                                 );
@@ -1640,6 +1717,191 @@ export default function Questionnaires() {
               </>
             )}
 
+          </div>
+        </>
+      )}
+
+      {/* Модальное окно правила скрытия */}
+      {isHideRuleModalOpen && (
+        <>
+          <div className="modal-bg" onClick={closeHideRuleModal}></div>
+          <div className="hide-rule-modal">
+            <div className="hide-rule-modal-header">
+              <h4>Настройка правила скрытия</h4>
+              <div className="close-btn" onClick={closeHideRuleModal}>
+                <svg width="24px" height="24px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M7 7.00006L17 17.0001M7 17.0001L17 7.00006" stroke="#292929" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+            </div>
+
+            <div className="hide-rule-modal-body">
+              {/* Вопрос, для которого настраивается правило */}
+              {hideRuleData.questionId && (
+                <div className="hide-rule-question-info">
+                  <p className="hide-rule-question-label">
+                    Вопрос: <strong>{[...questions, ...passportQuestions, ...additionalBlocks.flatMap(b => b.questions)].find(q => q.id === hideRuleData.questionId)?.text || 'Не найден'}</strong>
+                  </p>
+                </div>
+              )}
+
+              {/* Карточка условия */}
+              <div className="hide-rule-condition-card">
+                <div className="condition-card-header">
+                  <h5>Не показывать если:</h5>
+                  {hideRuleData.conditions.length > 0 && (
+                    <button
+                      className="remove-all-conditions-btn"
+                      onClick={() => {
+                        if (confirm('Удалить все условия?')) {
+                          setHideRuleData(prev => ({
+                            ...prev,
+                            conditions: [{ questionId: null, type: 'selected', answers: [''] }]
+                          }));
+                        }
+                      }}
+                    >
+                      <svg width="18px" height="18px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M7 7.00006L17 17.0001M7 17.0001L17 7.00006" stroke="#ff4444" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
+
+                {hideRuleData.conditions.map((condition, index) => {
+                  const allQuestions = [...questions, ...passportQuestions, ...additionalBlocks.flatMap(b => b.questions)];
+                  const selectedQuestion = allQuestions.find(q => q.id === condition.questionId);
+
+                  return (
+                    <div key={index} className="hide-rule-condition">
+                      <div className="condition-header">
+                        <span className="condition-number">Условие {index + 1}</span>
+                        {hideRuleData.conditions.length > 1 && (
+                          <button
+                            className="remove-condition-btn"
+                            onClick={() => removeCondition(index)}
+                          >
+                            <svg width="16px" height="16px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M7 7.00006L17 17.0001M7 17.0001L17 7.00006" stroke="#ff4444" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                          </button>
+                        )}
+                      </div>
+                      <div className="condition-row">
+                        <select
+                          className="condition-select"
+                          value={condition.questionId || ''}
+                          onChange={(e) => updateCondition(index, 'questionId', e.target.value)}
+                        >
+                          <option value="" disabled>Выберите вопрос</option>
+                          {allQuestions.filter(q => q.id !== hideRuleData.questionId).map((q, idx) => (
+                            <option key={q.id} value={q.id}>{idx + 1}. {q.text}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {condition.questionId && (
+                        <>
+                          <div className="condition-type-buttons">
+                            <button
+                              className={`condition-type-btn ${condition.type === 'selected' ? 'active' : ''}`}
+                              onClick={() => updateCondition(index, 'type', 'selected')}
+                            >
+                              Выбрал
+                            </button>
+                            <button
+                              className={`condition-type-btn ${condition.type === 'not_selected' ? 'active' : ''}`}
+                              onClick={() => updateCondition(index, 'type', 'not_selected')}
+                            >
+                              Не выбрал
+                            </button>
+
+                            {selectedQuestion && selectedQuestion.answers && selectedQuestion.answers.length > 0 && (
+                              <>
+                                {condition.answers && condition.answers.length > 0 && (
+                                  <div className="answers-container">
+                                    {condition.answers.map((answer, ansIdx) => (
+                                      <div key={ansIdx} className="answer-row">
+                                        <select
+                                          className="answer-select"
+                                          value={answer}
+                                          onChange={(e) => updateConditionAnswer(index, ansIdx, e.target.value)}
+                                        >
+                                          <option value="" disabled>Выберите ответ</option>
+                                          {selectedQuestion.answers.map((a, aIdx) => (
+                                            <option key={a.id || aIdx} value={a.text || a.type}>
+                                              {a.text || a.type}
+                                            </option>
+                                          ))}
+                                        </select>
+                                        {ansIdx > 0 && (
+                                          <button 
+                                            className="remove-answer-btn-small"
+                                            onClick={() => {
+                                              setHideRuleData(prev => ({
+                                                ...prev,
+                                                conditions: prev.conditions.map((c, i) => 
+                                                  i === index ? { ...c, answers: c.answers.filter((_, j) => j !== ansIdx) } : c
+                                                )
+                                              }));
+                                            }}
+                                          >
+                                            <svg width="14px" height="14px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                              <path d="M7 7.00006L17 17.0001M7 17.0001L17 7.00006" stroke="#ff4444" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                                            </svg>
+                                          </button>
+                                        )}
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                                <button 
+                                  className="add-answer-to-condition-btn"
+                                  onClick={() => addAnswerToCondition(index)}
+                                >
+                                  + Ответ
+                                </button>
+                              </>
+                            )}
+                            {!selectedQuestion && (
+                              <p className="no-answers-message">Выберите вопрос для настройки ответов</p>
+                            )}
+                            {selectedQuestion && (!selectedQuestion.answers || selectedQuestion.answers.length === 0) && (
+                              <p className="no-answers-message">У вопроса нет ответов</p>
+                            )}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  );
+                })}
+
+                <button className="add-rule-condition-btn" onClick={addCondition}>
+                  + Добавить условие
+                </button>
+              </div>
+            </div>
+
+            <div className="submit-form">
+              <button className="cancel-btn" onClick={closeHideRuleModal}>
+                Отменить
+              </button>
+              <button className="save-btn" onClick={() => {
+                // Сохраняем правила скрытия для этого вопроса
+                if (hideRuleData.questionId) {
+                  setHideRules(prev => ({
+                    ...prev,
+                    [hideRuleData.questionId]: {
+                      conditions: hideRuleData.conditions
+                    }
+                  }));
+                }
+                alert('Правило скрытия сохранено');
+                closeHideRuleModal();
+              }}>
+                Сохранить
+              </button>
+            </div>
           </div>
         </>
       )}
@@ -1724,8 +1986,7 @@ export default function Questionnaires() {
               <li
                 className="question-menu-item"
                 onClick={() => {
-                  setSettingsMenuOpen(false);
-                  alert('Правило скрытия для вопроса');
+                  openHideRuleModal(selectedQuestionForSettings);
                 }}
               >
                 Правило скрытия
