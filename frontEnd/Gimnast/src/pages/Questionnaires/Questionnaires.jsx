@@ -207,11 +207,11 @@ export default function Questionnaires() {
     try {
       const response = await axios.get(`http://localhost:8080/questionnaire/${questionnaireId}/questions`);
       const allQuestions = response.data;
-
+      
       // Разделяем вопросы на основные, паспортичку и дополнительные блоки
       const mainQ = allQuestions.filter(q => q.block_type === 'main');
       const passportQ = allQuestions.filter(q => q.block_type === 'passport');
-
+      
       // Группируем дополнительные блоки
       const additionalBlocksMap = {};
       allQuestions.forEach(q => {
@@ -222,14 +222,30 @@ export default function Questionnaires() {
           additionalBlocksMap[q.block_type].push(q);
         }
       });
-
+      
       // Создаем массив дополнительных блоков
       const additionalBlocksArr = Object.keys(additionalBlocksMap).map((blockId, index) => ({
         id: blockId,
         name: `Дополнительный блок ${index + 1}`,
         questions: additionalBlocksMap[blockId]
       }));
-
+      
+      // Загружаем правила скрытия для каждого вопроса
+      const hideRulesData = {};
+      allQuestions.forEach(q => {
+        if (q.hide_rules && q.hide_rules.trim()) {
+          try {
+            const parsed = JSON.parse(q.hide_rules);
+            if (parsed && parsed.conditions) {
+              hideRulesData[q.id] = parsed;
+            }
+          } catch (e) {
+            console.error('Ошибка парсинга правил скрытия:', e);
+          }
+        }
+      });
+      setHideRules(hideRulesData);
+      
       setQuestions(mainQ);
       setPassportQuestions(passportQ);
       setAdditionalBlocks(additionalBlocksArr);
@@ -801,11 +817,13 @@ export default function Questionnaires() {
   const openHideRuleModal = (questionId) => {
     // Загружаем сохраненные правила для этого вопроса, если они есть
     const savedRules = hideRules[questionId];
+    const conditions = savedRules && savedRules.conditions && savedRules.conditions.length > 0
+      ? savedRules.conditions
+      : [{ questionId: null, type: 'selected', answers: [''] }];
+    
     setHideRuleData({
       questionId: questionId,
-      conditions: savedRules && savedRules.conditions && savedRules.conditions.length > 0 
-        ? savedRules.conditions 
-        : [{ questionId: null, type: 'selected', answers: [''] }]
+      conditions: conditions
     });
     setSettingsMenuOpen(false);
     setIsHideRuleModalOpen(true);
@@ -1472,7 +1490,7 @@ export default function Questionnaires() {
                                         <circle cx="12" cy="18" r="1.5" fill="#080341"></circle>
                                       </svg>
                                     </button>
-                                    {hideRules[question.id] && hideRules[question.id].conditions && hideRules[question.id].conditions.length > 0 && (
+                                    {hideRules[question.id] && hideRules[question.id].conditions && hideRules[question.id].conditions.filter(c => c.questionId).length > 0 && (
                                       <span className="hide-rule-indicator" title="Есть правило скрытия"></span>
                                     )}
                                   </td>
@@ -1582,7 +1600,7 @@ export default function Questionnaires() {
                                         <circle cx="12" cy="18" r="1.5" fill="#080341"></circle>
                                       </svg>
                                     </button>
-                                    {hideRules[question.id] && hideRules[question.id].conditions && hideRules[question.id].conditions.length > 0 && (
+                                    {hideRules[question.id] && hideRules[question.id].conditions && hideRules[question.id].conditions.filter(c => c.questionId).length > 0 && (
                                       <span className="hide-rule-indicator" title="Есть правило скрытия"></span>
                                     )}
                                   </td>
@@ -1693,7 +1711,7 @@ export default function Questionnaires() {
                                           <circle cx="12" cy="18" r="1.5" fill="#080341"></circle>
                                         </svg>
                                       </button>
-                                      {hideRules[question.id] && hideRules[question.id].conditions && hideRules[question.id].conditions.length > 0 && (
+                                      {hideRules[question.id] && hideRules[question.id].conditions && hideRules[question.id].conditions.filter(c => c.questionId).length > 0 && (
                                         <span className="hide-rule-indicator" title="Есть правило скрытия"></span>
                                       )}
                                     </td>
@@ -1886,15 +1904,31 @@ export default function Questionnaires() {
               <button className="cancel-btn" onClick={closeHideRuleModal}>
                 Отменить
               </button>
-              <button className="save-btn" onClick={() => {
+              <button className="save-btn" onClick={async () => {
                 // Сохраняем правила скрытия для этого вопроса
                 if (hideRuleData.questionId) {
-                  setHideRules(prev => ({
-                    ...prev,
-                    [hideRuleData.questionId]: {
-                      conditions: hideRuleData.conditions
-                    }
-                  }));
+                  try {
+                    // Фильтруем пустые условия
+                    const validConditions = hideRuleData.conditions.filter(c => c.questionId);
+                    const hideRulesJson = JSON.stringify({ conditions: validConditions });
+                    
+                    await axios.put(
+                      `http://localhost:8080/question/${hideRuleData.questionId}/hide-rules`,
+                      { hide_rules: hideRulesJson }
+                    );
+                    
+                    // Обновляем локальное состояние
+                    setHideRules(prev => ({
+                      ...prev,
+                      [hideRuleData.questionId]: {
+                        conditions: validConditions
+                      }
+                    }));
+                  } catch (err) {
+                    console.error('Ошибка при сохранении правил скрытия:', err);
+                    alert('Ошибка при сохранении правил скрытия: ' + (err.response?.data?.error || err.message));
+                    return;
+                  }
                 }
                 alert('Правило скрытия сохранено');
                 closeHideRuleModal();

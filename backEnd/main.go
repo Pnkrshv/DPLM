@@ -88,6 +88,7 @@ type Question struct {
 	IsRandomized    bool      `gorm:"default:false" json:"is_randomized"`                 // перемешивать ответы
 	MaxAnswers      int       `gorm:"default:0" json:"max_answers"`                       // максимум ответов (0 = неограниченно)
 	RegionScope     string    `gorm:"type:varchar(50);default:'all'" json:"region_scope"` // для каких регионов
+	HideRules       string    `gorm:"type:text" json:"hide_rules"`                        // правила скрытия (JSON)
 	Answers         []Answer  `gorm:"foreignKey:QuestionID" json:"answers,omitempty"`
 	CreatedAt       time.Time `json:"created_at"`
 	UpdatedAt       time.Time `json:"updated_at"`
@@ -885,6 +886,7 @@ func createQuestion(c echo.Context) error {
 		IsRandomized bool            `json:"is_randomized"`
 		MaxAnswers   int             `json:"max_answers"`
 		RegionScope  string          `json:"region_scope"`
+		HideRules    string          `json:"hide_rules"`
 		Answers      []AnswerPayload `json:"answers"`
 	}
 
@@ -913,6 +915,7 @@ func createQuestion(c echo.Context) error {
 		IsRandomized:    req.IsRandomized,
 		MaxAnswers:      req.MaxAnswers,
 		RegionScope:     req.RegionScope,
+		HideRules:       req.HideRules,
 		CreatedAt:       time.Now(),
 		UpdatedAt:       time.Now(),
 	}
@@ -1035,6 +1038,41 @@ func deleteQuestion(c echo.Context) error {
 	})
 }
 
+// Обновление правил скрытия для вопроса
+func updateHideRules(c echo.Context) error {
+	questionID := c.Param("question_id")
+
+	type HideRulesRequest struct {
+		HideRules string `json:"hide_rules"`
+	}
+
+	var req HideRulesRequest
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, echo.Map{
+			"error": "Неверный формат данных",
+		})
+	}
+
+	// Проверяем существование вопроса
+	var question Question
+	if err := db.First(&question, "id = ?", questionID).Error; err != nil {
+		return c.JSON(http.StatusNotFound, echo.Map{
+			"error": "Вопрос не найден",
+		})
+	}
+
+	if err := db.Model(&Question{}).Where("id = ?", questionID).Update("hide_rules", req.HideRules).Error; err != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{
+			"error": "Не удалось обновить правила скрытия",
+		})
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"id":      questionID,
+		"message": "Правила скрытия успешно обновлены",
+	})
+}
+
 // Добавление ответа к вопросу
 func createAnswer(c echo.Context) error {
 	questionID := c.Param("question_id")
@@ -1128,6 +1166,7 @@ func main() {
 	e.POST("/questionnaire/:id/questions", createQuestion)
 	e.GET("/questionnaire/:id/questions", getQuestionsByQuestionnaireID)
 	e.PUT("/questionnaire/:questionnaire_id/questions/:question_id", updateQuestion)
+	e.PUT("/question/:question_id/hide-rules", updateHideRules)
 	e.DELETE("/questionnaire/:questionnaire_id/questions/:question_id", deleteQuestion)
 	// Эндпоинты для ответов:
 	e.POST("/question/:question_id/answers", createAnswer)
