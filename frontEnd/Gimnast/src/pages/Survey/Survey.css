@@ -175,6 +175,492 @@ span {
   color: red;
 }
 
+/* Стили для навигации по этапам (Stepper) */
+.survey-stepper {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 2% 3%;
+  border-bottom: 1px solid #e0e0e0;
+  background-color: #fafafa;
+  position: relative;
+}
+
+.stepper-container {
+  display: flex;
+  align-items: flex-start;
+  flex: 1;
+  gap: 0;
+}
+
+.stepper-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.stepper-line-container {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  position: relative;
+}
+
+.stepper-line {
+  flex: 1;
+  height: 2px;
+  background-color: #e0e0e0;
+  transition: background-color 0.3s ease;
+}
+
+.stepper-item.completed .stepper-line {
+  background-color: #52c41a;
+}
+
+.stepper-item.current .stepper-line {
+  background-color: #409eff;
+}
+
+.stepper-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 500;
+  border: 2px solid #e0e0e0;
+  background-color: white;
+  color: #999;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+  z-index: 1;
+}
+
+.stepper-item.completed .stepper-circle {
+  background-color: #52c41a;
+  border-color: #52c41a;
+  color: white;
+}
+
+.stepper-item.current .stepper-circle {
+  background-color: #409eff;
+  border-color: #409eff;
+  color: white;
+}
+
+.stepper-item.pending .stepper-circle {
+  background-color: white;
+  border-color: #e0e0e0;
+  color: #999;
+}
+
+.stepper-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 8px;
+  text-align: center;
+  width: 100%;
+}
+
+.stepper-title {
+  font-family: main;
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 4px;
+  transition: color 0.3s ease;
+}
+
+.stepper-item.completed .stepper-title {
+  color: #52c41a;
+}
+
+.stepper-item.current .stepper-title {
+  color: #409eff;
+}
+
+.stepper-item.pending .stepper-title {
+  color: #999;
+}
+
+.stepper-subtitle {
+  font-family: main;
+  font-size: 11px;
+  color: #999;
+  max-width: 120px;
+  word-wrap: break-word;
+}
+
+.stepper-item:hover .stepper-title {
+  color: #409eff;
+}
+
+/* Кнопка "Следующий этап" */
+.next-step-btn {
+  padding: 8px 16px;
+  background-color: #409eff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-family: main;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  white-space: nowrap;
+  margin-left: 20px;
+  align-self: flex-start;
+}
+
+.next-step-btn:hover {
+  background-color: #2989ea;
+}
+
+/* Стили для контента этапа */
+.step-content {
+  width: 100%;
+  padding: 2% 2%;
+  min-height: 30vh;
+}
+
+/* Стили для этапа адаптации анкеты */
+.adaptation-step {
+  padding: 0;
+}
+
+.adaptation-container {
+  display: flex;
+  gap: 1vw;
+  min-height: 500px;
+}
+
+.adaptation-left {
+  width: 15vw;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid #e0e0e0;
+  padding-right: 1vw;
+}
+
+.adaptation-questionnaire-select {
+  display: flex;
+  gap: .5vw;
+  margin-bottom: 1vh;
+  align-items: center;
+
+  & select {
+    flex: 1;
+    padding: 1%;
+    border: 1px solid #d0d0d0;
+    border-radius: 4px;
+    font-family: main;
+    font-size: clamp(.6rem, .8rem, 1rem);
+    outline: none;
+    cursor: pointer;
+
+    &:focus {
+      border-color: var(--active);
+    }
+  }
+
+  & .refresh-btn {
+    padding: 1.5%;
+    border: 1px solid #d0d0d0;
+    border-radius: 4px;
+    background-color: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background-color: #f5f5f5;
+      border-color: var(--active);
+    }
+
+    & svg {
+      fill: #555;
+    }
+  }
+}
+
+.adaptation-scope-toggle {
+  display: flex;
+  gap: 0;
+  margin-bottom: 1vh;
+  border: 1px solid #d0d0d0;
+  border-radius: 4px;
+  overflow: hidden;
+
+  & button {
+    flex: 1;
+    padding: 1%;
+    border: none;
+    background-color: white;
+    font-family: main;
+    font-size: clamp(.6rem, .8rem, 1rem);
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &.activ {
+      background-color: var(--active);
+      color: white;
+    }
+
+    &:not(.active):hover {
+      background-color: #f5f5f5;
+    }
+  }
+}
+
+.adaptation-region-list {
+  flex: 1;
+  overflow-y: auto;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  padding: 1%;
+  background-color: #fafafa;
+}
+
+.region-element {
+  display: flex;
+  align-items: center;
+  gap: .5vw;
+  padding: 2%;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    background-color: #e8f4ff;
+  }
+
+  & input[type="checkbox"] {
+    cursor: pointer;
+    margin: 0;
+  }
+
+  & label {
+    cursor: pointer;
+    font-size: clamp(.6rem, .8rem, 1rem);
+    flex: 1;
+  }
+}
+
+.adaptation-cities-container {
+  max-height: 100%;
+  overflow-y: auto;
+}
+
+.adaptation-district {
+  margin-bottom: .5vh;
+}
+
+.adaptation-district-header {
+  display: flex;
+  align-items: center;
+  gap: .5vw;
+  padding: 1%;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    background-color: #e8f4ff;
+  }
+
+  & input[type="checkbox"] {
+    cursor: pointer;
+    margin: 0;
+  }
+}
+
+.adaptation-expand-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+
+  & svg {
+    fill: #555;
+  }
+}
+
+.adaptation-district-name {
+  font-size: clamp(.6rem, .8rem, 1rem);
+  font-weight: 500;
+  cursor: pointer;
+  flex: 1;
+}
+
+.adaptation-cities-list {
+  padding-left: 1vw;
+  margin-top: 1vh;
+}
+
+.adaptation-city-item {
+  display: flex;
+  align-items: center;
+  gap: .5vw;
+  padding: .5vh;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    background-color: #e8f4ff;
+  }
+
+  & input[type="checkbox"] {
+    cursor: pointer;
+    margin: 0;
+  }
+
+  & label {
+    cursor: pointer;
+    font-size: clamp(.6rem, .8rem, 1rem);
+    flex: 1;
+  }
+}
+
+.loading-text {
+  text-align: center;
+  color: #999;
+  padding: 2%;
+  font-size: clamp(.6rem, .8rem, 1rem);
+}
+
+/* Правая панель - вопросы */
+.adaptation-right {
+  flex: 1;
+  overflow-y: auto;
+  padding-left: 1%;
+}
+
+.adaptation-questions {
+  display: flex;
+  flex-direction: column;
+  gap: 1vh;
+}
+
+.adaptation-block-section {
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+  background-color: white;
+}
+
+.adaptation-block-title {
+  padding: 1%;
+  margin: 0;
+  background-color: #f5f5f5;
+  border-bottom: 1px solid #e0e0e0;
+  font-size: clamp(.6rem, .8rem, 1rem);
+  font-weight: 600;
+  color: #333;
+}
+
+.adaptation-questions-list {
+  padding: 1vh;
+  display: flex;
+  flex-direction: column;
+  gap: 1vh;
+}
+
+.adaptation-question-card {
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  padding: 1%;
+  background-color: #fafafa;
+}
+
+.adaptation-question-header {
+  display: flex;
+  align-items: flex-start;
+  gap: .5vw;
+  margin-bottom: 1vh;
+}
+
+.adaptation-question-number {
+  font-size: clamp(.6rem, .8rem, 1rem);
+  color: #999;
+  font-weight: 500;
+  min-width: 1.7vw;
+}
+
+.adaptation-question-text {
+  flex: 1;
+  font-size: clamp(.6rem, .8rem, 1rem);
+  color: #333;
+  line-height: 1.4;
+}
+
+.adaptation-edit-btn {
+  padding: .5%;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: #999;
+  transition: color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    color: var(--active);
+  }
+
+  & svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+.adaptation-answers-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1vh;
+  padding-left: 5%;
+}
+
+.adaptation-answer-item {
+  display: flex;
+  align-items: center;
+  gap: .5vw;
+  padding: 1%;
+  background-color: white;
+  border-radius: 4px;
+  border: 1px solid #e8e8e8;
+}
+
+.adaptation-answer-number {
+  font-size: clamp(.5rem, .7rem, .9rem);
+  color: #999;
+  font-weight: 500;
+  min-width: 1.2vw;
+}
+
+.adaptation-answer-text {
+  flex: 1;
+  font-size: clamp(.6rem, .8rem, 1rem);
+  color: #555;
+}
+
+.adaptation-no-questions,
+.adaptation-no-selection {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #999;
+  font-size: clamp(.6rem, .8rem, 1rem);
+  text-align: center;
+}
+
 .survey-table {
   margin-top: 2vh;
   width: 80%;
@@ -532,6 +1018,51 @@ span {
   .survey-window {
     width: 95vw;
     min-width: auto;
+  }
+
+  .survey-stepper {
+    flex-direction: column;
+    padding: 3% 2%;
+  }
+
+  .stepper-container {
+    flex-direction: column;
+    width: 100%;
+    margin-bottom: 15px;
+  }
+
+  .stepper-item {
+    flex-direction: row;
+    margin-bottom: 10px;
+    width: 100%;
+  }
+
+  .stepper-line-container {
+    width: auto;
+    margin-right: 10px;
+  }
+
+  .stepper-line {
+    width: 30px;
+    flex: none;
+  }
+
+  .stepper-content {
+    flex-direction: row;
+    align-items: center;
+    margin-top: 0;
+    text-align: left;
+  }
+
+  .stepper-title {
+    margin-bottom: 0;
+    margin-right: 10px;
+  }
+
+  .next-step-btn {
+    margin-left: 0;
+    align-self: center;
+    width: 100%;
   }
 
   .survey-input,
