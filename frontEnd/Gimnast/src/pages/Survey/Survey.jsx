@@ -673,7 +673,7 @@ export default function Survey() {
         setIsWindowOpen(false);
         setEditingSurveyId(null);
         setCurrentStep(1);
-        setCompletedSteps([]);
+        // Keep completedSteps to persist colors
         setSurveyName('');
         setSurveyCode('');
         setResponsible('');
@@ -796,9 +796,9 @@ export default function Survey() {
                             )}
                         </div>
 
-                        <form className="survey-form"
-                            onSubmit={handleSaveCurrentStep}
-                        >
+                        <div className="survey-form">
+                            <div className="step-contents" style={{ flex: 1, overflowY: 'auto' }}>
+                            
                             {/* Этап 1: Настройка опроса - показывает все поля */}
                             {currentStep === 1 && (
                                 <div className="step-content">
@@ -1373,10 +1373,13 @@ export default function Survey() {
                                 </div>
                             )}
 
-                            <button className="save-btn-survey" type='submit'>
-                                Сохранить
-                            </button>
-                        </form>
+                            </div>
+                            <div className="survey-footer">
+                                <button className="save-btn-survey" type="button" onClick={handleSaveCurrentStep}>
+                                    Сохранить
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </>
             )}
