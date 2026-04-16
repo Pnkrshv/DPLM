@@ -23,6 +23,10 @@ export default function Survey() {
     const [currentStep, setCurrentStep] = useState(1);
     // Состояние для пройденных этапов
     const [completedSteps, setCompletedSteps] = useState([]);
+    // Состояния для отслеживания изменений на этапах
+    const [step1Changed, setStep1Changed] = useState(false);
+    const [step3Changed, setStep3Changed] = useState(false);
+    const [step4Changed, setStep4Changed] = useState(false);
 
     // Пагинация
     const [currentPage, setCurrentPage] = useState(1);
@@ -61,6 +65,13 @@ export default function Survey() {
     const [adaptationExpandedDistricts, setAdaptationExpandedDistricts] = useState({});
     const [adaptationLoading, setAdaptationLoading] = useState(false);
 
+    // Состояния для модального окна редактирования вопроса
+    const [isQuestionEditModalOpen, setIsQuestionEditModalOpen] = useState(false);
+    const [editingQuestion, setEditingQuestion] = useState(null);
+    const [editingQuestionText, setEditingQuestionText] = useState('');
+    const [editingQuestionEnabled, setEditingQuestionEnabled] = useState(true);
+    const [editingAnswers, setEditingAnswers] = useState([]);
+
     // Загрузка опросов из БД
     const fetchSurveys = async () => {
         try {
@@ -76,10 +87,6 @@ export default function Survey() {
     // Переход к следующему этапу
     const goToNextStep = () => {
         if (currentStep < 5) {
-            // Добавляем текущий этап в пройденные
-            if (!completedSteps.includes(currentStep)) {
-                setCompletedSteps([...completedSteps, currentStep]);
-            }
             setCurrentStep(currentStep + 1);
         }
     };
@@ -88,10 +95,14 @@ export default function Survey() {
     const goToStep = (step) => {
         // Можно перейти к текущему, пройденному или следующему после пройденного этапу
         if (step <= currentStep || completedSteps.includes(step - 1) || step === currentStep + 1) {
-            if (!completedSteps.includes(currentStep) && step > currentStep) {
-                setCompletedSteps([...completedSteps, currentStep]);
-            }
             setCurrentStep(step);
+        }
+    };
+
+    // Отметить этап как сохраненный (зеленый)
+    const markStepAsCompleted = (step) => {
+        if (!completedSteps.includes(step)) {
+            setCompletedSteps([...completedSteps, step]);
         }
     };
 
@@ -115,6 +126,17 @@ export default function Survey() {
 
     // Обработчик кнопки "Следующий этап"
     const handleNextStep = () => {
+        // Отмечаем текущий этап как завершенный при переходе дальше, если были изменения
+        if (currentStep === 1 && step1Changed) {
+            markStepAsCompleted(1);
+        }
+        if (currentStep === 3 && step3Changed) {
+            markStepAsCompleted(3);
+        }
+        if (currentStep === 4 && step4Changed) {
+            markStepAsCompleted(4);
+        }
+
         if (currentStep === 5) {
             // На последнем этапе сохраняем опрос
             handleSaveSurvey(new Event('submit'));
@@ -127,9 +149,113 @@ export default function Survey() {
 
     // Получение статуса этапа
     const getStepStatus = (step) => {
-        if (step === currentStep) return 'current';
         if (completedSteps.includes(step)) return 'completed';
+        if (step === currentStep) return 'current';
         return 'pending';
+    };
+
+    // Сохранение текущего этапа
+    const handleSaveCurrentStep = async () => {
+        const surveyId = editingSurveyId || currentSurveyId;
+        if (!surveyId && currentStep !== 1) {
+            alert('Сначала сохраните настройки опроса на этапе 1');
+            goToStep(1);
+            return;
+        }
+
+        let stepChanged = false;
+        let data = {};
+        let isValid = true;
+
+        switch (currentStep) {
+            case 1:
+                if (!step1Changed) {
+                    alert('Нет изменений на этом этапе');
+                    return;
+                }
+                stepChanged = step1Changed;
+                if (!surveyName || !surveyCode || !responsible) {
+                    alert('Заполните обязательные поля: название, код, ответственный');
+                    isValid = false;
+                    break;
+                }
+                data = {
+                    name: surveyName,
+                    code: surveyCode,
+                    responsible: responsible,
+                    adaptation: adaptation,
+                    adaptation_date: adaptationDate ? new Date(adaptationDate).toISOString() : null,
+                };
+                break;
+            case 2:
+                // Этап 2 сохраняется через отдельные кнопки вопросов
+                alert('Сохраните изменения вопросов на этом этапе');
+                return;
+            case 3:
+                if (!step3Changed) {
+                    alert('Нет изменений на этом этапе');
+                    return;
+                }
+                stepChanged = step3Changed;
+                data = { koir };
+                break;
+            case 4:
+                if (!step4Changed) {
+                    alert('Нет изменений на этом этапе');
+                    return;
+                }
+                stepChanged = step4Changed;
+                data = {
+                    start_date: startDate ? new Date(startDate).toISOString() : null,
+                    end_date: endDate ? new Date(endDate).toISOString() : null,
+                    exit_poll: exitPoll,
+                    manual_input: manualInput,
+                };
+                break;
+            case 5:
+                // Финальное сохранение всего
+                await handleSaveSurvey(new Event('submit'));
+                return;
+            default:
+                alert('Неизвестный этап');
+                return;
+        }
+
+        if (!isValid) return;
+
+        try {
+            let response;
+            if (!editingSurveyId && currentStep === 1) {
+                // Создание нового опроса
+                response = await axios.post('http://localhost:8080/survey', data);
+                if (response.data.message === 'Опрос успешно создан') {
+                    const newId = response.data.id;
+                    setEditingSurveyId(newId);
+                    setCurrentSurveyId(newId);
+                    alert('Опрос создан! Переход к следующему этапу.');
+                }
+            } else {
+                // Обновление
+                response = await axios.put(`http://localhost:8080/survey/${surveyId}`, data);
+                if (response.data.message === 'Опрос успешно обновлен') {
+                    alert('Этап сохранен!');
+                }
+            }
+
+            // Отметить этап завершенным и сбросить флаг изменений
+            markStepAsCompleted(currentStep);
+            if (currentStep === 1) setStep1Changed(false);
+            if (currentStep === 3) setStep3Changed(false);
+            if (currentStep === 4) setStep4Changed(false);
+
+            // Перейти к следующему
+            if (currentStep < 5) {
+                goToNextStep();
+            }
+        } catch (err) {
+            console.error('Ошибка сохранения этапа:', err);
+            alert('Ошибка: ' + (err.response?.data?.error || err.message));
+        }
     };
 
     // Загрузка выборок
@@ -201,12 +327,12 @@ export default function Survey() {
         try {
             const response = await axios.get(`http://localhost:8080/questionnaire/${questionnaireId}/questions`);
             const allQuestions = Array.isArray(response.data) ? response.data : [];
-            
+
             // Разделяем вопросы по типам блоков
             const mainQuestions = allQuestions.filter(q => q.block_type === 'main');
             const passportQuestions = allQuestions.filter(q => q.block_type === 'passport');
             const additionalQuestions = allQuestions.filter(q => q.block_type && q.block_type.startsWith('additional_'));
-            
+
             // Группируем дополнительные блоки
             const additionalBlocksMap = {};
             additionalQuestions.forEach(q => {
@@ -215,13 +341,13 @@ export default function Survey() {
                 }
                 additionalBlocksMap[q.block_type].push(q);
             });
-            
+
             const additionalBlocksArr = Object.keys(additionalBlocksMap).map((blockId, index) => ({
                 id: blockId,
                 name: `Дополнительный блок ${index + 1}`,
                 questions: additionalBlocksMap[blockId]
             }));
-            
+
             setAdaptationQuestions(mainQuestions);
             setAdaptationPassportQuestions(passportQuestions);
             setAdaptationAdditionalBlocks(additionalBlocksArr);
@@ -245,6 +371,156 @@ export default function Survey() {
     const handleAdaptationQuestionnaireChange = (questionnaireId) => {
         setSelectedAdaptationQuestionnaire(questionnaireId);
         fetchAdaptationQuestions(questionnaireId);
+    };
+
+    // Открыть модальное окно редактирования вопроса
+    const openQuestionEditModal = async (question) => {
+        console.log('Открытие модального окна редактирования вопроса:', {
+            questionId: question.id,
+            currentSurveyId: currentSurveyId,
+            question: question
+        });
+
+        setEditingQuestion(question);
+        setEditingQuestionText(question.text || '');
+        setEditingQuestionEnabled(true);
+
+        // Преобразуем ответы в нужный формат
+        const answersData = (question.answers || []).map((answer, index) => ({
+            id: answer.id || index,
+            number: String(index + 1).padStart(3, '0'),
+            text: typeof answer === 'string' ? answer : (answer.text || answer.type || ''),
+            enabled: true
+        }));
+
+        // Загружаем сохраненные адаптации, если есть surveyId
+        if (currentSurveyId) {
+            try {
+                console.log('Загрузка адаптаций для вопроса:', question.id, 'опроса:', currentSurveyId);
+                const response = await axios.get(
+                    `http://localhost:8080/survey/${currentSurveyId}/question/${question.id}/adaptations`
+                );
+
+                console.log('Полученные адаптации:', response.data);
+
+                if (response.data && response.data.length > 0) {
+                    // Берем последнюю адаптацию
+                    const latestAdaptation = response.data[0];
+                    const answersDataParsed = JSON.parse(latestAdaptation.answers_data || '[]');
+
+                    console.log('Распарсенные данные ответов:', answersDataParsed);
+
+                    setEditingQuestionText(latestAdaptation.question_text || question.text || '');
+                    setEditingQuestionEnabled(latestAdaptation.is_enabled !== false);
+
+                    // Обновляем ответы из сохраненной адаптации
+                    const updatedAnswers = answersData.map((answer, index) => {
+                        const savedAnswer = answersDataParsed.find(a => a.id === answer.id);
+                        return {
+                            ...answer,
+                            text: savedAnswer ? savedAnswer.text : answer.text,
+                            enabled: savedAnswer ? savedAnswer.enabled : answer.enabled
+                        };
+                    });
+                    setEditingAnswers(updatedAnswers);
+                } else {
+                    setEditingAnswers(answersData);
+                }
+            } catch (err) {
+                console.error('Ошибка при загрузке адаптаций:', err);
+                setEditingAnswers(answersData);
+            }
+        } else {
+            console.log('currentSurveyId не установлен, адаптации не загружаются');
+            setEditingAnswers(answersData);
+        }
+
+        setIsQuestionEditModalOpen(true);
+    };
+
+    // Закрыть модальное окно редактирования вопроса
+    const closeQuestionEditModal = () => {
+        setIsQuestionEditModalOpen(false);
+        setEditingQuestion(null);
+        setEditingQuestionText('');
+        setEditingQuestionEnabled(true);
+        setEditingAnswers([]);
+    };
+
+    // Обновить текст ответа
+    const handleAnswerTextChange = (index, value) => {
+        setEditingAnswers(prev => prev.map((answer, i) =>
+            i === index ? { ...answer, text: value } : answer
+        ));
+    };
+
+    // Переключить состояние ответа
+    const toggleAnswerEnabled = (index) => {
+        setEditingAnswers(prev => prev.map((answer, i) =>
+            i === index ? { ...answer, enabled: !answer.enabled } : answer
+        ));
+    };
+
+    // Сохранить изменения вопроса
+    const handleSaveQuestionEdit = async () => {
+        if (!editingQuestion) {
+            alert('Ошибка: вопрос не выбран');
+            return;
+        }
+        
+        if (!currentSurveyId) {
+            alert('Сначала сохраните опрос, чтобы сохранить адаптации вопросов');
+            return;
+        }
+        
+        console.log('Сохранение адаптации вопроса:', {
+            surveyId: currentSurveyId,
+            questionId: editingQuestion.id,
+            data: {
+                question_text: editingQuestionText,
+                is_enabled: editingQuestionEnabled,
+                region_scope: adaptationScope,
+                answers: editingAnswers
+            }
+        });
+        
+        try {
+            // Подготавливаем данные для отправки
+            const adaptationData = {
+                question_text: editingQuestionText,
+                is_enabled: editingQuestionEnabled,
+                region_scope: adaptationScope,
+                answers: editingAnswers.map(answer => ({
+                    id: answer.id,
+                    text: answer.text,
+                    enabled: answer.enabled
+                }))
+            };
+
+            console.log('Отправка запроса на:', `http://localhost:8080/survey/${currentSurveyId}/question/${editingQuestion.id}/adaptation`);
+
+            // Отправляем запрос на сохранение адаптации
+            const response = await axios.post(
+                `http://localhost:8080/survey/${currentSurveyId}/question/${editingQuestion.id}/adaptation`,
+                adaptationData
+            );
+
+            console.log('Ответ сервера:', response.data);
+
+            if (response.data.message === 'Адаптация вопроса успешно сохранена') {
+                alert('Изменения сохранены!');
+                // Отмечаем этап 2 как завершенный
+                markStepAsCompleted(2);
+                // Не закрываем модальное окно редактирования вопроса
+                // closeQuestionEditModal();
+                // Обновляем вопросы, чтобы отобразить изменения
+                fetchAdaptationQuestions(selectedAdaptationQuestionnaire);
+            }
+        } catch (err) {
+            console.error('Ошибка при сохранении адаптации вопроса:', err);
+            console.error('Детали ошибки:', err.response?.data);
+            alert('Ошибка при сохранении: ' + (err.response?.data?.error || err.message));
+        }
     };
 
     // Загрузка связанных данных для опроса
@@ -280,22 +556,22 @@ export default function Survey() {
                 // Обновление существующего опроса
                 response = await axios.put(`http://localhost:8080/survey/${editingSurveyId}`, surveyData);
                 if (response.data.message === 'Опрос успешно обновлен') {
-                    alert('Опрос успешно обновлен!')
-                    setIsWindowOpen(false);
-                    await fetchRelatedData(editingSurveyId);
+                    alert('Опрос успешно обновлен!');
+                    markStepAsCompleted(5);
                     fetchSurveys();
                 }
             } else {
                 // Создание нового опроса
                 response = await axios.post('http://localhost:8080/survey', surveyData);
                 if (response.data.message === 'Опрос успешно создан') {
-                    alert('Опрос успешно создан!')
-                    setIsWindowOpen(false);
+                    alert('Опрос успешно создан!');
+                    markStepAsCompleted(1);
+                    markStepAsCompleted(5);
                     const surveyId = response.data.id;
                     if (surveyId) {
+                        setEditingSurveyId(surveyId);
+                        setCurrentSurveyId(surveyId);
                         await fetchRelatedData(surveyId);
-                    } else {
-                        console.error('Не получен ID созданного опроса!');
                     }
                     fetchSurveys();
                 }
@@ -367,28 +643,27 @@ export default function Survey() {
         setSelectedSample(survey.sample_id || '');
         setSelectedQuestionnaire(survey.questionnaire_id || '');
         setSelectedRoute(survey.route_id || '');
-        
-        // Сбрасываем этапы и устанавливаем пройденные на основе данных опроса
-        setCurrentStep(1);
-        const completed = [];
-        // Этап 1 (Настройка) всегда пройден, если есть данные
-        if (survey.name && survey.code && survey.responsible) {
-            completed.push(1);
+
+        // Compute completedSteps based on existing data
+        const newCompletedSteps = [];
+        if (survey.name && survey.code) {
+            newCompletedSteps.push(1);
         }
-        // Этап 2 (Адаптация) пройден, если включена адаптация или явно пропущен
-        if (survey.adaptation || !survey.adaptation) {
-            completed.push(2);
+        if (survey.koir !== null && survey.koir !== undefined) {
+            newCompletedSteps.push(3);
         }
-        // Этап 3 (КОИР) пройден, если включен КОИР или явно пропущен
-        if (survey.koir || !survey.koir) {
-            completed.push(3);
-        }
-        // Этап 4 (Проведение) пройден, если есть даты
         if (survey.start_date && survey.end_date) {
-            completed.push(4);
+            newCompletedSteps.push(4);
         }
-        setCompletedSteps(completed);
-        
+
+        setCompletedSteps(newCompletedSteps);
+        setCurrentStep(1);
+
+        // Сбрасываем состояния изменений
+        setStep1Changed(false);
+        setStep3Changed(false);
+        setStep4Changed(false);
+
         setIsWindowOpen(true);
         await fetchRelatedData(survey.id);
     };
@@ -429,6 +704,16 @@ export default function Survey() {
         setAdaptationScope('regions');
         setAdaptationCities([]);
         setAdaptationExpandedDistricts({});
+        // Сброс состояний модального окна редактирования вопроса
+        setIsQuestionEditModalOpen(false);
+        setEditingQuestion(null);
+        setEditingQuestionText('');
+        setEditingQuestionEnabled(true);
+        setEditingAnswers([]);
+        // Сброс состояний изменений этапов
+        setStep1Changed(false);
+        setStep3Changed(false);
+        setStep4Changed(false);
     };
 
     useEffect(() => {
@@ -489,7 +774,7 @@ export default function Survey() {
                                             <div className={`stepper-circle ${getStepStatus(step.id)}`}>
                                                 {completedSteps.includes(step.id) ? (
                                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                                                        <path d="M5 13L9 17L19 7" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+                                                        <path d="M5 13L9 17L19 7" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
                                                     </svg>
                                                 ) : (
                                                     step.id
@@ -511,7 +796,9 @@ export default function Survey() {
                             )}
                         </div>
 
-                        <form onSubmit={handleSaveSurvey} className="survey-form">
+                        <form className="survey-form"
+                            onSubmit={handleSaveCurrentStep}
+                        >
                             {/* Этап 1: Настройка опроса - показывает все поля */}
                             {currentStep === 1 && (
                                 <div className="step-content">
@@ -520,7 +807,10 @@ export default function Survey() {
                                         <input
                                             type="text"
                                             value={surveyName}
-                                            onChange={(e) => setSurveyName(e.target.value)}
+                                            onChange={(e) => {
+                                                setSurveyName(e.target.value);
+                                                setStep1Changed(true);
+                                            }}
                                             required
                                         />
                                     </div>
@@ -529,23 +819,14 @@ export default function Survey() {
                                         <input
                                             type="text"
                                             value={surveyCode}
-                                            onChange={(e) => setSurveyCode(e.target.value)}
+                                            onChange={(e) => {
+                                                setSurveyCode(e.target.value);
+                                                setStep1Changed(true);
+                                            }}
                                             required
                                         />
                                     </div>
-                                    <div className="survey-select">
-                                        <label><span>*</span>Ответственный </label>
-                                        <select
-                                            value={responsible}
-                                            onChange={(e) => setResponsible(e.target.value)}
-                                            required
-                                        >
-                                            <option value="" disabled>Выбрать</option>
-                                            <option value="Иванов И.И.">Иванов И.И.</option>
-                                            <option value="Петров П.П.">Петров П.П.</option>
-                                            <option value="Сидоров С.С.">Сидоров С.С.</option>
-                                        </select>
-                                    </div>
+
 
                                     <div className="survey-steps">
                                         <div className="survey-date">
@@ -783,11 +1064,11 @@ export default function Survey() {
                                                                         <span className="adaptation-expand-icon" onClick={() => toggleAdaptationDistrict(district)}>
                                                                             {isExpanded ? (
                                                                                 <svg width="16px" height="16px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                                                    <path fillRule="evenodd" clipRule="evenodd" d="M4.29289 8.29289C4.68342 7.90237 5.31658 7.90237 5.70711 8.29289L12 14.5858L18.2929 8.29289C18.6834 7.90237 19.3166 7.90237 19.7071 8.29289C20.0976 8.68342 20.0976 9.31658 19.7071 9.70711L12.7071 16.7071C12.3166 17.0976 11.6834 17.0976 11.2929 16.7071L4.29289 9.70711C3.90237 9.31658 3.90237 8.68342 4.29289 8.29289Z" fill="#000000"/>
+                                                                                    <path fillRule="evenodd" clipRule="evenodd" d="M4.29289 8.29289C4.68342 7.90237 5.31658 7.90237 5.70711 8.29289L12 14.5858L18.2929 8.29289C18.6834 7.90237 19.3166 7.90237 19.7071 8.29289C20.0976 8.68342 20.0976 9.31658 19.7071 9.70711L12.7071 16.7071C12.3166 17.0976 11.6834 17.0976 11.2929 16.7071L4.29289 9.70711C3.90237 9.31658 3.90237 8.68342 4.29289 8.29289Z" fill="#000000" />
                                                                                 </svg>
                                                                             ) : (
                                                                                 <svg width="16px" height="16px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                                                    <path fillRule="evenodd" clipRule="evenodd" d="M8.29289 4.29289C8.68342 3.90237 9.31658 3.90237 9.70711 4.29289L16.7071 11.2929C17.0976 11.6834 17.0976 12.3166 16.7071 12.7071L9.70711 19.7071C9.31658 20.0976 8.68342 20.0976 8.29289 19.7071C7.90237 19.3166 7.90237 18.6834 8.29289 18.2929L14.5858 12L8.29289 5.70711C7.90237 5.31658 7.90237 4.68342 8.29289 4.29289Z" fill="#000000"/>
+                                                                                    <path fillRule="evenodd" clipRule="evenodd" d="M8.29289 4.29289C8.68342 3.90237 9.31658 3.90237 9.70711 4.29289L16.7071 11.2929C17.0976 11.6834 17.0976 12.3166 16.7071 12.7071L9.70711 19.7071C9.31658 20.0976 8.68342 20.0976 8.29289 19.7071C7.90237 19.3166 7.90237 18.6834 8.29289 18.2929L14.5858 12L8.29289 5.70711C7.90237 5.31658 7.90237 4.68342 8.29289 4.29289Z" fill="#000000" />
                                                                                 </svg>
                                                                             )}
                                                                         </span>
@@ -826,10 +1107,10 @@ export default function Survey() {
                                                                         <div className="adaptation-question-header">
                                                                             <span className="adaptation-question-number">{String(index + 1).padStart(3, '0')}</span>
                                                                             <span className="adaptation-question-text">{question.text}</span>
-                                                                            <button className="adaptation-edit-btn" title="Редактировать">
+                                                                            <button className="adaptation-edit-btn" title="Редактировать" onClick={() => openQuestionEditModal(question)} type="button">
                                                                                 <svg width="16px" height="16px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                                                    <path d="M11 4H4C3.46957 4 2.96086 4.21071 2.58579 4.58579C2.21071 4.96086 2 5.46957 2 6V20C2 20.5304 2.21071 21.0391 2.58579 21.4142C2.96086 21.7893 3.46957 22 4 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                                                                                    <path d="M18.5 2.50001C18.8978 2.10219 19.4374 1.87869 20 1.87869C20.5626 1.87869 21.1022 2.10219 21.5 2.50001C21.8978 2.89784 22.1213 3.4374 22.1213 4.00001C22.1213 4.56262 21.8978 5.10219 21.5 5.50001L12 15L8 16L9 12L18.5 2.50001Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                                                                    <path d="M11 4H4C3.46957 4 2.96086 4.21071 2.58579 4.58579C2.21071 4.96086 2 5.46957 2 6V20C2 20.5304 2.21071 21.0391 2.58579 21.4142C2.96086 21.7893 3.46957 22 4 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                                                                    <path d="M18.5 2.50001C18.8978 2.10219 19.4374 1.87869 20 1.87869C20.5626 1.87869 21.1022 2.10219 21.5 2.50001C21.8978 2.89784 22.1213 3.4374 22.1213 4.00001C22.1213 4.56262 21.8978 5.10219 21.5 5.50001L12 15L8 16L9 12L18.5 2.50001Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                                                                                 </svg>
                                                                             </button>
                                                                         </div>
@@ -859,10 +1140,10 @@ export default function Survey() {
                                                                         <div className="adaptation-question-header">
                                                                             <span className="adaptation-question-number">{String(index + 1).padStart(3, '0')}</span>
                                                                             <span className="adaptation-question-text">{question.text}</span>
-                                                                            <button className="adaptation-edit-btn" title="Редактировать">
+                                                                            <button className="adaptation-edit-btn" title="Редактировать" onClick={() => openQuestionEditModal(question)} type="button">
                                                                                 <svg width="16px" height="16px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                                                    <path d="M11 4H4C3.46957 4 2.96086 4.21071 2.58579 4.58579C2.21071 4.96086 2 5.46957 2 6V20C2 20.5304 2.21071 21.0391 2.58579 21.4142C2.96086 21.7893 3.46957 22 4 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                                                                                    <path d="M18.5 2.50001C18.8978 2.10219 19.4374 1.87869 20 1.87869C20.5626 1.87869 21.1022 2.10219 21.5 2.50001C21.8978 2.89784 22.1213 3.4374 22.1213 4.00001C22.1213 4.56262 21.8978 5.10219 21.5 5.50001L12 15L8 16L9 12L18.5 2.50001Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                                                                    <path d="M11 4H4C3.46957 4 2.96086 4.21071 2.58579 4.58579C2.21071 4.96086 2 5.46957 2 6V20C2 20.5304 2.21071 21.0391 2.58579 21.4142C2.96086 21.7893 3.46957 22 4 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                                                                    <path d="M18.5 2.50001C18.8978 2.10219 19.4374 1.87869 20 1.87869C20.5626 1.87869 21.1022 2.10219 21.5 2.50001C21.8978 2.89784 22.1213 3.4374 22.1213 4.00001C22.1213 4.56262 21.8978 5.10219 21.5 5.50001L12 15L8 16L9 12L18.5 2.50001Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                                                                                 </svg>
                                                                             </button>
                                                                         </div>
@@ -892,10 +1173,10 @@ export default function Survey() {
                                                                         <div className="adaptation-question-header">
                                                                             <span className="adaptation-question-number">{String(qIndex + 1).padStart(3, '0')}</span>
                                                                             <span className="adaptation-question-text">{question.text}</span>
-                                                                            <button className="adaptation-edit-btn" title="Редактировать">
+                                                                            <button className="adaptation-edit-btn" title="Редактировать" onClick={() => openQuestionEditModal(question)} type="button">
                                                                                 <svg width="16px" height="16px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                                                    <path d="M11 4H4C3.46957 4 2.96086 4.21071 2.58579 4.58579C2.21071 4.96086 2 5.46957 2 6V20C2 20.5304 2.21071 21.0391 2.58579 21.4142C2.96086 21.7893 3.46957 22 4 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                                                                                    <path d="M18.5 2.50001C18.8978 2.10219 19.4374 1.87869 20 1.87869C20.5626 1.87869 21.1022 2.10219 21.5 2.50001C21.8978 2.89784 22.1213 3.4374 22.1213 4.00001C22.1213 4.56262 21.8978 5.10219 21.5 5.50001L12 15L8 16L9 12L18.5 2.50001Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                                                                    <path d="M11 4H4C3.46957 4 2.96086 4.21071 2.58579 4.58579C2.21071 4.96086 2 5.46957 2 6V20C2 20.5304 2.21071 21.0391 2.58579 21.4142C2.96086 21.7893 3.46957 22 4 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                                                                    <path d="M18.5 2.50001C18.8978 2.10219 19.4374 1.87869 20 1.87869C20.5626 1.87869 21.1022 2.10219 21.5 2.50001C21.8978 2.89784 22.1213 3.4374 22.1213 4.00001C22.1213 4.56262 21.8978 5.10219 21.5 5.50001L12 15L8 16L9 12L18.5 2.50001Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                                                                                 </svg>
                                                                             </button>
                                                                         </div>
@@ -943,7 +1224,10 @@ export default function Survey() {
                                                 id="checkbox-switcher2-step3"
                                                 className="options-switcher"
                                                 checked={koir}
-                                                onChange={(e) => setKoir(e.target.checked)}
+                                                onChange={(e) => {
+                                                    setKoir(e.target.checked);
+                                                    setStep3Changed(true);
+                                                }}
                                             />
                                             <label htmlFor="checkbox-switcher2-step3" className="options-switcher-label"></label>
                                         </div>
@@ -961,14 +1245,20 @@ export default function Survey() {
                                                 type="date"
                                                 className='survey-date-begin'
                                                 value={startDate}
-                                                onChange={(e) => setStartDate(e.target.value)}
+                                                onChange={(e) => {
+                                                    setStartDate(e.target.value);
+                                                    setStep4Changed(true);
+                                                }}
                                             />
                                             -
                                             <input
                                                 type="date"
                                                 className='survey-date-finish'
                                                 value={endDate}
-                                                onChange={(e) => setEndDate(e.target.value)}
+                                                onChange={(e) => {
+                                                    setEndDate(e.target.value);
+                                                    setStep4Changed(true);
+                                                }}
                                             />
                                         </div>
                                     </div>
@@ -980,7 +1270,10 @@ export default function Survey() {
                                             id="checkbox-switcher3-step4"
                                             className="options-switcher"
                                             checked={exitPoll}
-                                            onChange={(e) => setExitPoll(e.target.checked)}
+                                            onChange={(e) => {
+                                                setExitPoll(e.target.checked);
+                                                setStep4Changed(true);
+                                            }}
                                         />
                                         <label htmlFor="checkbox-switcher3-step4" className="options-switcher-label"></label>
                                     </div>
@@ -992,10 +1285,16 @@ export default function Survey() {
                                             id="checkbox-switcher4-step4"
                                             className="options-switcher"
                                             checked={manualInput}
-                                            onChange={(e) => setManualInput(e.target.checked)}
+                                            onChange={(e) => {
+                                                setManualInput(e.target.checked);
+                                                setStep4Changed(true);
+                                            }}
                                         />
                                         <label htmlFor="checkbox-switcher4-step4" className="options-switcher-label"></label>
                                     </div>
+                                    <button className="stage-save-btn" onClick={handleSaveCurrentStep} type="button">
+                                        Сохранить этап и продолжить
+                                    </button>
                                 </div>
                             )}
 
@@ -1291,6 +1590,86 @@ export default function Survey() {
                             </button>
                             <button className="save-btn" type="button" onClick={() => setIsRouteSelectModalOpen(false)}>
                                 Выбрать
+                            </button>
+                        </div>
+                    </div>
+                </>
+            )}
+
+            {/* Модальное окно редактирования вопроса */}
+            {isQuestionEditModalOpen && editingQuestion && (
+                <>
+                    <div className="modal-bg" onClick={closeQuestionEditModal}></div>
+                    <div className="question-edit-modal">
+                        <div className="question-edit-header">
+                            <h4>Адаптация вопроса для региона</h4>
+                            <div className="close-btn" onClick={closeQuestionEditModal}>
+                                <svg width="24px" height="24px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M7 7.00006L17 17.0001M7 17.0001L17 7.00006" stroke="#292929" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                            </div>
+                        </div>
+
+                        <div className="question-edit-body">
+                            {/* Ссылка "Скрыть" */}
+                            <div className="question-edit-toggle">
+                                <button type="button" className="toggle-link">
+                                    Скрыть
+                                </button>
+                            </div>
+
+                            {/* Поле вопроса */}
+                            <div className="question-edit-field">
+                                <input
+                                    type="text"
+                                    value={editingQuestionText}
+                                    onChange={(e) => setEditingQuestionText(e.target.value)}
+                                    placeholder="Текст вопроса"
+                                />
+                                <div className="question-edit-switcher">
+                                    <input
+                                        type="checkbox"
+                                        id="question-enabled-switcher"
+                                        className="options-switcher"
+                                        checked={editingQuestionEnabled}
+                                        onChange={(e) => setEditingQuestionEnabled(e.target.checked)}
+                                    />
+                                    <label htmlFor="question-enabled-switcher" className="options-switcher-label"></label>
+                                </div>
+                            </div>
+
+                            {/* Список ответов */}
+                            <div className="answers-edit-list">
+                                {editingAnswers.map((answer, index) => (
+                                    <div key={answer.id} className="answer-edit-item">
+                                        <span className="answer-edit-number">{answer.number}</span>
+                                        <input
+                                            type="text"
+                                            value={answer.text}
+                                            onChange={(e) => handleAnswerTextChange(index, e.target.value)}
+                                            placeholder={`Ответ ${index + 1}`}
+                                        />
+                                        <div className="answer-edit-switcher">
+                                            <input
+                                                type="checkbox"
+                                                id={`answer-switcher-${index}`}
+                                                className="options-switcher"
+                                                checked={answer.enabled}
+                                                onChange={() => toggleAnswerEnabled(index)}
+                                            />
+                                            <label htmlFor={`answer-switcher-${index}`} className="options-switcher-label"></label>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="question-edit-footer">
+                            <button className="cancel-btn" onClick={closeQuestionEditModal} type="button">
+                                Отменить
+                            </button>
+                            <button className="save-btn" onClick={handleSaveQuestionEdit} type="button">
+                                Сохранить
                             </button>
                         </div>
                     </div>

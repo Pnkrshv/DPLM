@@ -27,7 +27,7 @@ func initDB() {
 		log.Fatalf("Ошибка при подключении к БД: %v", err)
 	}
 
-	if err := db.AutoMigrate(&UserData{}, &SampleData{}, &RouteData{}, &SurveyData{}, &QuestionnaireData{}, &Question{}, &Answer{}); err != nil {
+	if err := db.AutoMigrate(&UserData{}, &SampleData{}, &RouteData{}, &SurveyData{}, &QuestionnaireData{}, &Question{}, &Answer{}, &QuestionAdaptation{}); err != nil {
 		log.Fatalf("Ошибка миграции БД: %v", err)
 	}
 }
@@ -105,6 +105,7 @@ type Answer struct {
 	OrderIndex int       `gorm:"not null;default:0" json:"order_index"`
 	IsRequired bool      `gorm:"default:false" json:"is_required"`
 	CreatedAt  time.Time `json:"created_at"`
+	UpdatedAt  time.Time `json:"updated_at"`
 }
 
 // Модель для опросов:
@@ -1196,6 +1197,144 @@ func deleteAnswer(c echo.Context) error {
 	})
 }
 
+// Обновление ответа
+func updateAnswer(c echo.Context) error {
+	answerID := c.Param("answer_id")
+
+	// Проверяем существование ответа
+	var answer Answer
+	if err := db.First(&answer, "id = ?", answerID).Error; err != nil {
+		return c.JSON(http.StatusNotFound, echo.Map{
+			"error": "Ответ не найден",
+		})
+	}
+
+	a := new(Answer)
+	if err := c.Bind(a); err != nil {
+		return c.JSON(http.StatusBadRequest, echo.Map{
+			"error": "Неверный формат данных",
+		})
+	}
+
+	a.UpdatedAt = time.Now()
+	if err := db.Model(&Answer{}).Where("id = ?", answerID).Updates(a).Error; err != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{
+			"error": "Не удалось обновить ответ",
+		})
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"id":      answerID,
+		"message": "Ответ успешно обновлен",
+	})
+}
+
+// Модель для адаптации вопроса
+type QuestionAdaptation struct {
+	ID           string    `gorm:"primaryKey" json:"id"`
+	QuestionID   string    `gorm:"type:uuid;not null;index" json:"question_id"`
+	SurveyID     string    `gorm:"type:uuid;not null;index" json:"survey_id"`
+	RegionScope  string    `gorm:"type:varchar(50);default:'all'" json:"region_scope"`
+	QuestionText string    `gorm:"type:text" json:"question_text"`
+	IsEnabled    bool      `gorm:"default:true" json:"is_enabled"`
+	AnswersData  string    `gorm:"type:jsonb" json:"answers_data"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
+}
+
+// Сохранение адаптации вопроса
+func saveQuestionAdaptation(c echo.Context) error {
+	surveyID := c.Param("survey_id")
+	questionID := c.Param("question_id")
+
+	// Проверяем существование вопроса
+	var question Question
+	if err := db.First(&question, "id = ?", questionID).Error; err != nil {
+		return c.JSON(http.StatusNotFound, echo.Map{
+			"error": "Вопрос не найден",
+		})
+	}
+
+	type AnswerAdaptationData struct {
+		ID      string `json:"id"`
+		Text    string `json:"text"`
+		Enabled bool   `json:"enabled"`
+	}
+
+	type AdaptationRequest struct {
+		QuestionText string                 `json:"question_text"`
+		IsEnabled    bool                   `json:"is_enabled"`
+		RegionScope  string                 `json:"region_scope"`
+		Answers      []AnswerAdaptationData `json:"answers"`
+	}
+
+	var req AdaptationRequest
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, echo.Map{
+			"error": "Неверный формат данных",
+		})
+	}
+
+	// Проверяем, существует ли уже адаптация
+	var adaptation QuestionAdaptation
+	result := db.Where("question_id = ? AND survey_id = ?", questionID, surveyID).First(&adaptation)
+
+	answersJSON, _ := json.Marshal(req.Answers)
+
+	if result.Error == gorm.ErrRecordNotFound {
+		// Создаем новую адаптацию
+		adaptation = QuestionAdaptation{
+			ID:           uuid.NewString(),
+			QuestionID:   questionID,
+			SurveyID:     surveyID,
+			RegionScope:  req.RegionScope,
+			QuestionText: req.QuestionText,
+			IsEnabled:    req.IsEnabled,
+			AnswersData:  string(answersJSON),
+			CreatedAt:    time.Now(),
+			UpdatedAt:    time.Now(),
+		}
+		if err := db.Create(&adaptation).Error; err != nil {
+			return c.JSON(http.StatusInternalServerError, echo.Map{
+				"error": "Не удалось сохранить адаптацию",
+			})
+		}
+	} else {
+		// Обновляем существующую адаптацию
+		adaptation.QuestionText = req.QuestionText
+		adaptation.IsEnabled = req.IsEnabled
+		adaptation.RegionScope = req.RegionScope
+		adaptation.AnswersData = string(answersJSON)
+		adaptation.UpdatedAt = time.Now()
+
+		if err := db.Save(&adaptation).Error; err != nil {
+			return c.JSON(http.StatusInternalServerError, echo.Map{
+				"error": "Не удалось обновить адаптацию",
+			})
+		}
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"id":      adaptation.ID,
+		"message": "Адаптация вопроса успешно сохранена",
+	})
+}
+
+// Получение адаптаций вопроса для опроса
+func getQuestionAdaptations(c echo.Context) error {
+	surveyID := c.Param("survey_id")
+	questionID := c.Param("question_id")
+
+	var adaptations []QuestionAdaptation
+	if err := db.Where("question_id = ? AND survey_id = ?", questionID, surveyID).Order("created_at DESC").Find(&adaptations).Error; err != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{
+			"error": "Ошибка при получении адаптаций",
+		})
+	}
+
+	return c.JSON(http.StatusOK, adaptations)
+}
+
 func main() {
 	initDB()
 	e := echo.New()
@@ -1248,6 +1387,10 @@ func main() {
 	e.DELETE("/questionnaire/:questionnaire_id/questions/:question_id", deleteQuestion)
 	// Эндпоинты для ответов:
 	e.POST("/question/:question_id/answers", createAnswer)
+	e.PUT("/answer/:answer_id", updateAnswer)
 	e.DELETE("/answer/:answer_id", deleteAnswer)
+	// Эндпоинты для адаптаций вопросов:
+	e.POST("/survey/:survey_id/question/:question_id/adaptation", saveQuestionAdaptation)
+	e.GET("/survey/:survey_id/question/:question_id/adaptations", getQuestionAdaptations)
 	e.Start(":8080")
 }
