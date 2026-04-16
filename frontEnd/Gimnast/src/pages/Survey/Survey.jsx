@@ -157,23 +157,24 @@ export default function Survey() {
     // Сохранение текущего этапа
     const handleSaveCurrentStep = async () => {
         const surveyId = editingSurveyId || currentSurveyId;
-        if (!surveyId && currentStep !== 1) {
-            alert('Сначала сохраните настройки опроса на этапе 1');
-            goToStep(1);
+
+        // Этап 2 (Адаптация) не имеет общей формы для сохранения – адаптации сохраняются через модальное окно вопроса.
+        // При нажатии «Сохранить» на этапе 2 просто переходим к следующему этапу.
+        if (currentStep === 2) {
+            if (!completedSteps.includes(2)) {
+                // Можно раскомментировать, если хотите предупреждать пользователя
+                // alert('Сначала сохраните изменения хотя бы одного вопроса на этом этапе');
+                // return;
+            }
+            goToNextStep();
             return;
         }
 
-        let stepChanged = false;
         let data = {};
         let isValid = true;
 
         switch (currentStep) {
             case 1:
-                if (!step1Changed) {
-                    alert('Нет изменений на этом этапе');
-                    return;
-                }
-                stepChanged = step1Changed;
                 if (!surveyName || !surveyCode || !responsible) {
                     alert('Заполните обязательные поля: название, код, ответственный');
                     isValid = false;
@@ -187,37 +188,31 @@ export default function Survey() {
                     adaptation_date: adaptationDate ? new Date(adaptationDate).toISOString() : null,
                 };
                 break;
-            case 2:
-                // Этап 2 сохраняется через отдельные кнопки вопросов
-                alert('Сохраните изменения вопросов на этом этапе');
-                return;
             case 3:
-                if (!step3Changed) {
-                    alert('Нет изменений на этом этапе');
-                    return;
-                }
-                stepChanged = step3Changed;
                 data = { koir };
                 break;
             case 4:
-                if (!step4Changed) {
-                    alert('Нет изменений на этом этапе');
-                    return;
+                if (!startDate || !endDate) {
+                    alert('Укажите даты начала и окончания опроса');
+                    isValid = false;
+                    break;
                 }
-                stepChanged = step4Changed;
                 data = {
-                    start_date: startDate ? new Date(startDate).toISOString() : null,
-                    end_date: endDate ? new Date(endDate).toISOString() : null,
+                    start_date: new Date(startDate).toISOString(),
+                    end_date: new Date(endDate).toISOString(),
                     exit_poll: exitPoll,
                     manual_input: manualInput,
                 };
                 break;
             case 5:
-                // Финальное сохранение всего
+                // Финальное сохранение всего опроса
                 await handleSaveSurvey(new Event('submit'));
+                // После успешного сохранения отмечаем этап 5 завершённым
+                markStepAsCompleted(5);
+                alert('Опрос успешно сохранён!');
+                // Окно не закрываем, этапов больше нет
                 return;
             default:
-                alert('Неизвестный этап');
                 return;
         }
 
@@ -225,32 +220,33 @@ export default function Survey() {
 
         try {
             let response;
-            if (!editingSurveyId && currentStep === 1) {
+            if (currentStep === 1 && !surveyId) {
                 // Создание нового опроса
                 response = await axios.post('http://localhost:8080/survey', data);
                 if (response.data.message === 'Опрос успешно создан') {
                     const newId = response.data.id;
                     setEditingSurveyId(newId);
                     setCurrentSurveyId(newId);
-                    alert('Опрос создан! Переход к следующему этапу.');
+                    markStepAsCompleted(1);
+                    setStep1Changed(false);
+                    goToNextStep();
                 }
             } else {
-                // Обновление
+                // Обновление существующего опроса
                 response = await axios.put(`http://localhost:8080/survey/${surveyId}`, data);
                 if (response.data.message === 'Опрос успешно обновлен') {
-                    alert('Этап сохранен!');
+                    if (currentStep === 1) {
+                        markStepAsCompleted(1);
+                        setStep1Changed(false);
+                    } else if (currentStep === 3) {
+                        markStepAsCompleted(3);
+                        setStep3Changed(false);
+                    } else if (currentStep === 4) {
+                        markStepAsCompleted(4);
+                        setStep4Changed(false);
+                    }
+                    goToNextStep();
                 }
-            }
-
-            // Отметить этап завершенным и сбросить флаг изменений
-            markStepAsCompleted(currentStep);
-            if (currentStep === 1) setStep1Changed(false);
-            if (currentStep === 3) setStep3Changed(false);
-            if (currentStep === 4) setStep4Changed(false);
-
-            // Перейти к следующему
-            if (currentStep < 5) {
-                goToNextStep();
             }
         } catch (err) {
             console.error('Ошибка сохранения этапа:', err);
@@ -467,12 +463,12 @@ export default function Survey() {
             alert('Ошибка: вопрос не выбран');
             return;
         }
-        
+
         if (!currentSurveyId) {
             alert('Сначала сохраните опрос, чтобы сохранить адаптации вопросов');
             return;
         }
-        
+
         console.log('Сохранение адаптации вопроса:', {
             surveyId: currentSurveyId,
             questionId: editingQuestion.id,
@@ -483,7 +479,7 @@ export default function Survey() {
                 answers: editingAnswers
             }
         });
-        
+
         try {
             // Подготавливаем данные для отправки
             const adaptationData = {
@@ -557,7 +553,7 @@ export default function Survey() {
                 response = await axios.put(`http://localhost:8080/survey/${editingSurveyId}`, surveyData);
                 if (response.data.message === 'Опрос успешно обновлен') {
                     alert('Опрос успешно обновлен!');
-                    markStepAsCompleted(5);
+                    // markStepAsCompleted(5);
                     fetchSurveys();
                 }
             } else {
@@ -565,8 +561,8 @@ export default function Survey() {
                 response = await axios.post('http://localhost:8080/survey', surveyData);
                 if (response.data.message === 'Опрос успешно создан') {
                     alert('Опрос успешно создан!');
-                    markStepAsCompleted(1);
-                    markStepAsCompleted(5);
+                    // markStepAsCompleted(1);
+                    // markStepAsCompleted(5);
                     const surveyId = response.data.id;
                     if (surveyId) {
                         setEditingSurveyId(surveyId);
@@ -644,16 +640,39 @@ export default function Survey() {
         setSelectedQuestionnaire(survey.questionnaire_id || '');
         setSelectedRoute(survey.route_id || '');
 
-        // Compute completedSteps based on existing data
+        // Определяем завершённые этапы на основе данных из БД
         const newCompletedSteps = [];
-        if (survey.name && survey.code) {
+
+        // Этап 1 завершён всегда, если опрос существует (у него есть id)
+        if (survey.id) {
             newCompletedSteps.push(1);
         }
-        if (survey.koir !== null && survey.koir !== undefined) {
+
+        // Этап 2 завершён, если есть хотя бы одна адаптация вопроса
+        try {
+            const adaptRes = await axios.get(`http://localhost:8080/survey/${survey.id}/adaptations`);
+            if (adaptRes.data && adaptRes.data.length > 0) {
+                newCompletedSteps.push(2);
+            }
+        } catch (err) {
+            // Эндпоинт может отсутствовать или адаптаций нет — этап не завершён
+            console.warn('Не удалось проверить адаптации (возможно, их нет)');
+        }
+
+        // Этап 3 завершён, если koir === true
+        if (survey.koir === true) {
             newCompletedSteps.push(3);
         }
+
+        // Этап 4 завершён, если указаны обе даты
         if (survey.start_date && survey.end_date) {
             newCompletedSteps.push(4);
+        }
+
+        // Этап 5 завершён, если статус не "черновик" ИЛИ заданы все связи (выборка, анкета, маршрут)
+        const hasAllRelations = survey.sample_id && survey.questionnaire_id && survey.route_id;
+        if (survey.status !== 'черновик' || hasAllRelations) {
+            newCompletedSteps.push(5);
         }
 
         setCompletedSteps(newCompletedSteps);
@@ -673,6 +692,7 @@ export default function Survey() {
         setIsWindowOpen(false);
         setEditingSurveyId(null);
         setCurrentStep(1);
+        setCompletedSteps([]);
         // Keep completedSteps to persist colors
         setSurveyName('');
         setSurveyCode('');
@@ -790,7 +810,7 @@ export default function Survey() {
                                 ))}
                             </div>
                             {currentStep < 5 && (
-                                <button className="next-step-btn" onClick={handleNextStep} type="button">
+                                <button className="next-step-btn" onClick={handleSaveCurrentStep} type="button">
                                     Следующий этап
                                 </button>
                             )}
@@ -798,580 +818,593 @@ export default function Survey() {
 
                         <div className="survey-form">
                             <div className="step-contents" style={{ flex: 1, overflowY: 'auto' }}>
-                            
-                            {/* Этап 1: Настройка опроса - показывает все поля */}
-                            {currentStep === 1 && (
-                                <div className="step-content">
-                                    <div className="survey-input">
-                                        <label><span>*</span>Название опроса </label>
-                                        <input
-                                            type="text"
-                                            value={surveyName}
-                                            onChange={(e) => {
-                                                setSurveyName(e.target.value);
-                                                setStep1Changed(true);
-                                            }}
-                                            required
-                                        />
-                                    </div>
-                                    <div className="survey-input">
-                                        <label><span>*</span>Код опроса </label>
-                                        <input
-                                            type="text"
-                                            value={surveyCode}
-                                            onChange={(e) => {
-                                                setSurveyCode(e.target.value);
-                                                setStep1Changed(true);
-                                            }}
-                                            required
-                                        />
-                                    </div>
 
-
-                                    <div className="survey-steps">
-                                        <div className="survey-date">
-                                            <label>Проведение опроса</label>
+                                {/* Этап 1: Настройка опроса - показывает все поля */}
+                                {currentStep === 1 && (
+                                    <div className="step-content">
+                                        <div className="survey-input">
+                                            <label><span>*</span>Название опроса </label>
                                             <input
-                                                type="date"
-                                                className='survey-date-begin'
-                                                value={startDate}
-                                                onChange={(e) => setStartDate(e.target.value)}
-                                            />
-                                            -
-                                            <input
-                                                type="date"
-                                                className='survey-date-finish'
-                                                value={endDate}
-                                                onChange={(e) => setEndDate(e.target.value)}
+                                                type="text"
+                                                value={surveyName}
+                                                onChange={(e) => {
+                                                    setSurveyName(e.target.value);
+                                                    setStep1Changed(true);
+                                                }}
+                                                required
                                             />
                                         </div>
-                                        <div className="survey-adapt">
-                                            <label>Адаптация анкеты</label>
+                                        <div className="survey-input">
+                                            <label><span>*</span>Код опроса </label>
                                             <input
-                                                type="checkbox"
-                                                id="checkbox-switcher1"
-                                                className="options-switcher"
-                                                checked={adaptation}
-                                                onChange={(e) => setAdaptation(e.target.checked)}
+                                                type="text"
+                                                value={surveyCode}
+                                                onChange={(e) => {
+                                                    setSurveyCode(e.target.value);
+                                                    setStep1Changed(true);
+                                                }}
+                                                required
                                             />
-                                            <label htmlFor="checkbox-switcher1" className="options-switcher-label"></label>
-                                            {adaptation && (
+                                        </div>
+
+                                        <div className="survey-input">
+                                            <label><span>*</span>Ответственный</label>
+                                            <input
+                                                type="text"
+                                                value={responsible}
+                                                onChange={(e) => {
+                                                    setResponsible(e.target.value);
+                                                    setStep1Changed(true);
+                                                }}
+                                                required
+                                            />
+                                        </div>
+
+
+                                        <div className="survey-steps">
+                                            <div className="survey-date">
+                                                <label>Проведение опроса</label>
                                                 <input
                                                     type="date"
-                                                    value={adaptationDate}
-                                                    onChange={(e) => setAdaptationDate(e.target.value)}
+                                                    className='survey-date-begin'
+                                                    value={startDate}
+                                                    onChange={(e) => setStartDate(e.target.value)}
                                                 />
-                                            )}
+                                                -
+                                                <input
+                                                    type="date"
+                                                    className='survey-date-finish'
+                                                    value={endDate}
+                                                    onChange={(e) => setEndDate(e.target.value)}
+                                                />
+                                            </div>
+                                            <div className="survey-adapt">
+                                                <label>Адаптация анкеты</label>
+                                                <input
+                                                    type="checkbox"
+                                                    id="checkbox-switcher1"
+                                                    className="options-switcher"
+                                                    checked={adaptation}
+                                                    onChange={(e) => setAdaptation(e.target.checked)}
+                                                />
+                                                <label htmlFor="checkbox-switcher1" className="options-switcher-label"></label>
+                                                {adaptation && (
+                                                    <input
+                                                        type="date"
+                                                        value={adaptationDate}
+                                                        onChange={(e) => setAdaptationDate(e.target.value)}
+                                                    />
+                                                )}
+                                            </div>
+                                            <div className="survey-koir">
+                                                <label>Перенос в КОИР</label>
+                                                <input
+                                                    type="checkbox"
+                                                    id="checkbox-switcher2"
+                                                    className="options-switcher"
+                                                    checked={koir}
+                                                    onChange={(e) => setKoir(e.target.checked)}
+                                                />
+                                                <label htmlFor="checkbox-switcher2" className="options-switcher-label"></label>
+                                            </div>
                                         </div>
-                                        <div className="survey-koir">
-                                            <label>Перенос в КОИР</label>
+
+                                        <div className="survey-exitpoll">
+                                            <label>Передача агрегированных данных (exit-poll)</label>
                                             <input
                                                 type="checkbox"
-                                                id="checkbox-switcher2"
+                                                id="checkbox-switcher3"
                                                 className="options-switcher"
-                                                checked={koir}
-                                                onChange={(e) => setKoir(e.target.checked)}
+                                                checked={exitPoll}
+                                                onChange={(e) => setExitPoll(e.target.checked)}
                                             />
-                                            <label htmlFor="checkbox-switcher2" className="options-switcher-label"></label>
+                                            <label htmlFor="checkbox-switcher3" className="options-switcher-label"></label>
                                         </div>
-                                    </div>
 
-                                    <div className="survey-exitpoll">
-                                        <label>Передача агрегированных данных (exit-poll)</label>
-                                        <input
-                                            type="checkbox"
-                                            id="checkbox-switcher3"
-                                            className="options-switcher"
-                                            checked={exitPoll}
-                                            onChange={(e) => setExitPoll(e.target.checked)}
-                                        />
-                                        <label htmlFor="checkbox-switcher3" className="options-switcher-label"></label>
-                                    </div>
+                                        <div className="survey-accept">
+                                            <label>Разрешить ручной ввод</label>
+                                            <input
+                                                type="checkbox"
+                                                id="checkbox-switcher4"
+                                                className="options-switcher"
+                                                checked={manualInput}
+                                                onChange={(e) => setManualInput(e.target.checked)}
+                                            />
+                                            <label htmlFor="checkbox-switcher4" className="options-switcher-label"></label>
+                                        </div>
 
-                                    <div className="survey-accept">
-                                        <label>Разрешить ручной ввод</label>
-                                        <input
-                                            type="checkbox"
-                                            id="checkbox-switcher4"
-                                            className="options-switcher"
-                                            checked={manualInput}
-                                            onChange={(e) => setManualInput(e.target.checked)}
-                                        />
-                                        <label htmlFor="checkbox-switcher4" className="options-switcher-label"></label>
-                                    </div>
+                                        <div className="related-blocks-container">
+                                            <div className="related-blocks">
+                                                <div className="related-block-item">
+                                                    <div className="block-header">
+                                                        <p>Выборки</p>
+                                                        {selectedSample && (
+                                                            <div className="selected-item-info">
+                                                                <p className="selected-item-name">
+                                                                    {samples.find(s => s.id === selectedSample)?.name || 'Выборка'}
+                                                                </p>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <div className="block-content">
+                                                        <button
+                                                            className="block-action-btn"
+                                                            onClick={() => setIsSampleSelectModalOpen(true)}
+                                                            type='button'
+                                                        >
+                                                            Добавить выборку
+                                                        </button>
+                                                    </div>
+                                                </div>
 
-                                    <div className="related-blocks-container">
-                                        <div className="related-blocks">
-                                            <div className="related-block-item">
-                                                <div className="block-header">
-                                                    <p>Выборки</p>
-                                                    {selectedSample && (
-                                                        <div className="selected-item-info">
-                                                            <p className="selected-item-name">
-                                                                {samples.find(s => s.id === selectedSample)?.name || 'Выборка'}
-                                                            </p>
-                                                        </div>
-                                                    )}
+                                                <div className="related-block-item">
+                                                    <div className="block-header">
+                                                        <p>Анкеты</p>
+                                                        {selectedQuestionnaire && (
+                                                            <div className="selected-item-info">
+                                                                <p className="selected-item-name">
+                                                                    {questionnaires.find(q => q.id === selectedQuestionnaire)?.name || 'Анкета'}
+                                                                </p>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <div className="block-content">
+                                                        <button
+                                                            className="block-action-btn"
+                                                            onClick={() => setIsQuestionnaireSelectModalOpen(true)}
+                                                            type='button'
+                                                        >
+                                                            Добавить анкету
+                                                        </button>
+                                                    </div>
                                                 </div>
-                                                <div className="block-content">
-                                                    <button
-                                                        className="block-action-btn"
-                                                        onClick={() => setIsSampleSelectModalOpen(true)}
-                                                        type='button'
-                                                    >
-                                                        Добавить выборку
-                                                    </button>
-                                                </div>
-                                            </div>
 
-                                            <div className="related-block-item">
-                                                <div className="block-header">
-                                                    <p>Анкеты</p>
-                                                    {selectedQuestionnaire && (
-                                                        <div className="selected-item-info">
-                                                            <p className="selected-item-name">
-                                                                {questionnaires.find(q => q.id === selectedQuestionnaire)?.name || 'Анкета'}
-                                                            </p>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                                <div className="block-content">
-                                                    <button
-                                                        className="block-action-btn"
-                                                        onClick={() => setIsQuestionnaireSelectModalOpen(true)}
-                                                        type='button'
-                                                    >
-                                                        Добавить анкету
-                                                    </button>
-                                                </div>
-                                            </div>
-
-                                            <div className="related-block-item">
-                                                <div className="block-header">
-                                                    <p>Маршруты</p>
-                                                    {selectedRoute && (
-                                                        <div className="selected-item-info">
-                                                            <p className="selected-item-name">
-                                                                {routes.find(r => r.id === selectedRoute)?.name || 'Маршрут'}
-                                                            </p>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                                <div className="block-content">
-                                                    <button
-                                                        className="block-action-btn"
-                                                        onClick={() => setIsRouteSelectModalOpen(true)}
-                                                        type='button'
-                                                    >
-                                                        Добавить маршрут
-                                                    </button>
+                                                <div className="related-block-item">
+                                                    <div className="block-header">
+                                                        <p>Маршруты</p>
+                                                        {selectedRoute && (
+                                                            <div className="selected-item-info">
+                                                                <p className="selected-item-name">
+                                                                    {routes.find(r => r.id === selectedRoute)?.name || 'Маршрут'}
+                                                                </p>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <div className="block-content">
+                                                        <button
+                                                            className="block-action-btn"
+                                                            onClick={() => setIsRouteSelectModalOpen(true)}
+                                                            type='button'
+                                                        >
+                                                            Добавить маршрут
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                            )}
+                                )}
 
-                            {/* Этап 2: Адаптация анкеты */}
-                            {currentStep === 2 && (
-                                <div className="step-content adaptation-step">
-                                    <div className="adaptation-container">
-                                        {/* Левая панель */}
-                                        <div className="adaptation-left">
-                                            {/* Выпадающий список анкет */}
-                                            <div className="adaptation-questionnaire-select">
-                                                <select
-                                                    value={selectedAdaptationQuestionnaire}
-                                                    onChange={(e) => handleAdaptationQuestionnaireChange(e.target.value)}
-                                                >
-                                                    <option value="" disabled>Выбрать анкету</option>
-                                                    {adaptationQuestionnaires.map(q => (
-                                                        <option key={q.id} value={q.id}>{q.name || 'Без названия'}</option>
-                                                    ))}
-                                                </select>
-                                                <button className="refresh-btn" onClick={fetchAdaptationQuestionnaires} title="Обновить">
-                                                    <svg width="16px" height="16px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                        <path d="M19.841 3.24A10.988 10.988 0 0 0 8.54.573l1.266 3.8a7.033 7.033 0 0 1 8.809 9.158L17 11.891v7.092h7l-2.407-2.439A11.049 11.049 0 0 0 19.841 3.24zM1 10.942a11.05 11.05 0 0 0 11.013 11.044 11.114 11.114 0 0 0 3.521-.575l-1.266-3.8a7.035 7.035 0 0 1-8.788-9.22L7 9.891V6.034c.021-.02.038-.044.06-.065L7 5.909V2.982H0l2.482 2.449A10.951 10.951 0 0 0 1 10.942z" />
-                                                    </svg>
-                                                </button>
-                                            </div>
+                                {/* Этап 2: Адаптация анкеты */}
+                                {currentStep === 2 && (
+                                    <div className="step-content adaptation-step">
+                                        <div className="adaptation-container">
+                                            {/* Левая панель */}
+                                            <div className="adaptation-left">
+                                                {/* Выпадающий список анкет */}
+                                                <div className="adaptation-questionnaire-select">
+                                                    <select
+                                                        value={selectedAdaptationQuestionnaire}
+                                                        onChange={(e) => handleAdaptationQuestionnaireChange(e.target.value)}
+                                                    >
+                                                        <option value="" disabled>Выбрать анкету</option>
+                                                        {adaptationQuestionnaires.map(q => (
+                                                            <option key={q.id} value={q.id}>{q.name || 'Без названия'}</option>
+                                                        ))}
+                                                    </select>
+                                                    <button className="refresh-btn" onClick={fetchAdaptationQuestionnaires} title="Обновить">
+                                                        <svg width="16px" height="16px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                            <path d="M19.841 3.24A10.988 10.988 0 0 0 8.54.573l1.266 3.8a7.033 7.033 0 0 1 8.809 9.158L17 11.891v7.092h7l-2.407-2.439A11.049 11.049 0 0 0 19.841 3.24zM1 10.942a11.05 11.05 0 0 0 11.013 11.044 11.114 11.114 0 0 0 3.521-.575l-1.266-3.8a7.035 7.035 0 0 1-8.788-9.22L7 9.891V6.034c.021-.02.038-.044.06-.065L7 5.909V2.982H0l2.482 2.449A10.951 10.951 0 0 0 1 10.942z" />
+                                                        </svg>
+                                                    </button>
+                                                </div>
 
-                                            {/* Переключатель Регионы/Города */}
-                                            <div className="adaptation-scope-toggle">
-                                                <button
-                                                    type="button"
-                                                    className={adaptationScope === 'regions' ? 'activ' : ''}
-                                                    onClick={() => setAdaptationScope('regions')}
-                                                >
-                                                    Регионов
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    className={adaptationScope === 'cities' ? 'activ' : ''}
-                                                    onClick={() => setAdaptationScope('cities')}
-                                                >
-                                                    Городов
-                                                </button>
-                                            </div>
+                                                {/* Переключатель Регионы/Города */}
+                                                <div className="adaptation-scope-toggle">
+                                                    <button
+                                                        type="button"
+                                                        className={adaptationScope === 'regions' ? 'activ' : ''}
+                                                        onClick={() => setAdaptationScope('regions')}
+                                                    >
+                                                        Регионов
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        className={adaptationScope === 'cities' ? 'activ' : ''}
+                                                        onClick={() => setAdaptationScope('cities')}
+                                                    >
+                                                        Городов
+                                                    </button>
+                                                </div>
 
-                                            {/* Список ФО/регионов */}
-                                            <div className="adaptation-region-list">
-                                                {adaptationScope === 'regions' ? (
-                                                    <>
-                                                        <div className="region-element">
-                                                            <input type="checkbox" id="fo-northcaucasus" />
-                                                            <label htmlFor="fo-northcaucasus">СЕВЕРО-КАВКАЗСКИЙ</label>
-                                                        </div>
-                                                        <div className="region-element">
-                                                            <input type="checkbox" id="fo-central" />
-                                                            <label htmlFor="fo-central">ЦЕНТРАЛЬНЫЙ</label>
-                                                        </div>
-                                                        <div className="region-element">
-                                                            <input type="checkbox" id="fo-siberian" />
-                                                            <label htmlFor="fo-siberian">СИБИРСКИЙ</label>
-                                                        </div>
-                                                        <div className="region-element">
-                                                            <input type="checkbox" id="fo-northwest" />
-                                                            <label htmlFor="fo-northwest">СЕВЕРО-ЗАПАДНЫЙ</label>
-                                                        </div>
-                                                        <div className="region-element">
-                                                            <input type="checkbox" id="fo-ural" />
-                                                            <label htmlFor="fo-ural">УРАЛЬСКИЙ</label>
-                                                        </div>
-                                                        <div className="region-element">
-                                                            <input type="checkbox" id="fo-south" />
-                                                            <label htmlFor="fo-south">ЮЖНЫЙ</label>
-                                                        </div>
-                                                        <div className="region-element">
-                                                            <input type="checkbox" id="fo-fareast" />
-                                                            <label htmlFor="fo-fareast">ДАЛЬНЕВОСТОЧНЫЙ</label>
-                                                        </div>
-                                                        <div className="region-element">
-                                                            <input type="checkbox" id="fo-volga" />
-                                                            <label htmlFor="fo-volga">ПРИВОЛЖСКИЙ</label>
-                                                        </div>
-                                                    </>
-                                                ) : (
-                                                    <div className="adaptation-cities-container">
-                                                        {adaptationLoading && <p className="loading-text">Загрузка городов...</p>}
-                                                        {!adaptationLoading && adaptationCities && Object.keys(adaptationCities).map(district => {
-                                                            const citiesList = Object.values(adaptationCities[district]).flat();
-                                                            const isExpanded = adaptationExpandedDistricts[district];
+                                                {/* Список ФО/регионов */}
+                                                <div className="adaptation-region-list">
+                                                    {adaptationScope === 'regions' ? (
+                                                        <>
+                                                            <div className="region-element">
+                                                                <input type="checkbox" id="fo-northcaucasus" />
+                                                                <label htmlFor="fo-northcaucasus">СЕВЕРО-КАВКАЗСКИЙ</label>
+                                                            </div>
+                                                            <div className="region-element">
+                                                                <input type="checkbox" id="fo-central" />
+                                                                <label htmlFor="fo-central">ЦЕНТРАЛЬНЫЙ</label>
+                                                            </div>
+                                                            <div className="region-element">
+                                                                <input type="checkbox" id="fo-siberian" />
+                                                                <label htmlFor="fo-siberian">СИБИРСКИЙ</label>
+                                                            </div>
+                                                            <div className="region-element">
+                                                                <input type="checkbox" id="fo-northwest" />
+                                                                <label htmlFor="fo-northwest">СЕВЕРО-ЗАПАДНЫЙ</label>
+                                                            </div>
+                                                            <div className="region-element">
+                                                                <input type="checkbox" id="fo-ural" />
+                                                                <label htmlFor="fo-ural">УРАЛЬСКИЙ</label>
+                                                            </div>
+                                                            <div className="region-element">
+                                                                <input type="checkbox" id="fo-south" />
+                                                                <label htmlFor="fo-south">ЮЖНЫЙ</label>
+                                                            </div>
+                                                            <div className="region-element">
+                                                                <input type="checkbox" id="fo-fareast" />
+                                                                <label htmlFor="fo-fareast">ДАЛЬНЕВОСТОЧНЫЙ</label>
+                                                            </div>
+                                                            <div className="region-element">
+                                                                <input type="checkbox" id="fo-volga" />
+                                                                <label htmlFor="fo-volga">ПРИВОЛЖСКИЙ</label>
+                                                            </div>
+                                                        </>
+                                                    ) : (
+                                                        <div className="adaptation-cities-container">
+                                                            {adaptationLoading && <p className="loading-text">Загрузка городов...</p>}
+                                                            {!adaptationLoading && adaptationCities && Object.keys(adaptationCities).map(district => {
+                                                                const citiesList = Object.values(adaptationCities[district]).flat();
+                                                                const isExpanded = adaptationExpandedDistricts[district];
 
-                                                            return (
-                                                                <div key={district} className="adaptation-district">
-                                                                    <div className="adaptation-district-header">
-                                                                        <span className="adaptation-expand-icon" onClick={() => toggleAdaptationDistrict(district)}>
-                                                                            {isExpanded ? (
-                                                                                <svg width="16px" height="16px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                                                    <path fillRule="evenodd" clipRule="evenodd" d="M4.29289 8.29289C4.68342 7.90237 5.31658 7.90237 5.70711 8.29289L12 14.5858L18.2929 8.29289C18.6834 7.90237 19.3166 7.90237 19.7071 8.29289C20.0976 8.68342 20.0976 9.31658 19.7071 9.70711L12.7071 16.7071C12.3166 17.0976 11.6834 17.0976 11.2929 16.7071L4.29289 9.70711C3.90237 9.31658 3.90237 8.68342 4.29289 8.29289Z" fill="#000000" />
-                                                                                </svg>
-                                                                            ) : (
-                                                                                <svg width="16px" height="16px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                                                    <path fillRule="evenodd" clipRule="evenodd" d="M8.29289 4.29289C8.68342 3.90237 9.31658 3.90237 9.70711 4.29289L16.7071 11.2929C17.0976 11.6834 17.0976 12.3166 16.7071 12.7071L9.70711 19.7071C9.31658 20.0976 8.68342 20.0976 8.29289 19.7071C7.90237 19.3166 7.90237 18.6834 8.29289 18.2929L14.5858 12L8.29289 5.70711C7.90237 5.31658 7.90237 4.68342 8.29289 4.29289Z" fill="#000000" />
-                                                                                </svg>
-                                                                            )}
-                                                                        </span>
-                                                                        <input type="checkbox" id={`district-${district}`} />
-                                                                        <label htmlFor={`district-${district}`} className="adaptation-district-name">{district}</label>
-                                                                    </div>
-                                                                    {isExpanded && (
-                                                                        <div className="adaptation-cities-list">
-                                                                            {citiesList.map(city => (
-                                                                                <div key={city} className="adaptation-city-item">
-                                                                                    <input type="checkbox" id={`city-${district}-${city}`} />
-                                                                                    <label htmlFor={`city-${district}-${city}`}>{city}</label>
-                                                                                </div>
-                                                                            ))}
+                                                                return (
+                                                                    <div key={district} className="adaptation-district">
+                                                                        <div className="adaptation-district-header">
+                                                                            <span className="adaptation-expand-icon" onClick={() => toggleAdaptationDistrict(district)}>
+                                                                                {isExpanded ? (
+                                                                                    <svg width="16px" height="16px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                                                        <path fillRule="evenodd" clipRule="evenodd" d="M4.29289 8.29289C4.68342 7.90237 5.31658 7.90237 5.70711 8.29289L12 14.5858L18.2929 8.29289C18.6834 7.90237 19.3166 7.90237 19.7071 8.29289C20.0976 8.68342 20.0976 9.31658 19.7071 9.70711L12.7071 16.7071C12.3166 17.0976 11.6834 17.0976 11.2929 16.7071L4.29289 9.70711C3.90237 9.31658 3.90237 8.68342 4.29289 8.29289Z" fill="#000000" />
+                                                                                    </svg>
+                                                                                ) : (
+                                                                                    <svg width="16px" height="16px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                                                        <path fillRule="evenodd" clipRule="evenodd" d="M8.29289 4.29289C8.68342 3.90237 9.31658 3.90237 9.70711 4.29289L16.7071 11.2929C17.0976 11.6834 17.0976 12.3166 16.7071 12.7071L9.70711 19.7071C9.31658 20.0976 8.68342 20.0976 8.29289 19.7071C7.90237 19.3166 7.90237 18.6834 8.29289 18.2929L14.5858 12L8.29289 5.70711C7.90237 5.31658 7.90237 4.68342 8.29289 4.29289Z" fill="#000000" />
+                                                                                    </svg>
+                                                                                )}
+                                                                            </span>
+                                                                            <input type="checkbox" id={`district-${district}`} />
+                                                                            <label htmlFor={`district-${district}`} className="adaptation-district-name">{district}</label>
                                                                         </div>
-                                                                    )}
+                                                                        {isExpanded && (
+                                                                            <div className="adaptation-cities-list">
+                                                                                {citiesList.map(city => (
+                                                                                    <div key={city} className="adaptation-city-item">
+                                                                                        <input type="checkbox" id={`city-${district}-${city}`} />
+                                                                                        <label htmlFor={`city-${district}-${city}`}>{city}</label>
+                                                                                    </div>
+                                                                                ))}
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            {/* Правая панель - вопросы и ответы */}
+                                            <div className="adaptation-right">
+                                                {selectedAdaptationQuestionnaire ? (
+                                                    <div className="adaptation-questions">
+                                                        {/* Основной блок */}
+                                                        {adaptationQuestions.length > 0 && (
+                                                            <div className="adaptation-block-section">
+                                                                <h5 className="adaptation-block-title">Основной блок</h5>
+                                                                <div className="adaptation-questions-list">
+                                                                    {adaptationQuestions.map((question, index) => (
+                                                                        <div key={question.id} className="adaptation-question-card">
+                                                                            <div className="adaptation-question-header">
+                                                                                <span className="adaptation-question-number">{String(index + 1).padStart(3, '0')}</span>
+                                                                                <span className="adaptation-question-text">{question.text}</span>
+                                                                                <button className="adaptation-edit-btn" title="Редактировать" onClick={() => openQuestionEditModal(question)} type="button">
+                                                                                    <svg width="16px" height="16px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                                                        <path d="M11 4H4C3.46957 4 2.96086 4.21071 2.58579 4.58579C2.21071 4.96086 2 5.46957 2 6V20C2 20.5304 2.21071 21.0391 2.58579 21.4142C2.96086 21.7893 3.46957 22 4 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                                                                        <path d="M18.5 2.50001C18.8978 2.10219 19.4374 1.87869 20 1.87869C20.5626 1.87869 21.1022 2.10219 21.5 2.50001C21.8978 2.89784 22.1213 3.4374 22.1213 4.00001C22.1213 4.56262 21.8978 5.10219 21.5 5.50001L12 15L8 16L9 12L18.5 2.50001Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                                                                    </svg>
+                                                                                </button>
+                                                                            </div>
+                                                                            {question.answers && question.answers.length > 0 && (
+                                                                                <div className="adaptation-answers-list">
+                                                                                    {question.answers.map((answer, ansIndex) => (
+                                                                                        <div key={answer.id || ansIndex} className="adaptation-answer-item">
+                                                                                            <span className="adaptation-answer-number">{String(index * 100 + ansIndex + 1).padStart(3, '0')}</span>
+                                                                                            <span className="adaptation-answer-text">{typeof answer === 'string' ? answer : (answer.text || answer.type || '')}</span>
+                                                                                        </div>
+                                                                                    ))}
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
+                                                                    ))}
                                                                 </div>
-                                                            );
-                                                        })}
+                                                            </div>
+                                                        )}
+
+                                                        {/* Паспортичка */}
+                                                        {adaptationPassportQuestions.length > 0 && (
+                                                            <div className="adaptation-block-section">
+                                                                <h5 className="adaptation-block-title">Вопросы о респонденте (паспортичка)</h5>
+                                                                <div className="adaptation-questions-list">
+                                                                    {adaptationPassportQuestions.map((question, index) => (
+                                                                        <div key={question.id} className="adaptation-question-card">
+                                                                            <div className="adaptation-question-header">
+                                                                                <span className="adaptation-question-number">{String(index + 1).padStart(3, '0')}</span>
+                                                                                <span className="adaptation-question-text">{question.text}</span>
+                                                                                <button className="adaptation-edit-btn" title="Редактировать" onClick={() => openQuestionEditModal(question)} type="button">
+                                                                                    <svg width="16px" height="16px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                                                        <path d="M11 4H4C3.46957 4 2.96086 4.21071 2.58579 4.58579C2.21071 4.96086 2 5.46957 2 6V20C2 20.5304 2.21071 21.0391 2.58579 21.4142C2.96086 21.7893 3.46957 22 4 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                                                                        <path d="M18.5 2.50001C18.8978 2.10219 19.4374 1.87869 20 1.87869C20.5626 1.87869 21.1022 2.10219 21.5 2.50001C21.8978 2.89784 22.1213 3.4374 22.1213 4.00001C22.1213 4.56262 21.8978 5.10219 21.5 5.50001L12 15L8 16L9 12L18.5 2.50001Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                                                                    </svg>
+                                                                                </button>
+                                                                            </div>
+                                                                            {question.answers && question.answers.length > 0 && (
+                                                                                <div className="adaptation-answers-list">
+                                                                                    {question.answers.map((answer, ansIndex) => (
+                                                                                        <div key={answer.id || ansIndex} className="adaptation-answer-item">
+                                                                                            <span className="adaptation-answer-number">{String((adaptationQuestions.length + index) * 100 + ansIndex + 1).padStart(3, '0')}</span>
+                                                                                            <span className="adaptation-answer-text">{typeof answer === 'string' ? answer : (answer.text || answer.type || '')}</span>
+                                                                                        </div>
+                                                                                    ))}
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        )}
+
+                                                        {/* Дополнительные блоки */}
+                                                        {adaptationAdditionalBlocks.map((block, blockIndex) => (
+                                                            <div key={block.id} className="adaptation-block-section">
+                                                                <h5 className="adaptation-block-title">{block.name}</h5>
+                                                                <div className="adaptation-questions-list">
+                                                                    {block.questions.map((question, qIndex) => (
+                                                                        <div key={question.id} className="adaptation-question-card">
+                                                                            <div className="adaptation-question-header">
+                                                                                <span className="adaptation-question-number">{String(qIndex + 1).padStart(3, '0')}</span>
+                                                                                <span className="adaptation-question-text">{question.text}</span>
+                                                                                <button className="adaptation-edit-btn" title="Редактировать" onClick={() => openQuestionEditModal(question)} type="button">
+                                                                                    <svg width="16px" height="16px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                                                        <path d="M11 4H4C3.46957 4 2.96086 4.21071 2.58579 4.58579C2.21071 4.96086 2 5.46957 2 6V20C2 20.5304 2.21071 21.0391 2.58579 21.4142C2.96086 21.7893 3.46957 22 4 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                                                                        <path d="M18.5 2.50001C18.8978 2.10219 19.4374 1.87869 20 1.87869C20.5626 1.87869 21.1022 2.10219 21.5 2.50001C21.8978 2.89784 22.1213 3.4374 22.1213 4.00001C22.1213 4.56262 21.8978 5.10219 21.5 5.50001L12 15L8 16L9 12L18.5 2.50001Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                                                                    </svg>
+                                                                                </button>
+                                                                            </div>
+                                                                            {question.answers && question.answers.length > 0 && (
+                                                                                <div className="adaptation-answers-list">
+                                                                                    {question.answers.map((answer, ansIndex) => (
+                                                                                        <div key={answer.id || ansIndex} className="adaptation-answer-item">
+                                                                                            <span className="adaptation-answer-number">{String(ansIndex + 1).padStart(3, '0')}</span>
+                                                                                            <span className="adaptation-answer-text">{typeof answer === 'string' ? answer : (answer.text || answer.type || '')}</span>
+                                                                                        </div>
+                                                                                    ))}
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        ))}
+
+                                                        {/* Если нет вопросов */}
+                                                        {adaptationQuestions.length === 0 && adaptationPassportQuestions.length === 0 && adaptationAdditionalBlocks.length === 0 && (
+                                                            <div className="adaptation-no-questions">
+                                                                <p>В выбранной анкете нет вопросов</p>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                ) : (
+                                                    <div className="adaptation-no-selection">
+                                                        <p>Выберите анкету для просмотра вопросов</p>
                                                     </div>
                                                 )}
                                             </div>
                                         </div>
+                                    </div>
+                                )}
 
-                                        {/* Правая панель - вопросы и ответы */}
-                                        <div className="adaptation-right">
-                                            {selectedAdaptationQuestionnaire ? (
-                                                <div className="adaptation-questions">
-                                                    {/* Основной блок */}
-                                                    {adaptationQuestions.length > 0 && (
-                                                        <div className="adaptation-block-section">
-                                                            <h5 className="adaptation-block-title">Основной блок</h5>
-                                                            <div className="adaptation-questions-list">
-                                                                {adaptationQuestions.map((question, index) => (
-                                                                    <div key={question.id} className="adaptation-question-card">
-                                                                        <div className="adaptation-question-header">
-                                                                            <span className="adaptation-question-number">{String(index + 1).padStart(3, '0')}</span>
-                                                                            <span className="adaptation-question-text">{question.text}</span>
-                                                                            <button className="adaptation-edit-btn" title="Редактировать" onClick={() => openQuestionEditModal(question)} type="button">
-                                                                                <svg width="16px" height="16px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                                                    <path d="M11 4H4C3.46957 4 2.96086 4.21071 2.58579 4.58579C2.21071 4.96086 2 5.46957 2 6V20C2 20.5304 2.21071 21.0391 2.58579 21.4142C2.96086 21.7893 3.46957 22 4 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                                                                    <path d="M18.5 2.50001C18.8978 2.10219 19.4374 1.87869 20 1.87869C20.5626 1.87869 21.1022 2.10219 21.5 2.50001C21.8978 2.89784 22.1213 3.4374 22.1213 4.00001C22.1213 4.56262 21.8978 5.10219 21.5 5.50001L12 15L8 16L9 12L18.5 2.50001Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                                                                </svg>
-                                                                            </button>
-                                                                        </div>
-                                                                        {question.answers && question.answers.length > 0 && (
-                                                                            <div className="adaptation-answers-list">
-                                                                                {question.answers.map((answer, ansIndex) => (
-                                                                                    <div key={answer.id || ansIndex} className="adaptation-answer-item">
-                                                                                        <span className="adaptation-answer-number">{String(index * 100 + ansIndex + 1).padStart(3, '0')}</span>
-                                                                                        <span className="adaptation-answer-text">{typeof answer === 'string' ? answer : (answer.text || answer.type || '')}</span>
-                                                                                    </div>
-                                                                                ))}
-                                                                            </div>
-                                                                        )}
-                                                                    </div>
-                                                                ))}
-                                                            </div>
-                                                        </div>
-                                                    )}
-
-                                                    {/* Паспортичка */}
-                                                    {adaptationPassportQuestions.length > 0 && (
-                                                        <div className="adaptation-block-section">
-                                                            <h5 className="adaptation-block-title">Вопросы о респонденте (паспортичка)</h5>
-                                                            <div className="adaptation-questions-list">
-                                                                {adaptationPassportQuestions.map((question, index) => (
-                                                                    <div key={question.id} className="adaptation-question-card">
-                                                                        <div className="adaptation-question-header">
-                                                                            <span className="adaptation-question-number">{String(index + 1).padStart(3, '0')}</span>
-                                                                            <span className="adaptation-question-text">{question.text}</span>
-                                                                            <button className="adaptation-edit-btn" title="Редактировать" onClick={() => openQuestionEditModal(question)} type="button">
-                                                                                <svg width="16px" height="16px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                                                    <path d="M11 4H4C3.46957 4 2.96086 4.21071 2.58579 4.58579C2.21071 4.96086 2 5.46957 2 6V20C2 20.5304 2.21071 21.0391 2.58579 21.4142C2.96086 21.7893 3.46957 22 4 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                                                                    <path d="M18.5 2.50001C18.8978 2.10219 19.4374 1.87869 20 1.87869C20.5626 1.87869 21.1022 2.10219 21.5 2.50001C21.8978 2.89784 22.1213 3.4374 22.1213 4.00001C22.1213 4.56262 21.8978 5.10219 21.5 5.50001L12 15L8 16L9 12L18.5 2.50001Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                                                                </svg>
-                                                                            </button>
-                                                                        </div>
-                                                                        {question.answers && question.answers.length > 0 && (
-                                                                            <div className="adaptation-answers-list">
-                                                                                {question.answers.map((answer, ansIndex) => (
-                                                                                    <div key={answer.id || ansIndex} className="adaptation-answer-item">
-                                                                                        <span className="adaptation-answer-number">{String((adaptationQuestions.length + index) * 100 + ansIndex + 1).padStart(3, '0')}</span>
-                                                                                        <span className="adaptation-answer-text">{typeof answer === 'string' ? answer : (answer.text || answer.type || '')}</span>
-                                                                                    </div>
-                                                                                ))}
-                                                                            </div>
-                                                                        )}
-                                                                    </div>
-                                                                ))}
-                                                            </div>
-                                                        </div>
-                                                    )}
-
-                                                    {/* Дополнительные блоки */}
-                                                    {adaptationAdditionalBlocks.map((block, blockIndex) => (
-                                                        <div key={block.id} className="adaptation-block-section">
-                                                            <h5 className="adaptation-block-title">{block.name}</h5>
-                                                            <div className="adaptation-questions-list">
-                                                                {block.questions.map((question, qIndex) => (
-                                                                    <div key={question.id} className="adaptation-question-card">
-                                                                        <div className="adaptation-question-header">
-                                                                            <span className="adaptation-question-number">{String(qIndex + 1).padStart(3, '0')}</span>
-                                                                            <span className="adaptation-question-text">{question.text}</span>
-                                                                            <button className="adaptation-edit-btn" title="Редактировать" onClick={() => openQuestionEditModal(question)} type="button">
-                                                                                <svg width="16px" height="16px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                                                    <path d="M11 4H4C3.46957 4 2.96086 4.21071 2.58579 4.58579C2.21071 4.96086 2 5.46957 2 6V20C2 20.5304 2.21071 21.0391 2.58579 21.4142C2.96086 21.7893 3.46957 22 4 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                                                                    <path d="M18.5 2.50001C18.8978 2.10219 19.4374 1.87869 20 1.87869C20.5626 1.87869 21.1022 2.10219 21.5 2.50001C21.8978 2.89784 22.1213 3.4374 22.1213 4.00001C22.1213 4.56262 21.8978 5.10219 21.5 5.50001L12 15L8 16L9 12L18.5 2.50001Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                                                                </svg>
-                                                                            </button>
-                                                                        </div>
-                                                                        {question.answers && question.answers.length > 0 && (
-                                                                            <div className="adaptation-answers-list">
-                                                                                {question.answers.map((answer, ansIndex) => (
-                                                                                    <div key={answer.id || ansIndex} className="adaptation-answer-item">
-                                                                                        <span className="adaptation-answer-number">{String(ansIndex + 1).padStart(3, '0')}</span>
-                                                                                        <span className="adaptation-answer-text">{typeof answer === 'string' ? answer : (answer.text || answer.type || '')}</span>
-                                                                                    </div>
-                                                                                ))}
-                                                                            </div>
-                                                                        )}
-                                                                    </div>
-                                                                ))}
-                                                            </div>
-                                                        </div>
-                                                    ))}
-
-                                                    {/* Если нет вопросов */}
-                                                    {adaptationQuestions.length === 0 && adaptationPassportQuestions.length === 0 && adaptationAdditionalBlocks.length === 0 && (
-                                                        <div className="adaptation-no-questions">
-                                                            <p>В выбранной анкете нет вопросов</p>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            ) : (
-                                                <div className="adaptation-no-selection">
-                                                    <p>Выберите анкету для просмотра вопросов</p>
-                                                </div>
-                                            )}
+                                {/* Этап 3: Перенос в КОИР */}
+                                {currentStep === 3 && (
+                                    <div className="step-content">
+                                        <div className="survey-steps">
+                                            <div className="survey-koir">
+                                                <label>Перенос в КОИР</label>
+                                                <input
+                                                    type="checkbox"
+                                                    id="checkbox-switcher2-step3"
+                                                    className="options-switcher"
+                                                    checked={koir}
+                                                    onChange={(e) => {
+                                                        setKoir(e.target.checked);
+                                                        setStep3Changed(true);
+                                                    }}
+                                                />
+                                                <label htmlFor="checkbox-switcher2-step3" className="options-switcher-label"></label>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            )}
+                                )}
 
-                            {/* Этап 3: Перенос в КОИР */}
-                            {currentStep === 3 && (
-                                <div className="step-content">
-                                    <div className="survey-steps">
-                                        <div className="survey-koir">
-                                            <label>Перенос в КОИР</label>
+                                {/* Этап 4: Проведение опроса */}
+                                {currentStep === 4 && (
+                                    <div className="step-content">
+                                        <div className="survey-steps">
+                                            <div className="survey-date">
+                                                <label>Проведение опроса</label>
+                                                <input
+                                                    type="date"
+                                                    className='survey-date-begin'
+                                                    value={startDate}
+                                                    onChange={(e) => {
+                                                        setStartDate(e.target.value);
+                                                        setStep4Changed(true);
+                                                    }}
+                                                />
+                                                -
+                                                <input
+                                                    type="date"
+                                                    className='survey-date-finish'
+                                                    value={endDate}
+                                                    onChange={(e) => {
+                                                        setEndDate(e.target.value);
+                                                        setStep4Changed(true);
+                                                    }}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="survey-exitpoll">
+                                            <label>Передача агрегированных данных (exit-poll)</label>
                                             <input
                                                 type="checkbox"
-                                                id="checkbox-switcher2-step3"
+                                                id="checkbox-switcher3-step4"
                                                 className="options-switcher"
-                                                checked={koir}
+                                                checked={exitPoll}
                                                 onChange={(e) => {
-                                                    setKoir(e.target.checked);
-                                                    setStep3Changed(true);
-                                                }}
-                                            />
-                                            <label htmlFor="checkbox-switcher2-step3" className="options-switcher-label"></label>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Этап 4: Проведение опроса */}
-                            {currentStep === 4 && (
-                                <div className="step-content">
-                                    <div className="survey-steps">
-                                        <div className="survey-date">
-                                            <label>Проведение опроса</label>
-                                            <input
-                                                type="date"
-                                                className='survey-date-begin'
-                                                value={startDate}
-                                                onChange={(e) => {
-                                                    setStartDate(e.target.value);
+                                                    setExitPoll(e.target.checked);
                                                     setStep4Changed(true);
                                                 }}
                                             />
-                                            -
+                                            <label htmlFor="checkbox-switcher3-step4" className="options-switcher-label"></label>
+                                        </div>
+
+                                        <div className="survey-accept">
+                                            <label>Разрешить ручной ввод</label>
                                             <input
-                                                type="date"
-                                                className='survey-date-finish'
-                                                value={endDate}
+                                                type="checkbox"
+                                                id="checkbox-switcher4-step4"
+                                                className="options-switcher"
+                                                checked={manualInput}
                                                 onChange={(e) => {
-                                                    setEndDate(e.target.value);
+                                                    setManualInput(e.target.checked);
                                                     setStep4Changed(true);
                                                 }}
                                             />
+                                            <label htmlFor="checkbox-switcher4-step4" className="options-switcher-label"></label>
                                         </div>
+                                        <button className="stage-save-btn" onClick={handleSaveCurrentStep} type="button">
+                                            Сохранить этап и продолжить
+                                        </button>
                                     </div>
+                                )}
 
-                                    <div className="survey-exitpoll">
-                                        <label>Передача агрегированных данных (exit-poll)</label>
-                                        <input
-                                            type="checkbox"
-                                            id="checkbox-switcher3-step4"
-                                            className="options-switcher"
-                                            checked={exitPoll}
-                                            onChange={(e) => {
-                                                setExitPoll(e.target.checked);
-                                                setStep4Changed(true);
-                                            }}
-                                        />
-                                        <label htmlFor="checkbox-switcher3-step4" className="options-switcher-label"></label>
-                                    </div>
+                                {/* Этап 5: Завершение опроса (Выборки, Анкеты, Маршруты) */}
+                                {currentStep === 5 && (
+                                    <div className="step-content">
+                                        <div className="related-blocks-container">
+                                            <div className="related-blocks">
+                                                <div className="related-block-item">
+                                                    <div className="block-header">
+                                                        <p>Выборки</p>
+                                                        {selectedSample && (
+                                                            <div className="selected-item-info">
+                                                                <p className="selected-item-name">
+                                                                    {samples.find(s => s.id === selectedSample)?.name || 'Выборка'}
+                                                                </p>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <div className="block-content">
+                                                        <button
+                                                            className="block-action-btn"
+                                                            onClick={() => setIsSampleSelectModalOpen(true)}
+                                                            type='button'
+                                                        >
+                                                            Добавить выборку
+                                                        </button>
+                                                    </div>
+                                                </div>
 
-                                    <div className="survey-accept">
-                                        <label>Разрешить ручной ввод</label>
-                                        <input
-                                            type="checkbox"
-                                            id="checkbox-switcher4-step4"
-                                            className="options-switcher"
-                                            checked={manualInput}
-                                            onChange={(e) => {
-                                                setManualInput(e.target.checked);
-                                                setStep4Changed(true);
-                                            }}
-                                        />
-                                        <label htmlFor="checkbox-switcher4-step4" className="options-switcher-label"></label>
-                                    </div>
-                                    <button className="stage-save-btn" onClick={handleSaveCurrentStep} type="button">
-                                        Сохранить этап и продолжить
-                                    </button>
-                                </div>
-                            )}
+                                                <div className="related-block-item">
+                                                    <div className="block-header">
+                                                        <p>Анкеты</p>
+                                                        {selectedQuestionnaire && (
+                                                            <div className="selected-item-info">
+                                                                <p className="selected-item-name">
+                                                                    {questionnaires.find(q => q.id === selectedQuestionnaire)?.name || 'Анкета'}
+                                                                </p>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <div className="block-content">
+                                                        <button
+                                                            className="block-action-btn"
+                                                            onClick={() => setIsQuestionnaireSelectModalOpen(true)}
+                                                            type='button'
+                                                        >
+                                                            Добавить анкету
+                                                        </button>
+                                                    </div>
+                                                </div>
 
-                            {/* Этап 5: Завершение опроса (Выборки, Анкеты, Маршруты) */}
-                            {currentStep === 5 && (
-                                <div className="step-content">
-                                    <div className="related-blocks-container">
-                                        <div className="related-blocks">
-                                            <div className="related-block-item">
-                                                <div className="block-header">
-                                                    <p>Выборки</p>
-                                                    {selectedSample && (
-                                                        <div className="selected-item-info">
-                                                            <p className="selected-item-name">
-                                                                {samples.find(s => s.id === selectedSample)?.name || 'Выборка'}
-                                                            </p>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                                <div className="block-content">
-                                                    <button
-                                                        className="block-action-btn"
-                                                        onClick={() => setIsSampleSelectModalOpen(true)}
-                                                        type='button'
-                                                    >
-                                                        Добавить выборку
-                                                    </button>
-                                                </div>
-                                            </div>
-
-                                            <div className="related-block-item">
-                                                <div className="block-header">
-                                                    <p>Анкеты</p>
-                                                    {selectedQuestionnaire && (
-                                                        <div className="selected-item-info">
-                                                            <p className="selected-item-name">
-                                                                {questionnaires.find(q => q.id === selectedQuestionnaire)?.name || 'Анкета'}
-                                                            </p>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                                <div className="block-content">
-                                                    <button
-                                                        className="block-action-btn"
-                                                        onClick={() => setIsQuestionnaireSelectModalOpen(true)}
-                                                        type='button'
-                                                    >
-                                                        Добавить анкету
-                                                    </button>
-                                                </div>
-                                            </div>
-
-                                            <div className="related-block-item">
-                                                <div className="block-header">
-                                                    <p>Маршруты</p>
-                                                    {selectedRoute && (
-                                                        <div className="selected-item-info">
-                                                            <p className="selected-item-name">
-                                                                {routes.find(r => r.id === selectedRoute)?.name || 'Маршрут'}
-                                                            </p>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                                <div className="block-content">
-                                                    <button
-                                                        className="block-action-btn"
-                                                        onClick={() => setIsRouteSelectModalOpen(true)}
-                                                        type='button'
-                                                    >
-                                                        Добавить маршрут
-                                                    </button>
+                                                <div className="related-block-item">
+                                                    <div className="block-header">
+                                                        <p>Маршруты</p>
+                                                        {selectedRoute && (
+                                                            <div className="selected-item-info">
+                                                                <p className="selected-item-name">
+                                                                    {routes.find(r => r.id === selectedRoute)?.name || 'Маршрут'}
+                                                                </p>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <div className="block-content">
+                                                        <button
+                                                            className="block-action-btn"
+                                                            onClick={() => setIsRouteSelectModalOpen(true)}
+                                                            type='button'
+                                                        >
+                                                            Добавить маршрут
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                            )}
+                                )}
 
                             </div>
                             <div className="survey-footer">
