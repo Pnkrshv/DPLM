@@ -1463,7 +1463,6 @@ func main() {
 	e.POST("/survey/:survey_id/question/:question_id/adaptation", saveQuestionAdaptation)
 	e.GET("/survey/:survey_id/question/:question_id/adaptations", getQuestionAdaptations)
 
-	// === НОВЫЕ ЭНДПОИНТЫ (должны быть перед e.Start) ===
 	// Проверка наличия адаптаций опроса (этап 2)
 	e.GET("/survey/:survey_id/adaptations", getSurveyAdaptations)
 

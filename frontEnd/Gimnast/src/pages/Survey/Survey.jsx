@@ -665,13 +665,21 @@ export default function Survey() {
 
         // Этап 3 завершён, если koir === true
         try {
-            const exportsRes = await axios.get(`http://localhost:8080/survey/${survey.id}/exports`);
-            if (exportsRes.data && exportsRes.data.length > 0) {
+            const exportsRes = await axios.get(`http://localhost:8080/exports`);
+            const allExports = exportsRes.data || [];
+            const hasExport = allExports.some(exp => exp.survey_id === survey.id);
+            if (hasExport) {
                 newCompletedSteps.push(3);
             }
         } catch (err) {
             console.warn('Не удалось проверить экспорты');
         }
+
+        // Этап 4 – проверяем даты
+        if (survey.start_date && survey.end_date) {
+            newCompletedSteps.push(4);
+        }
+
 
         // Этап 4 завершён, если указаны обе даты
         if (survey.start_date && survey.end_date) {
