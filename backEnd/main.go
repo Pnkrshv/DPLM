@@ -27,7 +27,7 @@ func initDB() {
 		log.Fatalf("Ошибка при подключении к БД: %v", err)
 	}
 
-	if err := db.AutoMigrate(&UserData{}, &SampleData{}, &RouteData{}, &SurveyData{}, &QuestionnaireData{}, &Question{}, &Answer{}, &QuestionAdaptation{}); err != nil {
+	if err := db.AutoMigrate(&UserData{}, &SampleData{}, &RouteData{}, &SurveyData{}, &QuestionnaireData{}, &Question{}, &Answer{}, &QuestionAdaptation{}, &ExportRecord{}); err != nil {
 		log.Fatalf("Ошибка миграции БД: %v", err)
 	}
 }
@@ -278,6 +278,17 @@ type CityResult struct {
 	City     string `json:"city"`
 	Region   string `json:"region"`
 	District string `json:"district"`
+}
+
+type ExportRecord struct {
+	ID         string     `gorm:"primaryKey" json:"id"`
+	SurveyID   string     `gorm:"type:uuid;not null;index" json:"survey_id"`
+	ExportDate time.Time  `json:"export_date"`
+	ImportDate *time.Time `json:"import_date"`
+	FileName   string     `json:"file_name"`
+	Status     string     `json:"status" gorm:"default:'В работе'"`
+	CreatedAt  time.Time  `json:"created_at"`
+	UpdatedAt  time.Time  `json:"updated_at"`
 }
 
 func searchCities(c echo.Context) error {
@@ -1335,6 +1346,58 @@ func getQuestionAdaptations(c echo.Context) error {
 	return c.JSON(http.StatusOK, adaptations)
 }
 
+// Получить все записи экспорта для опроса
+func getSurveyExports(c echo.Context) error {
+	surveyID := c.Param("survey_id")
+	var records []ExportRecord
+	if err := db.Where("survey_id = ?", surveyID).Order("export_date DESC").Find(&records).Error; err != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Ошибка при получении записей экспорта"})
+	}
+	return c.JSON(http.StatusOK, records)
+}
+
+// Создать новую запись экспорта (запуск экспорта)
+func createSurveyExport(c echo.Context) error {
+	surveyID := c.Param("survey_id")
+
+	// Проверяем существование опроса
+	var survey SurveyData
+	if err := db.First(&survey, "id = ?", surveyID).Error; err != nil {
+		return c.JSON(http.StatusNotFound, echo.Map{"error": "Опрос не найден"})
+	}
+
+	now := time.Now()
+	// Формируем имя файла: ГГГГММДД_ЧЧММСС_surveyID.zip
+	fileName := now.Format("20060102_150405") + "_" + surveyID + ".zip"
+
+	record := &ExportRecord{
+		ID:         uuid.NewString(),
+		SurveyID:   surveyID,
+		ExportDate: now,
+		ImportDate: nil,
+		FileName:   fileName,
+		Status:     "В работе",
+		CreatedAt:  now,
+		UpdatedAt:  now,
+	}
+
+	if err := db.Create(record).Error; err != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Не удалось создать запись экспорта"})
+	}
+
+	return c.JSON(http.StatusCreated, record)
+}
+
+// Получить все адаптации для опроса (для проверки завершённости этапа 2)
+func getSurveyAdaptations(c echo.Context) error {
+	surveyID := c.Param("survey_id")
+	var adaptations []QuestionAdaptation
+	if err := db.Where("survey_id = ?", surveyID).Find(&adaptations).Error; err != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Ошибка при получении адаптаций"})
+	}
+	return c.JSON(http.StatusOK, adaptations)
+}
+
 func main() {
 	initDB()
 	e := echo.New()
@@ -1392,5 +1455,14 @@ func main() {
 	// Эндпоинты для адаптаций вопросов:
 	e.POST("/survey/:survey_id/question/:question_id/adaptation", saveQuestionAdaptation)
 	e.GET("/survey/:survey_id/question/:question_id/adaptations", getQuestionAdaptations)
+
+	// === НОВЫЕ ЭНДПОИНТЫ (должны быть перед e.Start) ===
+	// Проверка наличия адаптаций опроса (этап 2)
+	e.GET("/survey/:survey_id/adaptations", getSurveyAdaptations)
+
+	// Экспорт в КОИР (этап 3)
+	e.GET("/survey/:survey_id/exports", getSurveyExports)
+	e.POST("/survey/:survey_id/export", createSurveyExport)
+
 	e.Start(":8080")
 }

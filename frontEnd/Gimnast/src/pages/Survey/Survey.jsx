@@ -72,6 +72,10 @@ export default function Survey() {
     const [editingQuestionEnabled, setEditingQuestionEnabled] = useState(true);
     const [editingAnswers, setEditingAnswers] = useState([]);
 
+    // Состояния для экспортов (этап 3)
+    const [exports, setExports] = useState([]);
+    const [exportsLoading, setExportsLoading] = useState(false);
+
     // Загрузка опросов из БД
     const fetchSurveys = async () => {
         try {
@@ -660,8 +664,13 @@ export default function Survey() {
         }
 
         // Этап 3 завершён, если koir === true
-        if (survey.koir === true) {
-            newCompletedSteps.push(3);
+        try {
+            const exportsRes = await axios.get(`http://localhost:8080/survey/${survey.id}/exports`);
+            if (exportsRes.data && exportsRes.data.length > 0) {
+                newCompletedSteps.push(3);
+            }
+        } catch (err) {
+            console.warn('Не удалось проверить экспорты');
         }
 
         // Этап 4 завершён, если указаны обе даты
@@ -685,6 +694,7 @@ export default function Survey() {
 
         setIsWindowOpen(true);
         await fetchRelatedData(survey.id);
+        fetchExports();
     };
 
     // Закрыть окно и сбросить форму
@@ -744,8 +754,11 @@ export default function Survey() {
     useEffect(() => {
         if (isWindowOpen && currentStep === 2) {
             fetchAdaptationQuestionnaires();
+        };
+        if (isWindowOpen && currentStep === 3 && currentSurveyId) {
+            fetchExports();
         }
-    }, [isWindowOpen, currentStep]);
+    }, [isWindowOpen, currentStep, currentSurveyId]);
 
     // Загрузка городов при переключении на города
     useEffect(() => {
@@ -758,6 +771,42 @@ export default function Survey() {
     useEffect(() => {
         setCurrentPage(1);
     }, [surveys]);
+
+    // Загрузка списка экспортов для текущего опроса
+    const fetchExports = async () => {
+        if (!currentSurveyId) return;
+        setExportsLoading(true);
+        try {
+            const response = await axios.get(`http://localhost:8080/survey/${currentSurveyId}/exports`);
+            setExports(Array.isArray(response.data) ? response.data : []);
+        } catch (err) {
+            console.error('Ошибка при загрузке экспортов:', err);
+            setExports([]);
+        } finally {
+            setExportsLoading(false);
+        }
+    };
+
+    // Создание нового экспорта (кнопка "Экспорт")
+    const handleCreateExport = async () => {
+        if (!currentSurveyId) {
+            alert('Сначала сохраните опрос');
+            return;
+        }
+        try {
+            const response = await axios.post(`http://localhost:8080/survey/${currentSurveyId}/export`);
+            const newExport = response.data;
+            setExports(prev => [newExport, ...prev]);
+            // После успешного экспорта этап 3 становится завершённым
+            if (!completedSteps.includes(3)) {
+                markStepAsCompleted(3);
+                setStep3Changed(true);
+            }
+        } catch (err) {
+            console.error('Ошибка при создании экспорта:', err);
+            alert('Ошибка при создании экспорта: ' + (err.response?.data?.error || err.message));
+        }
+    };
 
     return (
         <>
@@ -1248,22 +1297,57 @@ export default function Survey() {
 
                                 {/* Этап 3: Перенос в КОИР */}
                                 {currentStep === 3 && (
-                                    <div className="step-content">
-                                        <div className="survey-steps">
-                                            <div className="survey-koir">
-                                                <label>Перенос в КОИР</label>
-                                                <input
-                                                    type="checkbox"
-                                                    id="checkbox-switcher2-step3"
-                                                    className="options-switcher"
-                                                    checked={koir}
-                                                    onChange={(e) => {
-                                                        setKoir(e.target.checked);
-                                                        setStep3Changed(true);
-                                                    }}
-                                                />
-                                                <label htmlFor="checkbox-switcher2-step3" className="options-switcher-label"></label>
+                                    <div className="step-content export-step">
+                                        <div className="export-header">
+                                            <div className="export-buttons">
+                                                <button className="export-cancel-btn" type="button" disabled>
+                                                    Отменить экспорт
+                                                </button>
+                                                <button className="export-create-btn" type="button" onClick={handleCreateExport}>
+                                                    Экспорт
+                                                </button>
+                                                <button className="export-refresh-btn" type="button" onClick={fetchExports} title="Обновить">
+                                                    <svg width="20px" height="20px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                        <path d="M19.841 3.24A10.988 10.988 0 0 0 8.54.573l1.266 3.8a7.033 7.033 0 0 1 8.809 9.158L17 11.891v7.092h7l-2.407-2.439A11.049 11.049 0 0 0 19.841 3.24zM1 10.942a11.05 11.05 0 0 0 11.013 11.044 11.114 11.114 0 0 0 3.521-.575l-1.266-3.8a7.035 7.035 0 0 1-8.788-9.22L7 9.891V6.034c.021-.02.038-.044.06-.065L7 5.909V2.982H0l2.482 2.449A10.951 10.951 0 0 0 1 10.942z" fill="currentColor" />
+                                                    </svg>
+                                                </button>
                                             </div>
+                                            <div className="export-total">
+                                                Всего: {exports.length}
+                                            </div>
+                                        </div>
+
+                                        <div className="export-table-container">
+                                            {exportsLoading ? (
+                                                <p className="loading-text">Загрузка...</p>
+                                            ) : (
+                                                <table className="export-table">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Дата экспорта</th>
+                                                            <th>Дата импорта</th>
+                                                            <th>Файл</th>
+                                                            <th>Статус</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {exports.length > 0 ? (
+                                                            exports.map((exp) => (
+                                                                <tr key={exp.id}>
+                                                                    <td>{new Date(exp.export_date).toLocaleString('ru-RU')}</td>
+                                                                    <td>{exp.import_date ? new Date(exp.import_date).toLocaleString('ru-RU') : 'Не указано'}</td>
+                                                                    <td>{exp.file_name}</td>
+                                                                    <td>{exp.status}</td>
+                                                                </tr>
+                                                            ))
+                                                        ) : (
+                                                            <tr>
+                                                                <td colSpan="4" className="no-exports">Нет экспортов</td>
+                                                            </tr>
+                                                        )}
+                                                    </tbody>
+                                                </table>
+                                            )}
                                         </div>
                                     </div>
                                 )}
