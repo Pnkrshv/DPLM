@@ -1346,11 +1346,10 @@ func getQuestionAdaptations(c echo.Context) error {
 	return c.JSON(http.StatusOK, adaptations)
 }
 
-// Получить все записи экспорта для опроса
-func getSurveyExports(c echo.Context) error {
-	surveyID := c.Param("survey_id")
+// Получить все записи экспорта (глобально)
+func getAllExports(c echo.Context) error {
 	var records []ExportRecord
-	if err := db.Where("survey_id = ?", surveyID).Order("export_date DESC").Find(&records).Error; err != nil {
+	if err := db.Order("export_date DESC").Find(&records).Error; err != nil {
 		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Ошибка при получении записей экспорта"})
 	}
 	return c.JSON(http.StatusOK, records)
@@ -1366,8 +1365,16 @@ func createSurveyExport(c echo.Context) error {
 		return c.JSON(http.StatusNotFound, echo.Map{"error": "Опрос не найден"})
 	}
 
+	// Проверяем, нет ли уже активного экспорта для этого опроса
+	var existing ExportRecord
+	err := db.Where("survey_id = ? AND status IN (?)", surveyID, []string{"В работе", "Успешно"}).First(&existing).Error
+	if err == nil {
+		return c.JSON(http.StatusConflict, echo.Map{"error": "Опрос уже экспортирован"})
+	} else if err != gorm.ErrRecordNotFound {
+		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Ошибка при проверке существующих экспортов"})
+	}
+
 	now := time.Now()
-	// Формируем имя файла: ГГГГММДД_ЧЧММСС_surveyID.zip
 	fileName := now.Format("20060102_150405") + "_" + surveyID + ".zip"
 
 	record := &ExportRecord{
@@ -1461,7 +1468,8 @@ func main() {
 	e.GET("/survey/:survey_id/adaptations", getSurveyAdaptations)
 
 	// Экспорт в КОИР (этап 3)
-	e.GET("/survey/:survey_id/exports", getSurveyExports)
+	e.GET("/exports", getAllExports)
+	e.POST("/survey/:survey_id/export", createSurveyExport)
 	e.POST("/survey/:survey_id/export", createSurveyExport)
 
 	e.Start(":8080")

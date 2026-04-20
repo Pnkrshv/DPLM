@@ -774,10 +774,9 @@ export default function Survey() {
 
     // Загрузка списка экспортов для текущего опроса
     const fetchExports = async () => {
-        if (!currentSurveyId) return;
         setExportsLoading(true);
         try {
-            const response = await axios.get(`http://localhost:8080/survey/${currentSurveyId}/exports`);
+            const response = await axios.get(`http://localhost:8080/exports`); // ← изменён URL
             setExports(Array.isArray(response.data) ? response.data : []);
         } catch (err) {
             console.error('Ошибка при загрузке экспортов:', err);
@@ -797,16 +796,25 @@ export default function Survey() {
             const response = await axios.post(`http://localhost:8080/survey/${currentSurveyId}/export`);
             const newExport = response.data;
             setExports(prev => [newExport, ...prev]);
-            // После успешного экспорта этап 3 становится завершённым
             if (!completedSteps.includes(3)) {
                 markStepAsCompleted(3);
                 setStep3Changed(true);
             }
         } catch (err) {
             console.error('Ошибка при создании экспорта:', err);
-            alert('Ошибка при создании экспорта: ' + (err.response?.data?.error || err.message));
+            if (err.response?.status === 409) {
+                alert('Этот опрос уже был экспортирован');
+            } else {
+                alert('Ошибка: ' + (err.response?.data?.error || err.message));
+            }
         }
     };
+
+    useEffect(() => {
+        if (isWindowOpen && currentStep === 3) {
+            fetchExports();
+        }
+    }, [isWindowOpen, currentStep]);
 
     return (
         <>
