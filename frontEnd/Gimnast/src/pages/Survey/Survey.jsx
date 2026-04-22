@@ -680,7 +680,6 @@ export default function Survey() {
             newCompletedSteps.push(4);
         }
 
-
         // Этап 4 завершён, если указаны обе даты
         if (survey.start_date && survey.end_date) {
             newCompletedSteps.push(4);
