@@ -1,5 +1,5 @@
 import './Survey.css'
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react';
 import axios from 'axios'
 
 export default function Survey() {
@@ -79,6 +79,11 @@ export default function Survey() {
     // Этап 4
     const [selectedConductQuestionnaire, setSelectedConductQuestionnaire] = useState('');
     const [conductData, setConductData] = useState([]);
+    // Этап 4 – вкладки
+    const [activeConductTab, setActiveConductTab] = useState('readiness'); // 'readiness', 'tasks', 'results'
+    const [conductTableData, setConductTableData] = useState([]);
+    const [expandedDistrictsConduct, setExpandedDistrictsConduct] = useState({});
+    const [routeCities, setRouteCities] = useState([]);
 
     // Загрузка опросов из БД
     const fetchSurveys = async () => {
@@ -834,12 +839,73 @@ export default function Survey() {
     };
 
     useEffect(() => {
-        if (isWindowOpen && currentStep === 4 && currentSurveyId) {
-            // Установить выбранную анкету из текущего опроса
+        if (isWindowOpen && currentStep === 4) {
             setSelectedConductQuestionnaire(selectedQuestionnaire || '');
-            fetchConductData();
+            if (selectedRoute) {
+                loadRouteDataForConduct();
+            } else {
+                setConductTableData([]);
+            }
         }
-    }, [isWindowOpen, currentStep, currentSurveyId, selectedQuestionnaire]);
+    }, [isWindowOpen, currentStep, selectedRoute, selectedQuestionnaire]);
+
+
+    // Генерация случайного прогресса квот в формате "X% Y%"
+    const generateRandomQuotaProgress = () => {
+        const x = Math.floor(Math.random() * 30) + 1; // 1-30%
+        const y = Math.floor(Math.random() * 41) + 60; // 60-100%
+        return `${x}% ${y}%`;
+    };
+
+    // Генерация случайного времени в формате "мм:сс"
+    const generateRandomTime = () => {
+        const minutes = Math.floor(Math.random() * 60);
+        const seconds = Math.floor(Math.random() * 60);
+        return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    };
+
+    // Загрузка данных маршрута и формирование таблицы
+    const loadRouteDataForConduct = async () => {
+        if (!selectedRoute) {
+            setRouteCities([]);
+            setConductTableData([]);
+            return;
+        }
+        try {
+            const response = await axios.get(`http://localhost:8080/route/${selectedRoute}`);
+            const route = response.data;
+            let cities = [];
+            try {
+                cities = JSON.parse(route.cities_data);
+            } catch (e) {
+                console.error('Ошибка парсинга cities_data', e);
+            }
+            setRouteCities(cities);
+
+            // Группируем по федеральным округам
+            const grouped = {};
+            cities.forEach(city => {
+                const district = city.district;
+                if (!grouped[district]) {
+                    grouped[district] = [];
+                }
+                grouped[district].push(city);
+            });
+
+            // Формируем данные таблицы
+            const tableData = Object.keys(grouped).map(district => ({
+                district,
+                cities: grouped[district],
+                quotaProgress: generateRandomQuotaProgress(),
+                notMatch: '0',
+                rejected: '0',
+                avgTime: generateRandomTime(),
+            }));
+            setConductTableData(tableData);
+        } catch (err) {
+            console.error('Ошибка загрузки маршрута для проведения опроса:', err);
+        }
+    };
 
 
     return (
@@ -1392,16 +1458,31 @@ export default function Survey() {
                                         {/* Верхняя панель с кнопками */}
                                         <div className="conduct-header">
                                             <div className="conduct-tabs">
-                                                <button className="conduct-tab active">Карта готовности</button>
-                                                <button className="conduct-tab">Задания</button>
+                                                <button
+                                                    className={`conduct-tab ${activeConductTab === 'readiness' ? 'active' : ''}`}
+                                                    onClick={() => setActiveConductTab('readiness')}
+                                                >
+                                                    Карта готовности
+                                                </button>
+                                                <button
+                                                    className={`conduct-tab ${activeConductTab === 'tasks' ? 'active' : ''}`}
+                                                    onClick={() => setActiveConductTab('tasks')}
+                                                >
+                                                    Задания
+                                                </button>
                                                 <button className="conduct-tab disabled" disabled>Агрегированные данные</button>
-                                                <button className="conduct-tab">Результаты</button>
+                                                <button
+                                                    className={`conduct-tab ${activeConductTab === 'results' ? 'active' : ''}`}
+                                                    onClick={() => setActiveConductTab('results')}
+                                                >
+                                                    Результаты
+                                                </button>
                                             </div>
                                         </div>
 
                                         {/* Панель управления таблицей */}
                                         <div className="conduct-table-controls">
-                                            <button className="refresh-table-btn" onClick={fetchConductData} title="Обновить таблицу">
+                                            <button className="refresh-table-btn" onClick={loadRouteDataForConduct} title="Обновить таблицу">
                                                 <svg width="20px" height="20px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                                     <path d="M19.841 3.24A10.988 10.988 0 0 0 8.54.573l1.266 3.8a7.033 7.033 0 0 1 8.809 9.158L17 11.891v7.092h7l-2.407-2.439A11.049 11.049 0 0 0 19.841 3.24zM1 10.942a11.05 11.05 0 0 0 11.013 11.044 11.114 11.114 0 0 0 3.521-.575l-1.266-3.8a7.035 7.035 0 0 1-8.788-9.22L7 9.891V6.034c.021-.02.038-.044.06-.065L7 5.909V2.982H0l2.482 2.449A10.951 10.951 0 0 0 1 10.942z" fill="currentColor" />
                                                 </svg>
@@ -1434,10 +1515,46 @@ export default function Survey() {
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                    {/* Данные будут добавлены позже */}
-                                                    <tr>
-                                                        <td colSpan="6" className="no-data">Нет данных для отображения</td>
-                                                    </tr>
+                                                    {conductTableData.length > 0 ? (
+                                                        conductTableData.map((row) => (
+                                                            <React.Fragment key={row.district}>
+                                                                <tr
+                                                                    className="district-row"
+                                                                    onClick={() => setExpandedDistrictsConduct(prev => ({
+                                                                        ...prev,
+                                                                        [row.district]: !prev[row.district]
+                                                                    }))}
+                                                                    style={{ cursor: 'pointer' }}
+                                                                >
+                                                                    <td>
+                                                                        <span className="expand-icon" style={{ marginRight: '8px' }}>
+                                                                            {expandedDistrictsConduct[row.district] ? '▼' : '▶'}
+                                                                        </span>
+                                                                        {row.district}
+                                                                    </td>
+                                                                    <td>{row.quotaProgress}</td>
+                                                                    <td>{row.notMatch}</td>
+                                                                    <td>{row.rejected}</td>
+                                                                    <td>{row.avgTime}</td>
+                                                                    <td></td>
+                                                                </tr>
+                                                                {expandedDistrictsConduct[row.district] && row.cities.map((city, idx) => (
+                                                                    <tr key={`${row.district}-${city.city}-${idx}`} className="city-row">
+                                                                        <td style={{ paddingLeft: '40px' }}>{city.city}</td>
+                                                                        <td>{generateRandomQuotaProgress()}</td>
+                                                                        <td>0</td>
+                                                                        <td>0</td>
+                                                                        <td>{generateRandomTime()}</td>
+                                                                        <td></td>
+                                                                    </tr>
+                                                                ))}
+                                                            </React.Fragment>
+                                                        ))
+                                                    ) : (
+                                                        <tr>
+                                                            <td colSpan="6" className="no-data">Нет данных для отображения</td>
+                                                        </tr>
+                                                    )}
                                                 </tbody>
                                             </table>
                                         </div>
