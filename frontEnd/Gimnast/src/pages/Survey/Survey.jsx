@@ -852,9 +852,9 @@ export default function Survey() {
 
     // Генерация случайного прогресса квот в формате "X% Y%"
     const generateRandomQuotaProgress = () => {
-        const x = Math.floor(Math.random() * 30) + 1; // 1-30%
-        const y = Math.floor(Math.random() * 41) + 60; // 60-100%
-        return `${x}% ${y}%`;
+        const low = Math.floor(Math.random() * 30) + 1;   // 1-30%
+        const high = Math.floor(Math.random() * 41) + 60; // 60-100%
+        return { low, high };
     };
 
     // Генерация случайного времени в формате "мм:сс"
@@ -896,7 +896,7 @@ export default function Survey() {
             const tableData = Object.keys(grouped).map(district => ({
                 district,
                 cities: grouped[district],
-                quotaProgress: generateRandomQuotaProgress(),
+                quotaProgress: generateRandomQuotaProgress(), // теперь объект { low, high }
                 notMatch: '0',
                 rejected: '0',
                 avgTime: generateRandomTime(),
@@ -1532,22 +1532,60 @@ export default function Survey() {
                                                                         </span>
                                                                         {row.district}
                                                                     </td>
-                                                                    <td>{row.quotaProgress}</td>
+                                                                    <td>
+                                                                        <div className="quota-progress-bar">
+                                                                            <div
+                                                                                className="quota-progress-low"
+                                                                                style={{ width: `${row.quotaProgress.low}%` }}
+                                                                                title={`${row.quotaProgress.low}% / ${row.quotaProgress.high}%`}
+                                                                            >
+                                                                                <span className="quota-progress-label">{row.quotaProgress.low}%</span>
+                                                                            </div>
+                                                                            <div
+                                                                                className="quota-progress-high"
+                                                                                style={{ width: `${row.quotaProgress.high}%` }}
+                                                                                title={`${row.quotaProgress.low}% / ${row.quotaProgress.high}%`}
+                                                                            >
+                                                                                <span className="quota-progress-label">{row.quotaProgress.high}%</span>
+                                                                            </div>
+                                                                        </div>
+                                                                    </td>
                                                                     <td>{row.notMatch}</td>
                                                                     <td>{row.rejected}</td>
                                                                     <td>{row.avgTime}</td>
                                                                     <td></td>
                                                                 </tr>
-                                                                {expandedDistrictsConduct[row.district] && row.cities.map((city, idx) => (
-                                                                    <tr key={`${row.district}-${city.city}-${idx}`} className="city-row">
-                                                                        <td style={{ paddingLeft: '40px' }}>{city.city}</td>
-                                                                        <td>{generateRandomQuotaProgress()}</td>
-                                                                        <td>0</td>
-                                                                        <td>0</td>
-                                                                        <td>{generateRandomTime()}</td>
-                                                                        <td></td>
-                                                                    </tr>
-                                                                ))}
+                                                                {expandedDistrictsConduct[row.district] && row.cities.map((city, idx) => {
+                                                                    const cityProgress = generateRandomQuotaProgress();
+                                                                    const cityTime = generateRandomTime();
+                                                                    return (
+                                                                        <tr key={`${row.district}-${city.city}-${idx}`} className="city-row">
+                                                                            <td style={{ paddingLeft: '40px' }}>{city.city}</td>
+                                                                            <td>
+                                                                                <div className="quota-progress-bar">
+                                                                                    <div
+                                                                                        className="quota-progress-low"
+                                                                                        style={{ width: `${cityProgress.low}%` }}
+                                                                                        title={`${cityProgress.low}% / ${cityProgress.high}%`}
+                                                                                    >
+                                                                                        <span className="quota-progress-label">{cityProgress.low}%</span>
+                                                                                    </div>
+                                                                                    <div
+                                                                                        className="quota-progress-high"
+                                                                                        style={{ width: `${cityProgress.high}%` }}
+                                                                                        title={`${cityProgress.low}% / ${cityProgress.high}%`}
+                                                                                    >
+                                                                                        <span className="quota-progress-label">{cityProgress.high}%</span>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </td>
+                                                                            <td>0</td>
+                                                                            <td>0</td>
+                                                                            <td>{cityTime}</td>
+                                                                            <td></td>
+                                                                        </tr>
+                                                                    );
+                                                                })}
                                                             </React.Fragment>
                                                         ))
                                                     ) : (

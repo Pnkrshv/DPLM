@@ -1573,3 +1573,28 @@ span {
 .city-row:hover {
   background-color: #f0f0f0;
 }
+
+/* Прогресс-бар квот */
+.quota-progress-bar {
+  display: flex;
+  height: 20px;
+  width: 100%;
+  background-color: #eee;
+  border-radius: 10px;
+  overflow: hidden;
+  min-width: 100px;
+}
+
+.quota-progress-low {
+  background-color: #1a3a5c;
+  /* тёмно-синий */
+  height: 100%;
+  transition: width 0.3s;
+}
+
+.quota-progress-high {
+  background-color: #5fa8d3;
+  /* голубой */
+  height: 100%;
+  transition: width 0.3s;
+}
