@@ -76,6 +76,10 @@ export default function Survey() {
     const [exports, setExports] = useState([]);
     const [exportsLoading, setExportsLoading] = useState(false);
 
+    // Этап 4
+    const [selectedConductQuestionnaire, setSelectedConductQuestionnaire] = useState('');
+    const [conductData, setConductData] = useState([]);
+
     // Загрузка опросов из БД
     const fetchSurveys = async () => {
         try {
@@ -823,6 +827,21 @@ export default function Survey() {
         }
     }, [isWindowOpen, currentStep]);
 
+    const fetchConductData = async () => {
+        // В будущем здесь будет запрос к API
+        console.log('Обновление данных проведения опроса...');
+        // setConductData(...);
+    };
+
+    useEffect(() => {
+        if (isWindowOpen && currentStep === 4 && currentSurveyId) {
+            // Установить выбранную анкету из текущего опроса
+            setSelectedConductQuestionnaire(selectedQuestionnaire || '');
+            fetchConductData();
+        }
+    }, [isWindowOpen, currentStep, currentSurveyId, selectedQuestionnaire]);
+
+
     return (
         <>
             {isWindowOpen && (
@@ -1369,64 +1388,59 @@ export default function Survey() {
 
                                 {/* Этап 4: Проведение опроса */}
                                 {currentStep === 4 && (
-                                    <div className="step-content">
-                                        <div className="survey-steps">
-                                            <div className="survey-date">
-                                                <label>Проведение опроса</label>
-                                                <input
-                                                    type="date"
-                                                    className='survey-date-begin'
-                                                    value={startDate}
-                                                    onChange={(e) => {
-                                                        setStartDate(e.target.value);
-                                                        setStep4Changed(true);
-                                                    }}
-                                                />
-                                                -
-                                                <input
-                                                    type="date"
-                                                    className='survey-date-finish'
-                                                    value={endDate}
-                                                    onChange={(e) => {
-                                                        setEndDate(e.target.value);
-                                                        setStep4Changed(true);
-                                                    }}
-                                                />
+                                    <div className="step-content conduct-step">
+                                        {/* Верхняя панель с кнопками */}
+                                        <div className="conduct-header">
+                                            <div className="conduct-tabs">
+                                                <button className="conduct-tab active">Карта готовности</button>
+                                                <button className="conduct-tab">Задания</button>
+                                                <button className="conduct-tab disabled" disabled>Агрегированные данные</button>
+                                                <button className="conduct-tab">Результаты</button>
                                             </div>
                                         </div>
 
-                                        <div className="survey-exitpoll">
-                                            <label>Передача агрегированных данных (exit-poll)</label>
-                                            <input
-                                                type="checkbox"
-                                                id="checkbox-switcher3-step4"
-                                                className="options-switcher"
-                                                checked={exitPoll}
-                                                onChange={(e) => {
-                                                    setExitPoll(e.target.checked);
-                                                    setStep4Changed(true);
-                                                }}
-                                            />
-                                            <label htmlFor="checkbox-switcher3-step4" className="options-switcher-label"></label>
+                                        {/* Панель управления таблицей */}
+                                        <div className="conduct-table-controls">
+                                            <button className="refresh-table-btn" onClick={fetchConductData} title="Обновить таблицу">
+                                                <svg width="20px" height="20px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <path d="M19.841 3.24A10.988 10.988 0 0 0 8.54.573l1.266 3.8a7.033 7.033 0 0 1 8.809 9.158L17 11.891v7.092h7l-2.407-2.439A11.049 11.049 0 0 0 19.841 3.24zM1 10.942a11.05 11.05 0 0 0 11.013 11.044 11.114 11.114 0 0 0 3.521-.575l-1.266-3.8a7.035 7.035 0 0 1-8.788-9.22L7 9.891V6.034c.021-.02.038-.044.06-.065L7 5.909V2.982H0l2.482 2.449A10.951 10.951 0 0 0 1 10.942z" fill="currentColor" />
+                                                </svg>
+                                            </button>
+                                            <div className="conduct-questionnaire-selector">
+                                                <label>Анкета</label>
+                                                <select
+                                                    value={selectedConductQuestionnaire}
+                                                    onChange={(e) => setSelectedConductQuestionnaire(e.target.value)}
+                                                >
+                                                    <option value="">Выберите анкету</option>
+                                                    {questionnaires.map(q => (
+                                                        <option key={q.id} value={q.id}>{q.name || 'Без названия'}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
                                         </div>
 
-                                        <div className="survey-accept">
-                                            <label>Разрешить ручной ввод</label>
-                                            <input
-                                                type="checkbox"
-                                                id="checkbox-switcher4-step4"
-                                                className="options-switcher"
-                                                checked={manualInput}
-                                                onChange={(e) => {
-                                                    setManualInput(e.target.checked);
-                                                    setStep4Changed(true);
-                                                }}
-                                            />
-                                            <label htmlFor="checkbox-switcher4-step4" className="options-switcher-label"></label>
+                                        {/* Таблица */}
+                                        <div className="conduct-table-container">
+                                            <table className="conduct-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Федеральный округ/субъект РФ</th>
+                                                        <th>Выполнение квот</th>
+                                                        <th>Не соответствует выборке</th>
+                                                        <th>Отклонено</th>
+                                                        <th>Среднее время интервью, мин</th>
+                                                        <th>Особенности</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {/* Данные будут добавлены позже */}
+                                                    <tr>
+                                                        <td colSpan="6" className="no-data">Нет данных для отображения</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
                                         </div>
-                                        <button className="stage-save-btn" onClick={handleSaveCurrentStep} type="button">
-                                            Сохранить этап и продолжить
-                                        </button>
                                     </div>
                                 )}
 
