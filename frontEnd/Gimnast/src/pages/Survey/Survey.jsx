@@ -106,8 +106,9 @@ export default function Survey() {
 
     // Переход к конкретному этапу по клику
     const goToStep = (step) => {
-        // Можно перейти к текущему, пройденному или следующему после пройденного этапу
-        if (step <= currentStep || completedSteps.includes(step - 1) || step === currentStep + 1) {
+        // На 4 этап можно перейти с любого этапа
+        // На остальные — только если это текущий, пройденный или следующий после пройденного
+        if (step === 4 || step <= currentStep || completedSteps.includes(step - 1) || step === currentStep + 1) {
             setCurrentStep(step);
         }
     };
