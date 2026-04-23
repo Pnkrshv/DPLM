@@ -2110,6 +2110,11 @@ export default function Survey() {
                                 </table>
                             </div>
                         </div>
+                        <div className="quota-detail-footer">
+                            <button className="close-btn-grey" onClick={() => setIsQuotaDetailModalOpen(false)} type="button">
+                                Закрыть
+                            </button>
+                        </div>
                     </div>
                 </>
             )}
