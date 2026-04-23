@@ -1,4 +1,4 @@
-package main
+﻿package main
 
 import (
 	"encoding/json"
@@ -1405,6 +1405,24 @@ func getSurveyAdaptations(c echo.Context) error {
 	return c.JSON(http.StatusOK, adaptations)
 }
 
+
+// Cancel export
+func cancelSurveyExport(c echo.Context) error {
+	surveyID := c.Param("survey_id")
+	exportID := c.Param("export_id")
+
+	var export ExportRecord
+	if err := db.Where("id = ? AND survey_id = ?", exportID, surveyID).First(&export).Error; err != nil {
+		return c.JSON(http.StatusNotFound, echo.Map{"error": "Экспорт не найден"})
+	}
+
+	if err := db.Delete(&export).Error; err != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Ошибка при отмене экспорта"})
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{"message": "Экспорт успешно отменен"})
+}
+
 func main() {
 	initDB()
 	e := echo.New()
@@ -1469,7 +1487,7 @@ func main() {
 	// Экспорт в КОИР (этап 3)
 	e.GET("/exports", getAllExports)
 	e.POST("/survey/:survey_id/export", createSurveyExport)
-	e.POST("/survey/:survey_id/export", createSurveyExport)
+	e.DELETE("/survey/:survey_id/export/:export_id", cancelSurveyExport)
 
 	e.Start(":8080")
 }

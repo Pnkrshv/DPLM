@@ -180,16 +180,17 @@ export default function Survey() {
             return;
         }
 
-        // Этап 3 (Перенос в КОИР): этап отмечается зеленым ТОЛЬКО после создания экспорта.
-        // При нажатии «Сохранить» без экспорта - пропускаем этап (переходим дальше без отметки).
+        // Этап 3 (Перенос в КОИР): проверяем, есть ли экспорт опроса.
+        // Если экспорт есть — этап считается пройденным (зелёный).
+        // Если экспорта нет — этап помечается пропущенным.
         if (currentStep === 3) {
             if (exports.length > 0) {
-                // Экспорт уже был создан - этап уже завершен, переходим дальше
-                goToNextStep();
+                markStepAsCompleted(3);
             } else {
-                // Экспортов нет - просто пропускаем этап
-                goToNextStep();
+                // Убираем этап из пройденных, чтобы он отображался как пропущенный
+                setCompletedSteps(prev => prev.filter(s => s !== 3));
             }
+            goToNextStep();
             return;
         }
 
@@ -806,7 +807,7 @@ export default function Survey() {
         }
     };
 
-    // Создание нового экспорта (кнопка "Экспорт")
+        // Создание нового экспорта (кнопка "Экспорт")
     const handleCreateExport = async () => {
         if (!currentSurveyId) {
             alert('Сначала сохраните опрос');
@@ -827,6 +828,40 @@ export default function Survey() {
             } else {
                 alert('Ошибка: ' + (err.response?.data?.error || err.message));
             }
+        }
+    };
+
+    // Отмена экспорта (кнопка "Отменить экспорт")
+    const handleCancelExport = async () => {
+        if (!currentSurveyId) {
+            alert('Сначала сохраните опрос');
+            return;
+        }
+
+        if (!exports || exports.length === 0) {
+            alert('Нет экспортов для отмены');
+            return;
+        }
+
+        if (!confirm('Вы уверены, что хотите отменить экспорт?')) return;
+
+                try {
+            const lastExportId = exports[0].id;
+            const response = await axios.delete(`http://localhost:8080/survey/${currentSurveyId}/export/${lastExportId}`);
+            if (response.data.message === 'Экспорт успешно отменен' || response.status === 200) {
+                // Обновляем список экспортов (удаляем отмененный)
+                setExports(prev => prev.filter(exp => exp.id !== lastExportId));
+                // Если после отмены экспортов не осталось - убираем зеленую отметку с этапа 3
+                if (exports.length <= 1) {
+                    setCompletedSteps(prev => prev.filter(s => s !== 3));
+                    setStep3Changed(false);
+                }
+                alert('Экспорт отменен');
+                fetchExports();
+            }
+        } catch (err) {
+            console.error('Ошибка при отмене экспорта:', err);
+            alert('Ошибка: ' + (err.response?.data?.error || err.message));
         }
     };
 
@@ -1404,7 +1439,7 @@ export default function Survey() {
                                     <div className="step-content export-step">
                                         <div className="export-header">
                                             <div className="export-buttons">
-                                                <button className="export-cancel-btn" type="button" disabled>
+                                                                                                <button className="export-cancel-btn" type="button" disabled={exports.length === 0} onClick={handleCancelExport}>
                                                     Отменить экспорт
                                                 </button>
                                                 <button className="export-create-btn" type="button" onClick={handleCreateExport}>
