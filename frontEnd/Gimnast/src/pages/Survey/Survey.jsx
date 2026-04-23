@@ -137,14 +137,11 @@ export default function Survey() {
         }
     };
 
-    // Обработчик кнопки "Следующий этап"
+        // Обработчик кнопки "Следующий этап"
     const handleNextStep = () => {
         // Отмечаем текущий этап как завершенный при переходе дальше, если были изменения
         if (currentStep === 1 && step1Changed) {
             markStepAsCompleted(1);
-        }
-        if (currentStep === 3 && step3Changed) {
-            markStepAsCompleted(3);
         }
         if (currentStep === 4 && step4Changed) {
             markStepAsCompleted(4);
@@ -171,7 +168,7 @@ export default function Survey() {
     const handleSaveCurrentStep = async () => {
         const surveyId = editingSurveyId || currentSurveyId;
 
-        // Этап 2 (Адаптация) не имеет общей формы для сохранения – адаптации сохраняются через модальное окно вопроса.
+                // Этап 2 (Адаптация) не имеет общей формы для сохранения – адаптации сохраняются через модальное окно вопроса.
         // При нажатии «Сохранить» на этапе 2 просто переходим к следующему этапу.
         if (currentStep === 2) {
             if (!completedSteps.includes(2)) {
@@ -180,6 +177,19 @@ export default function Survey() {
                 // return;
             }
             goToNextStep();
+            return;
+        }
+
+        // Этап 3 (Перенос в КОИР): этап отмечается зеленым ТОЛЬКО после создания экспорта.
+        // При нажатии «Сохранить» без экспорта - пропускаем этап (переходим дальше без отметки).
+        if (currentStep === 3) {
+            if (exports.length > 0) {
+                // Экспорт уже был создан - этап уже завершен, переходим дальше
+                goToNextStep();
+            } else {
+                // Экспортов нет - просто пропускаем этап
+                goToNextStep();
+            }
             return;
         }
 
@@ -200,9 +210,6 @@ export default function Survey() {
                     adaptation: adaptation,
                     adaptation_date: adaptationDate ? new Date(adaptationDate).toISOString() : null,
                 };
-                break;
-            case 3:
-                data = { koir };
                 break;
             case 4:
                 if (!startDate || !endDate) {
@@ -251,9 +258,6 @@ export default function Survey() {
                     if (currentStep === 1) {
                         markStepAsCompleted(1);
                         setStep1Changed(false);
-                    } else if (currentStep === 3) {
-                        markStepAsCompleted(3);
-                        setStep3Changed(false);
                     } else if (currentStep === 4) {
                         markStepAsCompleted(4);
                         setStep4Changed(false);
