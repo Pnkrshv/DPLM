@@ -85,6 +85,9 @@ export default function Survey() {
     const [expandedDistrictsConduct, setExpandedDistrictsConduct] = useState({});
     const [routeCities, setRouteCities] = useState([]);
 
+    // Модальное окно выполнения жёстких квот выборки (по клику на гистограмму)
+    const [isQuotaDetailModalOpen, setIsQuotaDetailModalOpen] = useState(false);
+
     // Загрузка опросов из БД
     const fetchSurveys = async () => {
         try {
@@ -1580,7 +1583,10 @@ export default function Survey() {
                                                                         </span>
                                                                         {row.district}
                                                                     </td>
-                                                                    <td>
+                                                                    <td
+                                                                        style={{ cursor: 'pointer' }}
+                                                                        onClick={() => setIsQuotaDetailModalOpen(true)}
+                                                                    >
                                                                         <div className="quota-progress-bar">
                                                                             <div
                                                                                 className="quota-progress-low"
@@ -1609,7 +1615,10 @@ export default function Survey() {
                                                                     return (
                                                                         <tr key={`${row.district}-${city.city}-${idx}`} className="city-row">
                                                                             <td style={{ paddingLeft: '40px' }}>{city.city}</td>
-                                                                            <td>
+                                                                            <td
+                                                                                style={{ cursor: 'pointer' }}
+                                                                                onClick={() => setIsQuotaDetailModalOpen(true)}
+                                                                            >
                                                                                 <div className="quota-progress-bar">
                                                                                     <div
                                                                                         className="quota-progress-low"
@@ -2023,6 +2032,83 @@ export default function Survey() {
                             <button className="save-btn" onClick={handleSaveQuestionEdit} type="button">
                                 Сохранить
                             </button>
+                        </div>
+                    </div>
+                </>
+            )}
+
+            {/* Модальное окно выполнения жёстких квот выборки */}
+            {isQuotaDetailModalOpen && (
+                <>
+                    <div className="modal-bg" onClick={() => setIsQuotaDetailModalOpen(false)}></div>
+                    <div className="quota-detail-modal">
+                        <nav className="window-map-navigation">
+                            <div className="map-title">Выполнение жетских квот выборки</div>
+                            <div className="close-btn" onClick={() => setIsQuotaDetailModalOpen(false)}>
+                                <svg width="18px" height="18px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M7 7.00006L17 17.0001M7 17.0001L17 7.00006" stroke="#292929" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                            </div>
+                        </nav>
+                        <div className="quota-detail-body">
+                            <div className="quota-detail-table-container">
+                                <table className="quota-detail-table">
+                                    <thead>
+                                        <tr className="quota-detail-header-row-1">
+                                            <th rowSpan="2" className="quota-detail-corner"></th>
+                                            <th rowSpan="2" className="quota-detail-header-opros">
+                                                <div className="quota-header-stacked">
+                                                    <span></span>
+                                                    <span></span>
+                                                </div>
+                                            </th>
+                                            <th colSpan="4">женский</th>
+                                            <th colSpan="4">мужской</th>
+                                            <th rowSpan="2">всего</th>
+                                        </tr>
+                                        <tr className="quota-detail-header-row-2">
+                                            <th>старше 60 лет</th>
+                                            <th>50-59 лет</th>
+                                            <th>30-49 лет</th>
+                                            <th>18-29 лет</th>
+                                            <th>старше 60 лет</th>
+                                            <th>50-59 лет</th>
+                                            <th>30-49 лет</th>
+                                            <th>18-29 лет</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {[
+                                            'город более 1 млн человек',
+                                            'город от 500 тыс до 1 млн человек',
+                                            'город от 100 тыс до 500 тыс человек',
+                                            'город от 50 тыс до 100 тыс человек',
+                                            'Всего',
+                                        ].map((rowLabel, rowIdx) => (
+                                            <tr key={rowIdx}>
+                                                <td className="quota-detail-row-label">{rowLabel}</td>
+                                                {/* 10 data cells: опрошено/план + женский x4 + мужской x4 + всего */}
+                                                <td className="quota-detail-cell opr">
+                                                    <span className="quota-cell-interviewed">Опрошено</span>
+                                                    <span className="quota-cell-plan">План</span>
+                                                </td>
+                                                {[1, 2, 3, 4, 5, 6, 7, 8].map((colIdx) => (
+                                                    <td key={colIdx} className="quota-detail-cell">
+                                                        <span className="quota-cell-interviewed">-</span>
+                                                        <span className="quota-cell-separator">/</span>
+                                                        <span className="quota-cell-plan">-</span>
+                                                    </td>
+                                                ))}
+                                                <td className="quota-detail-cell">
+                                                    <span className="quota-cell-interviewed">-</span>
+                                                    <span className="quota-cell-separator">/</span>
+                                                    <span className="quota-cell-plan">-</span>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </>
