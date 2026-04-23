@@ -851,11 +851,9 @@ export default function Survey() {
             if (response.data.message === 'Экспорт успешно отменен' || response.status === 200) {
                 // Обновляем список экспортов (удаляем отмененный)
                 setExports(prev => prev.filter(exp => exp.id !== lastExportId));
-                // Если после отмены экспортов не осталось - убираем зеленую отметку с этапа 3
-                if (exports.length <= 1) {
-                    setCompletedSteps(prev => prev.filter(s => s !== 3));
-                    setStep3Changed(false);
-                }
+                // При отмене экспорта этап 3 становится пропущенным (серый + надпись)
+                setCompletedSteps(prev => prev.filter(s => s !== 3));
+                setStep3Changed(false);
                 alert('Экспорт отменен');
                 fetchExports();
             }
@@ -870,6 +868,16 @@ export default function Survey() {
             fetchExports();
         }
     }, [isWindowOpen, currentStep]);
+
+    // Синхронизация этапа 3 с наличием экспортов: если экспорт есть — этап выполнен, нет — пропущен
+    useEffect(() => {
+        if (!isWindowOpen || !currentSurveyId) return;
+        if (exports.length > 0) {
+            setCompletedSteps(prev => prev.includes(3) ? prev : [...prev, 3]);
+        } else {
+            setCompletedSteps(prev => prev.filter(s => s !== 3));
+        }
+    }, [exports, isWindowOpen, currentSurveyId]);
 
     const fetchConductData = async () => {
         // В будущем здесь будет запрос к API
