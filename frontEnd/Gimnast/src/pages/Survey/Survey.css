@@ -1758,3 +1758,92 @@ span {
 .quota-detail-table tbody tr:last-child:hover td {
   background-color: #ffffff;
 }
+
+/* Модальное окно карты готовности опроса */
+.map-modal {
+  position: fixed;
+  z-index: 1001;
+  left: 50%;
+  top: 50%;
+  height: 85vh;
+  width: 75vw;
+  max-width: 1300px;
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  transform: translate(-50%, -50%);
+  background-color: rgb(255, 255, 255);
+  border: solid 1px grey;
+  -webkit-box-shadow: 4px 4px 8px 0px rgba(34, 60, 80, 0.2);
+  -moz-box-shadow: 4px 4px 8px 0px rgba(34, 60, 80, 0.2);
+  box-shadow: 4px 4px 8px 0px rgba(34, 60, 80, 0.2);
+  font-size: clamp(80%, 90%, 110%);
+  overflow: hidden;
+}
+
+.map-modal-body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  background-color: #ffffff;
+  overflow: hidden;
+}
+
+.russia-map-svg {
+  width: 100%;
+  height: 100%;
+}
+
+.map-tooltip {
+  position: fixed;
+  z-index: 10000;
+  padding: 6px 12px;
+  background-color: rgba(0, 0, 0, 0.8);
+  color: #ffffff;
+  font-family: main, Arial, sans-serif;
+  font-size: 13px;
+  border-radius: 4px;
+  pointer-events: none;
+  white-space: nowrap;
+  -webkit-box-shadow: 2px 2px 6px 0px rgba(34, 60, 80, 0.3);
+  -moz-box-shadow: 2px 2px 6px 0px rgba(34, 60, 80, 0.3);
+  box-shadow: 2px 2px 6px 0px rgba(34, 60, 80, 0.3);
+}
+
+.russia-map-svg .map-region {
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.russia-map-svg .map-region:hover {
+  opacity: 0.8;
+  stroke: #555;
+  stroke-width: 2;
+}
+
+.map-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 12px 16px;
+  border-top: 1px solid #d0d0d0;
+  background-color: #f5f5f5;
+}
+
+.map-modal-footer .close-btn-grey {
+  padding: 8px 20px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  font-family: main;
+  font-size: 13px;
+  background-color: transparent;
+  color: var(--active);
+  border: 1px solid var(--active);
+  transition: all 0.2s ease;
+}
+
+.map-modal-footer .close-btn-grey:hover {
+  background-color: rgba(64, 158, 255, 0.1);
+}
