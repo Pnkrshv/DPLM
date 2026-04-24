@@ -2093,15 +2093,13 @@ export default function Survey() {
                                                     <span className="quota-cell-plan">План</span>
                                                 </td>
                                                 {[1, 2, 3, 4, 5, 6, 7, 8].map((colIdx) => (
-                                                    <td key={colIdx} className="quota-detail-cell">
+                                                    <td key={colIdx} className="quota-detail-cell col">
                                                         <span className="quota-cell-interviewed">-</span>
-                                                        <span className="quota-cell-separator">/</span>
                                                         <span className="quota-cell-plan">-</span>
                                                     </td>
                                                 ))}
-                                                <td className="quota-detail-cell">
+                                                <td className="quota-detail-cell col">
                                                     <span className="quota-cell-interviewed">-</span>
-                                                    <span className="quota-cell-separator">/</span>
                                                     <span className="quota-cell-plan">-</span>
                                                 </td>
                                             </tr>
