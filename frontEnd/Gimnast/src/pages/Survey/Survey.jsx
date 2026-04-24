@@ -92,38 +92,57 @@ export default function Survey() {
     const [isReadinessMapModalOpen, setIsReadinessMapModalOpen] = useState(false);
     const mapSvgRef = useRef(null);
     const [mapTooltip, setMapTooltip] = useState({ show: false, text: '', x: 0, y: 0 });
+    const mapContainerRef = useRef(null);
 
     // Назначение случайных цветов регионам карты (бледно-розовый → тёмно-красный)
     // и добавление всплывающих подсказок при наведении
     useEffect(() => {
-        if (isReadinessMapModalOpen && mapSvgRef.current) {
+        if (isReadinessMapModalOpen && mapSvgRef.current && mapContainerRef.current) {
             const timer = setTimeout(() => {
                 const svg = mapSvgRef.current;
-                if (!svg) return;
+                const container = mapContainerRef.current;
+                if (!svg || !container) return;
+
                 const paths = svg.querySelectorAll('path[id]');
-                const handleMouseEnter = (e) => {
-                    const path = e.currentTarget;
-                    const titleEl = path.querySelector('title');
-                    const name = (titleEl ? titleEl.textContent : (path.getAttribute('title') || '')).trim();
-                    if (name) {
-                        setMapTooltip({ show: true, text: name, x: e.clientX, y: e.clientY });
-                    }
-                };
-                const handleMouseMove = (e) => {
-                    setMapTooltip(prev => prev.show ? { ...prev, x: e.clientX, y: e.clientY } : prev);
-                };
-                const handleMouseLeave = () => {
-                    setMapTooltip({ show: false, text: '', x: 0, y: 0 });
-                };
+
+                // Назначаем цвета при каждом открытии карты (больше не используем colorsAssigned)
                 paths.forEach(path => {
                     const g = Math.floor(70 + Math.random() * 130);
                     const b = Math.floor(70 + Math.random() * 130);
                     path.setAttribute('fill', `rgb(255, ${g}, ${b})`);
+                });
+
+                const handleMouseEnter = (e) => {
+                    const rect = container.getBoundingClientRect();
+                    const x = e.clientX - rect.left + 2;
+                    const y = e.clientY - rect.top + 2;
+                    const path = e.currentTarget;
+                    const titleEl = path.querySelector('title');
+                    const name = (titleEl ? titleEl.textContent : (path.getAttribute('title') || '')).trim();
+                    if (name) {
+                        setMapTooltip({ show: true, text: name, x, y });
+                    }
+                };
+                const handleMouseMove = (e) => {
+                    const tooltip = container.querySelector('.map-tooltip');
+                    if (tooltip) {
+                        const rect = container.getBoundingClientRect();
+                        const x = e.clientX - rect.left + 2;
+                        const y = e.clientY - rect.top + 2;
+                        tooltip.style.left = x + 'px';
+                        tooltip.style.top = y + 'px';
+                    }
+                };
+                const handleMouseLeave = () => {
+                    setMapTooltip({ show: false, text: '', x: 0, y: 0 });
+                };
+
+                paths.forEach(path => {
                     path.addEventListener('mouseenter', handleMouseEnter);
                     path.addEventListener('mousemove', handleMouseMove);
                     path.addEventListener('mouseleave', handleMouseLeave);
                 });
-                // Сохраняем ссылки для очистки
+
                 svg._cleanup = () => {
                     paths.forEach(path => {
                         path.removeEventListener('mouseenter', handleMouseEnter);
@@ -132,6 +151,7 @@ export default function Survey() {
                     });
                 };
             }, 50);
+
             return () => {
                 clearTimeout(timer);
                 if (mapSvgRef.current && mapSvgRef.current._cleanup) {
@@ -2098,46 +2118,16 @@ export default function Survey() {
                         <nav className="window-map-navigation">
                             <div className="map-title">Карта готовности опроса</div>
                             <div className="close-btn" onClick={() => setIsReadinessMapModalOpen(false)}>
-                                <svg width="32px" height="32px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <svg width="18px" height="18px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M7 7.00006L17 17.0001M7 17.0001L17 7.00006" stroke="#292929" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                                 </svg>
                             </div>
                         </nav>
-                        <div className="map-modal-body">
+                        <div className="map-modal-body" ref={mapContainerRef} style={{ position: 'relative' }}>
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 750" className="russia-map-svg" ref={mapSvgRef}>
-                                <defs>
-                                    <style>
-                                        {`
-                                path[id] {
-                                    stroke: #ffffff;
-                                    stroke-width: 1.2;
-                                    stroke-linejoin: round;
-                                    transition: all 0.2s ease;
-                                    cursor: pointer;
-                                }
-                                path[id]:hover {
-                                    stroke: #333333;
-                                    stroke-width: 2;
-                                    filter: drop-shadow(0 0 3px rgba(0,0,0,0.4));
-                                }
-                                .label {
-                                    font-family: Arial, sans-serif;
-                                    font-size: 8px;
-                                    fill: #333;
-                                    text-anchor: middle;
-                                    pointer-events: none;
-                                }
-                                .legend {
-                                    font-family: Arial, sans-serif;
-                                    font-size: 10px;
-                                    fill: #333;
-                                }
-                            `}
-                                    </style>
-                                </defs>
 
                                 {/* Все регионы (пути) сгруппированы по федеральным округам и снабжены <title> */}
-                                <svg xmlns:mapsvg="http://mapsvg.com" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:svg="http://www.w3.org/2000/svg" xmlns="http://www.w3.org/2000/svg" mapsvg:geoViewBox="19.642502 81.857875 190.345967 41.185573" width="1224.449" height="760.6203">
+                                <svg xmlns:mapsvg="http://mapsvg.com" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:svg="http://www.w3.org/2000/svg" xmlns="http://www.w3.org/2000/svg" width="1224.449" height="760.6203">
 
                                     <path d="m 144.77011,730.77082 1.01,1.4 1.07,-0.59 -0.04,-1.25 -0.44,0.01 -0.34,-0.63 -0.5,0.02 -0.37,-0.38 0.26,-0.8 -0.4,-1.32 0.57,-0.54 -0.02,-0.74 0.94,-0.62 -0.67,-0.48 0.37,-0.39 -0.16,-0.56 -0.62,-0.21 0.23,-0.57 -1.21,-0.08 -0.65,-0.57 -0.64,1.99 -1.16,0.37 -1.89,-0.39 -1.11,0.12 -1.37,-0.57 -0.66,-0.7 -0.84,-0.14 -0.22,-0.44 0.44,-0.57 0.49,0.43 0.8,-0.14 1.03,0.64 1.65,-0.1 2.02,-0.91 1.08,-0.86 1.18,0.2 0.66,0.61 1.11,0.4 0.81,-0.4 1.14,0.07 1.44,1.2 2.25,5.05 -0.65,0.25 -0.92,-2.54 -0.49,-0.46 -0.7,0.07 -0.53,1.54 1.03,2.29 -0.6,1.71 0.47,1.84 -0.38,1.26 -1,0.85 -2.52,-1.55 -1.48,0.1 -0.6,-0.52 0.67,-0.31 -0.17,-0.54 0.54,-0.24 -0.58,-1.01 0,0 z" title="Республика Адыгея" id="RU-AD" />
                                     <path d="m 469.45011,618.60082 0.4,-0.15 0.35,0.27 1.43,2.45 0.91,-0.17 1.76,0.97 0.35,0.78 0.65,0.27 0.09,0.36 1.4,0.67 0.55,1.71 0.61,0.3 0.61,1.93 0.7,0.57 0.43,1.07 2.8,0.35 -0.01,0.97 -0.4,0.92 -1.41,0.67 -0.16,0.38 0.5,0.75 2.22,1.85 0.14,1.27 -0.57,0.57 -0.02,0.8 0.32,1.09 0.67,-0.05 0.23,0.33 0.01,0.83 0,0 -0.82,-0.57 -0.66,0.11 -1.9,1.44 0.34,0.94 -0.25,1.52 0.38,0.3 0.07,1.74 -2.05,0.04 -0.58,1.1 -2.22,-0.49 -1.71,0.3 0.33,1.86 -0.71,0.35 -0.24,1.07 -1.84,1.49 0.16,0.71 -1.81,0.75 -1.47,0.16 -0.93,0.64 -1.15,0.09 -2.08,1.61 -1.81,0.25 -0.39,1.78 -0.35,-0.38 -0.83,0.36 0.12,0.7 0.8,-0.09 0.67,0.67 2.17,0.4 -0.19,0.92 0.94,0.56 -0.76,0.6 0.08,0.53 -0.52,0.35 -0.36,-0.16 -2.41,0.81 0,0 -0.65,-0.91 -0.12,-0.7 -1.08,-1.16 -2.94,-1.23 -1.06,-0.11 -0.32,0.25 -0.7,-0.55 -0.13,0.53 -0.82,0.83 -1.73,-0.3 -0.19,1.2 -1.17,0.82 -1.92,-0.23 -0.86,0.42 -1.11,-0.69 -0.89,-0.13 -0.49,0.1 -0.22,0.46 -2.24,0.12 0.19,-0.81 -0.46,-0.77 -0.16,-1.08 -2.36,0.42 0.59,-2.32 -0.14,-0.66 -0.53,0.35 -1.05,-0.76 -1.59,-0.59 -0.43,1.16 -1.3,0.01 0.2,2.64 -1.93,0.77 -0.05,0.84 -0.73,0 -0.09,0.85 -6.58,-13.66 -5.14,-9.41 -4.11,-6.58 0,0 0.32,-0.78 0.3,0.12 0.15,-0.32 -0.13,-0.55 0.73,-0.19 -0.74,-0.44 -0.02,-0.86 1.03,-0.06 0.52,-0.57 0.04,0.89 0.81,0.64 2.15,-0.54 0.35,-1.26 0.38,-0.28 1.68,-0.33 0.5,0.3 0.23,-0.45 0.43,0.31 0.67,-0.1 0.59,-0.48 0.73,0.41 0.69,-0.29 0.85,-0.61 0.14,-0.59 1.58,-0.5 0.18,-0.75 1.58,-0.97 -0.2,-0.5 0.44,-0.33 0.33,-0.14 0.29,0.54 0.42,-0.13 1.19,-0.96 0.85,-0.09 -0.15,-0.56 0.5,-0.48 1.73,-0.52 -0.27,-0.83 0.54,-0.58 0.4,0.04 0.26,1.13 0.93,0.92 0.23,0.96 0.71,-0.11 0.5,0.5 1.2,-0.04 0.83,0.84 0.03,1.13 1.88,0.05 -0.07,0.64 -0.74,0.48 0.49,1.27 2.51,0.54 0.38,0.2 -0.22,0.61 1.41,1.03 0.71,0.15 0.75,-0.27 -0.22,-0.29 0.9,-0.89 -0.14,-0.48 0.63,-0.86 -0.13,-0.68 2.64,-2.59 0.62,-0.33 0.94,0.1 0.28,0.88 0.57,0.23 0.66,-0.73 -0.1,-1.04 2.28,-0.35 1.08,0.19 2.05,-1.06 0.99,0.27 0.3,0.37 1.41,-1.78 2.07,-1 1.26,-0.25 z" title="Республика Алтай" id="RU-ALT" />
@@ -2231,7 +2221,7 @@ export default function Survey() {
                                 <div
                                     className="map-tooltip"
                                     style={{
-                                        position: 'fixed',
+                                        position: 'absolute',
                                         left: mapTooltip.x,
                                         top: mapTooltip.y,
                                     }}
@@ -2239,7 +2229,6 @@ export default function Survey() {
                                     {mapTooltip.text}
                                 </div>
                             )}
-
                         </div>
                         <div className="map-modal-footer">
                             <button className="close-btn-grey" onClick={() => setIsReadinessMapModalOpen(false)} type="button">
