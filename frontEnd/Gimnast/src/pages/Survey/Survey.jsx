@@ -1041,7 +1041,7 @@ export default function Survey() {
                         <nav className="window-map-navigation">
                             <div className="map-title">{editingSurveyId ? 'Редактирование опроса' : 'Создание опроса'}</div>
                             <div className="close-btn" onClick={closeAndReset}>
-                                <svg width="32px" height="32px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <svg width="18px" height="18px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M7 7.00006L17 17.0001M7 17.0001L17 7.00006" stroke="#292929" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                                 </svg>
                             </div>

@@ -258,6 +258,7 @@ span {
 .stepper-circle {
   width: 32px;
   height: 32px;
+  font-family: main;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -1597,6 +1598,12 @@ span {
   /* голубой */
   height: 100%;
   transition: width 0.3s;
+}
+
+.quota-progress-label {
+  color: white;
+  font-size: clamp(.4rem, .6rem, 8rem);
+  padding-left: 10%;
 }
 
 /* Модальное окно выполнения жёстких квот выборки */
