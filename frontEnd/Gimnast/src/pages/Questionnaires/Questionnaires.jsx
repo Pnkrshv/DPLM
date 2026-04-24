@@ -128,7 +128,7 @@ export default function Questionnaires() {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.get("http://localhost:8080/cities");
+      const response = await axios.get("/cities");
       setCities(response.data);
     } catch (err) {
       console.error("Ошибка при загрузке городов", err);
@@ -179,7 +179,7 @@ export default function Questionnaires() {
       };
 
       // Отправляем запрос на создание анкеты
-      const response = await axios.post('http://localhost:8080/questionnaire', questionnaireData);
+      const response = await axios.post('/questionnaire', questionnaireData);
 
       // Сохраняем ID созданной анкеты
       const questionnaireId = response.data.id;
@@ -224,7 +224,7 @@ export default function Questionnaires() {
   // Загрузка вопросов для текущей анкеты
   const fetchQuestions = async (questionnaireId) => {
     try {
-      const response = await axios.get(`http://localhost:8080/questionnaire/${questionnaireId}/questions`);
+      const response = await axios.get(`/questionnaire/${questionnaireId}/questions`);
       const allQuestions = response.data;
 
       // Разделяем вопросы на основные, паспортичку и дополнительные блоки
@@ -311,7 +311,7 @@ export default function Questionnaires() {
 
     try {
       // Загружаем полную анкету с вопросами и ответами
-      const response = await axios.get(`http://localhost:8080/questionnaire/${currentQuestionnaire.id}/full`);
+      const response = await axios.get(`/questionnaire/${currentQuestionnaire.id}/full`);
       const questionnaire = response.data;
 
       // Создаем документ Word
@@ -473,7 +473,7 @@ export default function Questionnaires() {
   // Открытие анкеты для редактирования
   const openQuestionnaire = async (questionnaireId) => {
     try {
-      const response = await axios.get(`http://localhost:8080/questionnaire/${questionnaireId}`);
+      const response = await axios.get(`/questionnaire/${questionnaireId}`);
       const questionnaire = response.data;
 
       setCurrentQuestionnaire(questionnaire);
@@ -501,7 +501,7 @@ export default function Questionnaires() {
     }
 
     try {
-      await axios.delete(`http://localhost:8080/questionnaire/${questionnaireId}`);
+      await axios.delete(`/questionnaire/${questionnaireId}`);
       fetchQuestionnaires();
     } catch (err) {
       console.error('Ошибка при удалении анкеты:', err);
@@ -678,7 +678,7 @@ export default function Questionnaires() {
 
       // Отправляем вопрос на сервер
       const response = await axios.post(
-        `http://localhost:8080/questionnaire/${currentQuestionnaire.id}/questions`,
+        `/questionnaire/${currentQuestionnaire.id}/questions`,
         questionPayload
       );
 
@@ -720,7 +720,7 @@ export default function Questionnaires() {
 
     try {
       await axios.delete(
-        `http://localhost:8080/questionnaire/${currentQuestionnaire.id}/questions/${questionId}`
+        `/questionnaire/${currentQuestionnaire.id}/questions/${questionId}`
       );
       setQuestions(prev => prev.filter(q => q.id !== questionId));
     } catch (err) {
@@ -741,7 +741,7 @@ export default function Questionnaires() {
 
     try {
       await axios.delete(
-        `http://localhost:8080/questionnaire/${currentQuestionnaire.id}/questions/${questionId}`
+        `/questionnaire/${currentQuestionnaire.id}/questions/${questionId}`
       );
       setPassportQuestions(prev => prev.filter(q => q.id !== questionId));
     } catch (err) {
@@ -762,7 +762,7 @@ export default function Questionnaires() {
 
     try {
       await axios.delete(
-        `http://localhost:8080/questionnaire/${currentQuestionnaire.id}/questions/${questionId}`
+        `/questionnaire/${currentQuestionnaire.id}/questions/${questionId}`
       );
       setAdditionalBlocks(prev => prev.map(block =>
         block.id === blockId
@@ -786,7 +786,7 @@ export default function Questionnaires() {
       if (block && block.questions) {
         for (const question of block.questions) {
           await axios.delete(
-            `http://localhost:8080/questionnaire/${currentQuestionnaire.id}/questions/${question.id}`
+            `/questionnaire/${currentQuestionnaire.id}/questions/${question.id}`
           );
         }
       }
@@ -1051,7 +1051,7 @@ export default function Questionnaires() {
   // Загрузка анкет из БД
   const fetchQuestionnaires = async () => {
     try {
-      const response = await axios.get('http://localhost:8080/questionnaires');
+      const response = await axios.get('/questionnaires');
       const data = Array.isArray(response.data) ? response.data : [];
       setQuestionnaireList(data);
       setCurrentPage(1);
@@ -2066,7 +2066,7 @@ export default function Questionnaires() {
                     const hideRulesJson = JSON.stringify({ conditions: validConditions });
 
                     await axios.put(
-                      `http://localhost:8080/question/${hideRuleData.questionId}/hide-rules`,
+                      `/question/${hideRuleData.questionId}/hide-rules`,
                       { hide_rules: hideRulesJson }
                     );
 
@@ -2313,7 +2313,7 @@ export default function Questionnaires() {
                     const transitionRulesJson = JSON.stringify(transitionRulesData);
 
                     await axios.put(
-                      `http://localhost:8080/question/${transitionRuleData.questionId}/transition-rules`,
+                      `/question/${transitionRuleData.questionId}/transition-rules`,
                       { transition_rules: transitionRulesJson }
                     );
 
@@ -2535,7 +2535,7 @@ export default function Questionnaires() {
                     const contradictionRulesJson = JSON.stringify(contradictionRulesData);
 
                     await axios.put(
-                      `http://localhost:8080/question/${contradictionData.questionId}/contradiction-rules`,
+                      `/question/${contradictionData.questionId}/contradiction-rules`,
                       { contradiction_rules: contradictionRulesJson }
                     );
 

@@ -108,7 +108,7 @@ export default function Selections() {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.get("http://localhost:8080/cities");
+      const response = await axios.get("/cities");
       setCities(response.data);
     } catch (err) {
       console.error("Ошибка при загрузке городов", err);
@@ -212,7 +212,7 @@ export default function Selections() {
       let response;
       if (editingSampleId) {
         // Обновление существующей выборки
-        response = await axios.put(`http://localhost:8080/sample/${editingSampleId}`, sampleData);
+        response = await axios.put(`/sample/${editingSampleId}`, sampleData);
         if (response.data.message === "Выборка успешно обновлена") {
           alert("Выборка успешно обновлена!");
           // Очистка всех полей
@@ -234,7 +234,7 @@ export default function Selections() {
         }
       } else {
         // Создание новой выборки
-        response = await axios.post("http://localhost:8080/sample", sampleData);
+        response = await axios.post("/sample", sampleData);
         if (response.data.message === "Выборка успешно создана") {
           alert("Выборка успешно сохранена!");
           // Очистка всех полей
@@ -262,7 +262,7 @@ export default function Selections() {
 
   const fetchSamples = async () => {
     try {
-      const response = await axios.get("http://localhost:8080/samples");
+      const response = await axios.get("/samples");
       setSamples(response.data);
       setCurrentPage(1);
     } catch (err) {
@@ -280,7 +280,7 @@ export default function Selections() {
 
   const loadSampleForEdit = async (sampleId) => {
     try {
-      const response = await axios.get(`http://localhost:8080/sample/${sampleId}`);
+      const response = await axios.get(`/sample/${sampleId}`);
       const sample = response.data;
       setEditingSampleId(sampleId);
 
@@ -911,7 +911,7 @@ export default function Selections() {
                         onClick={async () => {
                           if (confirm("Вы уверены, что хотите удалить эту выборку?")) {
                             try {
-                              await axios.delete(`http://localhost:8080/sample/${sample.id}`);
+                              await axios.delete(`/sample/${sample.id}`);
                               fetchSamples();
                             } catch (err) {
                               console.error("Ошибка при удалении", err);

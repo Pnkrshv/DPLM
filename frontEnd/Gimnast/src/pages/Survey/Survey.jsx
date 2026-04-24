@@ -164,7 +164,7 @@ export default function Survey() {
     // Загрузка опросов из БД
     const fetchSurveys = async () => {
         try {
-            const response = await axios.get('http://localhost:8080/surveys');
+            const response = await axios.get('/surveys');
             setSurveys(Array.isArray(response.data) ? response.data : []);
             setCurrentPage(1); // сбрасываем на первую страницу после обновления
         } catch (err) {
@@ -320,7 +320,7 @@ export default function Survey() {
             let response;
             if (currentStep === 1 && !surveyId) {
                 // Создание нового опроса
-                response = await axios.post('http://localhost:8080/survey', data);
+                response = await axios.post('/survey', data);
                 if (response.data.message === 'Опрос успешно создан') {
                     const newId = response.data.id;
                     setEditingSurveyId(newId);
@@ -331,7 +331,7 @@ export default function Survey() {
                 }
             } else {
                 // Обновление существующего опроса
-                response = await axios.put(`http://localhost:8080/survey/${surveyId}`, data);
+                response = await axios.put(`/survey/${surveyId}`, data);
                 if (response.data.message === 'Опрос успешно обновлен') {
                     if (currentStep === 1) {
                         markStepAsCompleted(1);
@@ -352,7 +352,7 @@ export default function Survey() {
     // Загрузка выборок
     const fetchSamples = async () => {
         try {
-            const response = await axios.get('http://localhost:8080/samples');
+            const response = await axios.get('/samples');
             setSamples(Array.isArray(response.data) ? response.data : []);
         } catch (err) {
             console.error('Ошибка при загрузке выборок:', err);
@@ -363,7 +363,7 @@ export default function Survey() {
     // Загрузка анкет
     const fetchQuestionnaires = async () => {
         try {
-            const response = await axios.get('http://localhost:8080/questionnaires');
+            const response = await axios.get('/questionnaires');
             setQuestionnaires(Array.isArray(response.data) ? response.data : []);
         } catch (err) {
             console.warn('Анкеты не загружены (endpoint недоступен):', err.message);
@@ -374,7 +374,7 @@ export default function Survey() {
     // Загрузка маршрутов
     const fetchRoutes = async () => {
         try {
-            const response = await axios.get('http://localhost:8080/routes');
+            const response = await axios.get('/routes');
             setRoutes(Array.isArray(response.data) ? response.data : []);
         } catch (err) {
             console.error('Ошибка при загрузке маршрутов:', err);
@@ -385,7 +385,7 @@ export default function Survey() {
     // Загрузка анкет для адаптации
     const fetchAdaptationQuestionnaires = async () => {
         try {
-            const response = await axios.get('http://localhost:8080/questionnaires');
+            const response = await axios.get('/questionnaires');
             setAdaptationQuestionnaires(Array.isArray(response.data) ? response.data : []);
         } catch (err) {
             console.error('Ошибка при загрузке анкет для адаптации:', err);
@@ -397,7 +397,7 @@ export default function Survey() {
     const fetchAdaptationCities = async () => {
         setAdaptationLoading(true);
         try {
-            const response = await axios.get('http://localhost:8080/cities');
+            const response = await axios.get('/cities');
             setAdaptationCities(response.data);
         } catch (err) {
             console.error('Ошибка при загрузке городов:', err);
@@ -416,7 +416,7 @@ export default function Survey() {
             return;
         }
         try {
-            const response = await axios.get(`http://localhost:8080/questionnaire/${questionnaireId}/questions`);
+            const response = await axios.get(`/questionnaire/${questionnaireId}/questions`);
             const allQuestions = Array.isArray(response.data) ? response.data : [];
 
             // Разделяем вопросы по типам блоков
@@ -489,7 +489,7 @@ export default function Survey() {
             try {
                 console.log('Загрузка адаптаций для вопроса:', question.id, 'опроса:', currentSurveyId);
                 const response = await axios.get(
-                    `http://localhost:8080/survey/${currentSurveyId}/question/${question.id}/adaptations`
+                    `/survey/${currentSurveyId}/question/${question.id}/adaptations`
                 );
 
                 console.log('Полученные адаптации:', response.data);
@@ -588,11 +588,11 @@ export default function Survey() {
                 }))
             };
 
-            console.log('Отправка запроса на:', `http://localhost:8080/survey/${currentSurveyId}/question/${editingQuestion.id}/adaptation`);
+            console.log('Отправка запроса на:', `/survey/${currentSurveyId}/question/${editingQuestion.id}/adaptation`);
 
             // Отправляем запрос на сохранение адаптации
             const response = await axios.post(
-                `http://localhost:8080/survey/${currentSurveyId}/question/${editingQuestion.id}/adaptation`,
+                `/survey/${currentSurveyId}/question/${editingQuestion.id}/adaptation`,
                 adaptationData
             );
 
@@ -645,7 +645,7 @@ export default function Survey() {
             let response;
             if (editingSurveyId) {
                 // Обновление существующего опроса
-                response = await axios.put(`http://localhost:8080/survey/${editingSurveyId}`, surveyData);
+                response = await axios.put(`/survey/${editingSurveyId}`, surveyData);
                 if (response.data.message === 'Опрос успешно обновлен') {
                     alert('Опрос успешно обновлен!');
                     // markStepAsCompleted(5);
@@ -653,7 +653,7 @@ export default function Survey() {
                 }
             } else {
                 // Создание нового опроса
-                response = await axios.post('http://localhost:8080/survey', surveyData);
+                response = await axios.post('/survey', surveyData);
                 if (response.data.message === 'Опрос успешно создан') {
                     alert('Опрос успешно создан!');
                     // markStepAsCompleted(1);
@@ -678,7 +678,7 @@ export default function Survey() {
         setSelectedSample(sampleId);
         if (currentSurveyId) {
             try {
-                await axios.patch(`http://localhost:8080/survey/${currentSurveyId}/sample`, { sample_id: sampleId });
+                await axios.patch(`/survey/${currentSurveyId}/sample`, { sample_id: sampleId });
             } catch (err) {
                 console.error('Ошибка при сохранении выборки:', err);
             }
@@ -689,7 +689,7 @@ export default function Survey() {
         setSelectedQuestionnaire(questionnaireId);
         if (currentSurveyId) {
             try {
-                await axios.patch(`http://localhost:8080/survey/${currentSurveyId}/questionnaire`, { questionnaire_id: questionnaireId });
+                await axios.patch(`/survey/${currentSurveyId}/questionnaire`, { questionnaire_id: questionnaireId });
             } catch (err) {
                 console.error('Ошибка при сохранении анкеты:', err);
             }
@@ -700,7 +700,7 @@ export default function Survey() {
         setSelectedRoute(routeId);
         if (currentSurveyId) {
             try {
-                await axios.patch(`http://localhost:8080/survey/${currentSurveyId}/route`, { route_id: routeId });
+                await axios.patch(`/survey/${currentSurveyId}/route`, { route_id: routeId });
             } catch (err) {
                 console.error('Ошибка при сохранении маршрута:', err);
             }
@@ -711,7 +711,7 @@ export default function Survey() {
     const deleteSurvey = async (surveyId) => {
         if (!confirm('Вы уверены, что хотите удалить этот опрос?')) return;
         try {
-            await axios.delete(`http://localhost:8080/survey/${surveyId}`);
+            await axios.delete(`/survey/${surveyId}`);
             fetchSurveys();
         } catch (err) {
             console.error('Ошибка при удалении опроса:', err);
@@ -745,7 +745,7 @@ export default function Survey() {
 
         // Этап 2 завершён, если есть хотя бы одна адаптация вопроса
         try {
-            const adaptRes = await axios.get(`http://localhost:8080/survey/${survey.id}/adaptations`);
+            const adaptRes = await axios.get(`/survey/${survey.id}/adaptations`);
             if (adaptRes.data && adaptRes.data.length > 0) {
                 newCompletedSteps.push(2);
             }
@@ -756,7 +756,7 @@ export default function Survey() {
 
         // Этап 3 завершён, если koir === true
         try {
-            const exportsRes = await axios.get(`http://localhost:8080/exports`);
+            const exportsRes = await axios.get(`/exports`);
             const allExports = exportsRes.data || [];
             const hasExport = allExports.some(exp => exp.survey_id === survey.id);
             if (hasExport) {
@@ -874,7 +874,7 @@ export default function Survey() {
     const fetchExports = async () => {
         setExportsLoading(true);
         try {
-            const response = await axios.get(`http://localhost:8080/exports`); // ← изменён URL
+            const response = await axios.get(`/exports`); // ← изменён URL
             setExports(Array.isArray(response.data) ? response.data : []);
         } catch (err) {
             console.error('Ошибка при загрузке экспортов:', err);
@@ -891,7 +891,7 @@ export default function Survey() {
             return;
         }
         try {
-            const response = await axios.post(`http://localhost:8080/survey/${currentSurveyId}/export`);
+            const response = await axios.post(`/survey/${currentSurveyId}/export`);
             const newExport = response.data;
             setExports(prev => [newExport, ...prev]);
             if (!completedSteps.includes(3)) {
@@ -924,7 +924,7 @@ export default function Survey() {
 
         try {
             const lastExportId = exports[0].id;
-            const response = await axios.delete(`http://localhost:8080/survey/${currentSurveyId}/export/${lastExportId}`);
+            const response = await axios.delete(`/survey/${currentSurveyId}/export/${lastExportId}`);
             if (response.data.message === 'Экспорт успешно отменен' || response.status === 200) {
                 // Обновляем список экспортов (удаляем отмененный)
                 setExports(prev => prev.filter(exp => exp.id !== lastExportId));
@@ -996,7 +996,7 @@ export default function Survey() {
             return;
         }
         try {
-            const response = await axios.get(`http://localhost:8080/route/${selectedRoute}`);
+            const response = await axios.get(`/route/${selectedRoute}`);
             const route = response.data;
             let cities = [];
             try {

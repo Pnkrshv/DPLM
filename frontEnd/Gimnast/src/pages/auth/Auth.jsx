@@ -15,7 +15,7 @@ export default function Auth() {
         setError('');
 
         try {
-            const response = await axios.post('http://localhost:8080/login', {
+            const response = await axios.post('/login', {
                 login: login,
                 password: password,
             });
