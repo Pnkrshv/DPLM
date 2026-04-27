@@ -1803,6 +1803,18 @@ span {
   height: 100%;
 }
 
+.russia-map-svg .federal-district-label {
+  fill: #111;
+  font-size: 18px;
+  font-weight: 700;
+  paint-order: stroke;
+  stroke: #fff;
+  stroke-width: 3px;
+  stroke-linejoin: round;
+  pointer-events: none;
+  text-anchor: middle;
+}
+
 .map-tooltip {
   position: absolute;
   /* было fixed, меняем на absolute */
