@@ -1405,7 +1405,6 @@ func getSurveyAdaptations(c echo.Context) error {
 	return c.JSON(http.StatusOK, adaptations)
 }
 
-
 // Cancel export
 func cancelSurveyExport(c echo.Context) error {
 	surveyID := c.Param("survey_id")
@@ -1431,63 +1430,63 @@ func main() {
 		AllowMethods: []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete},
 		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
 	}))
-	e.POST("/login", getAuth)
-	e.POST("/", addUser)
-	e.GET("/", getAllUsers)
-	e.DELETE("/user/:id", deleteUser)
-	e.GET("/cities", getCities)
-	e.GET("/cities/search", searchCities)
-	// Эндпоинты для выборок:
-	e.POST("/sample", createSample)
-	e.GET("/samples", getAllSamples)
-	e.GET("/sample/:id", getSampleByID)
-	e.PUT("/sample/:id", updateSample)
-	e.DELETE("/sample/:id", deleteSample)
-	// Эндпоинты для маршрутов:
-	e.POST("/route", createRoute)
-	e.GET("/routes", getAllRoutes)
-	e.GET("/route/:id", getRouteByID)
-	e.PUT("/route/:id", updateRoute)
-	e.DELETE("/route/:id", deleteRoute)
-	// Эндпоинты для опросов:
-	e.POST("/survey", createSurvey)
-	e.GET("/surveys", getAllSurveys)
-	e.PUT("/survey/:id", updateSurvey)
-	e.DELETE("/survey/:id", deleteSurvey)
-	// PATCH endpoint'ы для обновления связанных данных
-	e.PATCH("/survey/:id/sample", updateSurveySample)
-	e.PATCH("/survey/:id/questionnaire", updateSurveyQuestionnaire)
-	e.PATCH("/survey/:id/route", updateSurveyRoute)
-	// Эндпоинты для анкет:
-	e.POST("/questionnaire", createQuestionnaire)
-	e.GET("/questionnaires", getAllQuestionnaires)
-	e.GET("/questionnaire/:id", getQuestionnaireByID)
-	e.GET("/questionnaire/:id/full", getQuestionnaireFull)
-	e.PUT("/questionnaire/:id", updateQuestionnaire)
-	e.DELETE("/questionnaire/:id", deleteQuestionnaire)
-	// Эндпоинты для вопросов:
-	e.POST("/questionnaire/:id/questions", createQuestion)
-	e.GET("/questionnaire/:id/questions", getQuestionsByQuestionnaireID)
-	e.PUT("/questionnaire/:questionnaire_id/questions/:question_id", updateQuestion)
-	e.PUT("/question/:question_id/hide-rules", updateHideRules)
-	e.PUT("/question/:question_id/transition-rules", updateTransitionRules)
-	e.PUT("/question/:question_id/contradiction-rules", updateContradictionRules)
-	e.DELETE("/questionnaire/:questionnaire_id/questions/:question_id", deleteQuestion)
-	// Эндпоинты для ответов:
-	e.POST("/question/:question_id/answers", createAnswer)
-	e.PUT("/answer/:answer_id", updateAnswer)
-	e.DELETE("/answer/:answer_id", deleteAnswer)
-	// Эндпоинты для адаптаций вопросов:
-	e.POST("/survey/:survey_id/question/:question_id/adaptation", saveQuestionAdaptation)
-	e.GET("/survey/:survey_id/question/:question_id/adaptations", getQuestionAdaptations)
 
-	// Проверка наличия адаптаций опроса (этап 2)
-	e.GET("/survey/:survey_id/adaptations", getSurveyAdaptations)
+	api := e.Group("/api")
 
-	// Экспорт в КОИР (этап 3)
-	e.GET("/exports", getAllExports)
-	e.POST("/survey/:survey_id/export", createSurveyExport)
-	e.DELETE("/survey/:survey_id/export/:export_id", cancelSurveyExport)
+	api.POST("/login", getAuth)
+	api.POST("/users", addUser)    // бывший "/" POST
+	api.GET("/users", getAllUsers) // бывший "/" GET
+	api.DELETE("/user/:id", deleteUser)
+
+	api.GET("/cities", getCities)
+	api.GET("/cities/search", searchCities)
+
+	api.POST("/sample", createSample)
+	api.GET("/samples", getAllSamples)
+	api.GET("/sample/:id", getSampleByID)
+	api.PUT("/sample/:id", updateSample)
+	api.DELETE("/sample/:id", deleteSample)
+
+	api.POST("/route", createRoute)
+	api.GET("/routes", getAllRoutes)
+	api.GET("/route/:id", getRouteByID)
+	api.PUT("/route/:id", updateRoute)
+	api.DELETE("/route/:id", deleteRoute)
+
+	api.POST("/survey", createSurvey)
+	api.GET("/surveys", getAllSurveys)
+	api.PUT("/survey/:id", updateSurvey)
+	api.DELETE("/survey/:id", deleteSurvey)
+	api.PATCH("/survey/:id/sample", updateSurveySample)
+	api.PATCH("/survey/:id/questionnaire", updateSurveyQuestionnaire)
+	api.PATCH("/survey/:id/route", updateSurveyRoute)
+
+	api.POST("/questionnaire", createQuestionnaire)
+	api.GET("/questionnaires", getAllQuestionnaires)
+	api.GET("/questionnaire/:id", getQuestionnaireByID)
+	api.GET("/questionnaire/:id/full", getQuestionnaireFull)
+	api.PUT("/questionnaire/:id", updateQuestionnaire)
+	api.DELETE("/questionnaire/:id", deleteQuestionnaire)
+
+	api.POST("/questionnaire/:id/questions", createQuestion)
+	api.GET("/questionnaire/:id/questions", getQuestionsByQuestionnaireID)
+	api.PUT("/questionnaire/:questionnaire_id/questions/:question_id", updateQuestion)
+	api.PUT("/question/:question_id/hide-rules", updateHideRules)
+	api.PUT("/question/:question_id/transition-rules", updateTransitionRules)
+	api.PUT("/question/:question_id/contradiction-rules", updateContradictionRules)
+	api.DELETE("/questionnaire/:questionnaire_id/questions/:question_id", deleteQuestion)
+
+	api.POST("/question/:question_id/answers", createAnswer)
+	api.PUT("/answer/:answer_id", updateAnswer)
+	api.DELETE("/answer/:answer_id", deleteAnswer)
+
+	api.POST("/survey/:survey_id/question/:question_id/adaptation", saveQuestionAdaptation)
+	api.GET("/survey/:survey_id/question/:question_id/adaptations", getQuestionAdaptations)
+	api.GET("/survey/:survey_id/adaptations", getSurveyAdaptations)
+
+	api.GET("/exports", getAllExports)
+	api.POST("/survey/:survey_id/export", createSurveyExport)
+	api.DELETE("/survey/:survey_id/export/:export_id", cancelSurveyExport)
 
 	e.Start(":8080")
 }

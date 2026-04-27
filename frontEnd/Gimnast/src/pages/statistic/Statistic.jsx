@@ -78,7 +78,7 @@ export default function Statistic() {
     const fetchCitiesStat = async () => {
         setLoading(true);
         try {
-            const response = await axios.get("/cities");
+            const response = await axios.get("/api/cities");
             setCities(response.data);
         } catch (err) {
             console.error("Ошибка при загрузке городов", err);

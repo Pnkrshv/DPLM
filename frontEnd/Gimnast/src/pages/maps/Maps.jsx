@@ -66,7 +66,7 @@ export default function Maps() {
     useEffect(() => {
         const fetchRegions = async () => {
             try {
-                const res = await axios.get("/cities");
+                const res = await axios.get("/api/cities");
                 const data = res.data;
 
                 const allRegions = [];
@@ -86,7 +86,7 @@ export default function Maps() {
     const fetchSuggestions = async (query) => {
         if (!query) return;
         try {
-            const res = await axios.get("/cities/search", {
+            const res = await axios.get("/api/cities/search", {
                 params: { q: query }
             });
 
@@ -214,7 +214,7 @@ export default function Maps() {
         setLoading(true);
         setError(null);
         try {
-            const response = await axios.get("/cities");
+            const response = await axios.get("/api/cities");
             setCities(response.data);
         } catch (err) {
             console.error("Ошибка при загрузке городов", err);
@@ -338,7 +338,7 @@ export default function Maps() {
         try {
             let response;
             if (editingRouteId) {
-                response = await axios.put(`/route/${editingRouteId}`, routeData);
+                response = await axios.put(`/api/route/${editingRouteId}`, routeData);
                 if (response.data.message === "Маршрут успешно обновлен") {
                     alert("Маршрут успешно обновлен!");
                     setIsCreateMapOpen(false);
@@ -351,7 +351,7 @@ export default function Maps() {
                 }
             } else {
                 // Создание нового маршрута
-                response = await axios.post("/route", routeData);
+                response = await axios.post("/api/route", routeData);
                 console.log("Ответ сервера:", response.data);
                 if (response.data.message === "Маршрут успешно создан") {
                     alert("Маршрут успешно создан!");
@@ -372,7 +372,7 @@ export default function Maps() {
 
     const fetchRoutes = async () => {
         try {
-            const response = await axios.get("/routes");
+            const response = await axios.get("/api/routes");
             setRoutes(response.data);
             setCurrentPage(1);
         } catch (err) {
@@ -382,7 +382,7 @@ export default function Maps() {
 
     const loadRouteForEdit = async (routeId) => {
         try {
-            const response = await axios.get(`/route/${routeId}`);
+            const response = await axios.get(`/api/route/${routeId}`);
             const route = response.data;
             setEditingRouteId(routeId);
             setRouteName(route.name);
@@ -409,7 +409,7 @@ export default function Maps() {
             return;
         }
         try {
-            await axios.delete(`/route/${routeId}`);
+            await axios.delete(`/api/route/${routeId}`);
             fetchRoutes();
         } catch (err) {
             console.error("Ошибка при удалении маршрута", err);
