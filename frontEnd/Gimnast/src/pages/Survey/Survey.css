@@ -18,7 +18,7 @@
 
 .survey-window {
   position: fixed;
-  z-index: 1000;
+  z-index: 1001;
   left: 50%;
   top: 50%;
   height: 90vh;
@@ -1050,7 +1050,7 @@ span {
 /* Стили для модальных окон выбора */
 .select-modal-window {
   position: fixed;
-  z-index: 1001;
+  z-index: 1002;
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
@@ -1076,6 +1076,7 @@ span {
 
   & h4 {
     font-family: main;
+    font-weight: 300;
     font-size: clamp(.6rem, .8rem, 1rem);
   }
 
@@ -1862,4 +1863,159 @@ span {
   font-size: clamp(.6rem, .8rem, 1rem);
   background-color: transparent;
   color: var(--active);
+}
+
+/* Модальное окно просмотра результатов */
+.results-container {
+  display: flex;
+  gap: 1vw;
+  min-height: 60vh;
+}
+
+.results-left {
+  width: 15vw;
+  display: flex;
+  flex-direction: column;
+  gap: 1vh;
+  border-right: 1px solid #e0e0e0;
+  padding-right: 1%;
+  font-family: main;
+  font-size: clamp(.6rem, .8rem, 1rem);
+}
+
+.results-right {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #999;
+  font-size: clamp(.6rem, .8rem, 1rem);
+  font-family: main;
+}
+
+.results-date-block {
+  display: flex;
+  flex-direction: column;
+  gap: 1vh;
+}
+
+.results-date-block label {
+  font-family: main;
+  color: #333;
+  font-weight: 500;
+}
+
+.results-date-range {
+  display: flex;
+  align-items: center;
+  gap: .5vw;
+}
+
+.results-date-range input[type="date"] {
+  flex: 1;
+  padding: .5%;
+  border: 1px solid #d0d0d0;
+  border-radius: 4px;
+  font-family: main;
+  outline: none;
+}
+
+.results-date-range input[type="date"]:focus {
+  border-color: var(--active);
+}
+
+.results-regions-block {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: .5vh;
+}
+
+.results-regions-block label {
+  font-family: main;
+  color: #333;
+  font-weight: 500;
+}
+
+.results-region-list {
+  flex: 1;
+  overflow-y: auto;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  padding: 1%;
+  background-color: #fafafa;
+}
+
+.results-district-item {
+  display: flex;
+  flex-direction: column;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.results-district-item:last-child {
+  border-bottom: none;
+}
+
+.results-district-header {
+  display: flex;
+  align-items: center;
+  gap: .5vw;
+  padding: 1%;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.results-district-header:hover {
+  background-color: #e8f4ff;
+}
+
+.results-district-header input[type="checkbox"] {
+  cursor: pointer;
+  margin: 0;
+}
+
+.results-district-name {
+  flex: 1;
+  font-family: main;
+}
+
+.results-district-count {
+  color: #999;
+}
+
+.results-cities-list {
+  padding-left: 1%;
+  margin-bottom: 1vh;
+}
+
+.results-city-item {
+  display: flex;
+  align-items: center;
+  gap: .5vw;
+  padding: 1% 2%;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.results-city-item:hover {
+  background-color: #e8f4ff;
+}
+
+.results-city-item input[type="checkbox"] {
+  cursor: pointer;
+  margin: 0;
+}
+
+.results-city-item label {
+  cursor: pointer;
+  flex: 1;
+}
+
+.results-modal-bg {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  z-index: 1002;
+  background-color: rgba(166, 166, 166, 0.274);
+  backdrop-filter: blur(3px);
 }

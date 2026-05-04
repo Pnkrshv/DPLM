@@ -94,6 +94,30 @@ export default function Survey() {
     const [mapTooltip, setMapTooltip] = useState({ show: false, text: '', x: 0, y: 0 });
     const mapContainerRef = useRef(null);
 
+    // Модальное окно результатов опроса
+    const [isResultsModalOpen, setIsResultsModalOpen] = useState(false);
+    const [resultsDateFrom, setResultsDateFrom] = useState('');
+    const [resultsDateTo, setResultsDateTo] = useState('');
+    const [resultsCitiesData, setResultsCitiesData] = useState({});
+    const [resultsExpandedDistricts, setResultsExpandedDistricts] = useState({});
+
+
+    const openResultsModal = async () => {
+        setIsResultsModalOpen(true);
+        // Загружаем города, если еще не загружены
+        if (Object.keys(resultsCitiesData).length === 0) {
+            try {
+                const resp = await axios.get('/api/cities');
+                setResultsCitiesData(resp.data || {});
+            } catch (e) {
+                console.error('Ошибка загрузки городов для результатов', e);
+            }
+        }
+    };
+
+    const closeResultsModal = () => {
+        setIsResultsModalOpen(false);
+    };
     // Назначение случайных цветов регионам карты (бледно-розовый → тёмно-красный)
     // и добавление всплывающих подсказок при наведении
     useEffect(() => {
@@ -105,7 +129,7 @@ export default function Survey() {
 
                 const paths = svg.querySelectorAll('path[id]');
 
-                // Назначаем цвета при каждом открытии карты (больше не используем colorsAssigned)
+                // Назначаем цвета при каждом открытии карты
                 paths.forEach(path => {
                     const g = Math.floor(70 + Math.random() * 130);
                     const b = Math.floor(70 + Math.random() * 130);
@@ -1030,6 +1054,90 @@ export default function Survey() {
 
     return (
         <>
+
+            {isResultsModalOpen && (
+                <>
+                    <div className="results-modal-bg" onClick={closeResultsModal}></div>
+                    <div className="select-modal-window results-modal-window">
+                        <div className="modal-header">
+                            <h4>Просмотр результатов</h4>
+                            <div className="close-btn" onClick={closeResultsModal}>
+                                <svg width="18px" height="18px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M7 7.00006L17 17.0001M7 17.0001L17 7.00006" stroke="#292929" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                            </div>
+                        </div>
+                        <div className="modal-body">
+                            <div className="results-container">
+                                {/* Левая панель фильтров */}
+                                <div className="results-left">
+                                    <div className="results-date-block">
+                                        <label>Дата</label>
+                                        <div className="results-date-range">
+                                            <input type="date" value={resultsDateFrom} onChange={e => setResultsDateFrom(e.target.value)} />
+                                            <a>-</a>
+                                            <input type="date" value={resultsDateTo} onChange={e => setResultsDateTo(e.target.value)} />
+                                        </div>
+                                    </div>
+                                    <div className="results-regions-block">
+                                        <label>Регионы</label>
+                                        <div className="results-region-list">
+                                            {Object.keys(resultsCitiesData).length > 0 ? (
+                                                Object.keys(resultsCitiesData).map(district => {
+                                                    const cities = Object.values(resultsCitiesData[district]).flat();
+                                                    const isExpanded = resultsExpandedDistricts[district] || false;
+                                                    return (
+                                                        <div key={district} className="results-district-item">
+                                                            <div
+                                                                className="results-district-header"
+                                                                onClick={() => setResultsExpandedDistricts(prev => ({ ...prev, [district]: !prev[district] }))}
+                                                            >
+                                                                <p className="adaptation-expand-icon">
+                                                                    {isExpanded ? (
+                                                                        <svg width="16px" height="16px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                                            <path fillRule="evenodd" clipRule="evenodd" d="M4.29289 8.29289C4.68342 7.90237 5.31658 7.90237 5.70711 8.29289L12 14.5858L18.2929 8.29289C18.6834 7.90237 19.3166 7.90237 19.7071 8.29289C20.0976 8.68342 20.0976 9.31658 19.7071 9.70711L12.7071 16.7071C12.3166 17.0976 11.6834 17.0976 11.2929 16.7071L4.29289 9.70711C3.90237 9.31658 3.90237 8.68342 4.29289 8.29289Z" fill="#000000" />
+                                                                        </svg>
+                                                                    ) : (
+                                                                        <svg width="16px" height="16px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                                            <path fillRule="evenodd" clipRule="evenodd" d="M8.29289 4.29289C8.68342 3.90237 9.31658 3.90237 9.70711 4.29289L16.7071 11.2929C17.0976 11.6834 17.0976 12.3166 16.7071 12.7071L9.70711 19.7071C9.31658 20.0976 8.68342 20.0976 8.29289 19.7071C7.90237 19.3166 7.90237 18.6834 8.29289 18.2929L14.5858 12L8.29289 5.70711C7.90237 5.31658 7.90237 4.68342 8.29289 4.29289Z" fill="#000000" />
+                                                                        </svg>
+                                                                    )}
+                                                                </p>
+                                                                <input type="checkbox" readOnly checked={false} />
+                                                                <p className="results-district-name">{district}</p>
+                                                                <p className="results-district-count">{cities.length}</p>
+                                                            </div>
+                                                            {isExpanded && (
+                                                                <div className="results-cities-list">
+                                                                    {cities.map(city => (
+                                                                        <div key={city} className="results-city-item">
+                                                                            <input type="checkbox" readOnly />
+                                                                            <label>{city}</label>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })
+                                            ) : (
+                                                <p className="loading-text">Загрузка...</p>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                                {/* Правая панель */}
+                                <div className="results-right">
+                                    <p>Здесь будет таблица результатов</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="modal-footer">
+                            <button className="close-btn-grey" onClick={closeResultsModal}>Закрыть</button>
+                        </div>
+                    </div>
+                </>
+            )}
             {isWindowOpen && (
                 <>
                     <div className="modal-bg" onClick={closeAndReset}></div>
@@ -1593,7 +1701,7 @@ export default function Survey() {
                                                 <button className="conduct-tab disabled" disabled>Агрегированные данные</button>
                                                 <button
                                                     className={`conduct-tab ${activeConductTab === 'results' ? 'active' : ''}`}
-                                                    onClick={() => setActiveConductTab('results')}
+                                                    onClick={openResultsModal} // вместо setActiveConductTab
                                                 >
                                                     Результаты
                                                 </button>
@@ -1723,6 +1831,7 @@ export default function Survey() {
                                             </table>
                                         </div>
                                     </div>
+
                                 )}
 
                                 {/* Этап 5: Завершение опроса (Выборки, Анкеты, Маршруты) */}
