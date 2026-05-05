@@ -1938,12 +1938,9 @@ span {
 }
 
 .results-region-list {
-  flex: 1;
   overflow-y: auto;
-  border: 1px solid #e0e0e0;
   border-radius: 4px;
   padding: 1%;
-  background-color: #fafafa;
 }
 
 .results-district-item {

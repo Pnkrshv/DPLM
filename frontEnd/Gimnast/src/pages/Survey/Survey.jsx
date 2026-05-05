@@ -100,17 +100,45 @@ export default function Survey() {
     const [resultsDateTo, setResultsDateTo] = useState('');
     const [resultsCitiesData, setResultsCitiesData] = useState({});
     const [resultsExpandedDistricts, setResultsExpandedDistricts] = useState({});
+    const [resultsFilteredDistricts, setResultsFilteredDistricts] = useState({});
+
 
 
     const openResultsModal = async () => {
         setIsResultsModalOpen(true);
-        // Загружаем города, если еще не загружены
-        if (Object.keys(resultsCitiesData).length === 0) {
+        if (!selectedRoute) {
+            setResultsFilteredDistricts({});
+            return;
+        }
+
+        // Если данные городов маршрута уже загружены в routeCities (после loadRouteDataForConduct) – используем их
+        if (routeCities.length > 0) {
+            const grouped = {};
+            routeCities.forEach(city => {
+                if (!grouped[city.district]) grouped[city.district] = [];
+                grouped[city.district].push(city.city);
+            });
+            setResultsFilteredDistricts(grouped);
+        } else {
+            // Иначе загружаем маршрут с сервера
             try {
-                const resp = await axios.get('/api/cities');
-                setResultsCitiesData(resp.data || {});
-            } catch (e) {
-                console.error('Ошибка загрузки городов для результатов', e);
+                const response = await axios.get(`/api/route/${selectedRoute}`);
+                const route = response.data;
+                let cities = [];
+                try {
+                    cities = JSON.parse(route.cities_data);
+                } catch (e) {
+                    console.error('Ошибка парсинга cities_data', e);
+                }
+                const grouped = {};
+                cities.forEach(city => {
+                    if (!grouped[city.district]) grouped[city.district] = [];
+                    grouped[city.district].push(city.city);
+                });
+                setResultsFilteredDistricts(grouped);
+            } catch (err) {
+                console.error('Ошибка загрузки маршрута для результатов', err);
+                setResultsFilteredDistricts({});
             }
         }
     };
@@ -1082,9 +1110,9 @@ export default function Survey() {
                                     <div className="results-regions-block">
                                         <label>Регионы</label>
                                         <div className="results-region-list">
-                                            {Object.keys(resultsCitiesData).length > 0 ? (
-                                                Object.keys(resultsCitiesData).map(district => {
-                                                    const cities = Object.values(resultsCitiesData[district]).flat();
+                                            {Object.keys(resultsFilteredDistricts).length > 0 ? (
+                                                Object.keys(resultsFilteredDistricts).map(district => {
+                                                    const cities = resultsFilteredDistricts[district];
                                                     const isExpanded = resultsExpandedDistricts[district] || false;
                                                     return (
                                                         <div key={district} className="results-district-item">
@@ -1103,7 +1131,6 @@ export default function Survey() {
                                                                         </svg>
                                                                     )}
                                                                 </p>
-                                                                <input type="checkbox" readOnly checked={false} />
                                                                 <p className="results-district-name">{district}</p>
                                                                 <p className="results-district-count">{cities.length}</p>
                                                             </div>
@@ -1111,7 +1138,6 @@ export default function Survey() {
                                                                 <div className="results-cities-list">
                                                                     {cities.map(city => (
                                                                         <div key={city} className="results-city-item">
-                                                                            <input type="checkbox" readOnly />
                                                                             <label>{city}</label>
                                                                         </div>
                                                                     ))}
@@ -1121,7 +1147,9 @@ export default function Survey() {
                                                     );
                                                 })
                                             ) : (
-                                                <p className="loading-text">Загрузка...</p>
+                                                <p className="loading-text">
+                                                    {selectedRoute ? 'Нет данных о городах маршрута' : 'Маршрут не выбран'}
+                                                </p>
                                             )}
                                         </div>
                                     </div>
