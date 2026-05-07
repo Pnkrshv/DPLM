@@ -1196,9 +1196,33 @@ export default function Survey() {
                                         <div className="quality-filter-group">
                                             <label>Соответствует выборке</label>
                                             <div className="quality-radio-group">
-                                                <label><input type="radio" name="match" value="yes" checked={resultsMatchFilter === 'yes'} onChange={() => setResultsMatchFilter('yes')} /> Да</label>
-                                                <label><input type="radio" name="match" value="no" checked={resultsMatchFilter === 'no'} onChange={() => setResultsMatchFilter('no')} /> Нет</label>
-                                                <label><input type="radio" name="match" value="neither" checked={resultsMatchFilter === 'neither'} onChange={() => setResultsMatchFilter('neither')} /> Неважно</label>
+                                                <label>
+                                                    <input
+                                                        type="radio"
+                                                        name="match"
+                                                        value="yes"
+                                                        checked={resultsMatchFilter === 'yes'}
+                                                        onChange={() => setResultsMatchFilter('yes')} />
+                                                    Да
+                                                </label>
+                                                <label>
+                                                    <input
+                                                        type="radio"
+                                                        name="match"
+                                                        value="no"
+                                                        checked={resultsMatchFilter === 'no'}
+                                                        onChange={() => setResultsMatchFilter('no')} />
+                                                    Нет
+                                                </label>
+                                                <label>
+                                                    <input
+                                                        type="radio"
+                                                        name="match"
+                                                        value="neither"
+                                                        checked={resultsMatchFilter === 'neither'}
+                                                        onChange={() => setResultsMatchFilter('neither')} />
+                                                    Неважно
+                                                </label>
                                             </div>
                                         </div>
 
@@ -1206,16 +1230,40 @@ export default function Survey() {
                                         <div className="quality-filter-group">
                                             <label>Отклонено</label>
                                             <div className="quality-radio-group">
-                                                <label><input type="radio" name="reject" value="yes" checked={resultsRejectFilter === 'yes'} onChange={() => setResultsRejectFilter('yes')} /> Да</label>
-                                                <label><input type="radio" name="reject" value="no" checked={resultsRejectFilter === 'no'} onChange={() => setResultsRejectFilter('no')} /> Нет</label>
-                                                <label><input type="radio" name="reject" value="neither" checked={resultsRejectFilter === 'neither'} onChange={() => setResultsRejectFilter('neither')} /> Неважно</label>
+                                                <label>
+                                                    <input
+                                                        type="radio"
+                                                        name="reject"
+                                                        value="yes"
+                                                        checked={resultsRejectFilter === 'yes'}
+                                                        onChange={() => setResultsRejectFilter('yes')} />
+                                                    Да
+                                                </label>
+                                                <label>
+                                                    <input
+                                                        type="radio"
+                                                        name="reject"
+                                                        value="no"
+                                                        checked={resultsRejectFilter === 'no'}
+                                                        onChange={() => setResultsRejectFilter('no')} />
+                                                    Нет
+                                                </label>
+                                                <label>
+                                                    <input
+                                                        type="radio"
+                                                        name="reject"
+                                                        value="neither"
+                                                        checked={resultsRejectFilter === 'neither'}
+                                                        onChange={() => setResultsRejectFilter('neither')} />
+                                                    Неважно
+                                                </label>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                                {/* Правая панель */}
+
                                 <div className="results-right">
-                                    <p>Здесь будет таблица результатов</p>
+                                    <p>Результаты</p>
                                 </div>
                             </div>
                         </div>
