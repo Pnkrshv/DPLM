@@ -1925,7 +1925,6 @@ span {
 }
 
 .results-regions-block {
-  flex: 1;
   display: flex;
   flex-direction: column;
   gap: .5vh;
@@ -2015,4 +2014,42 @@ span {
   z-index: 1002;
   background-color: rgba(166, 166, 166, 0.274);
   backdrop-filter: blur(3px);
+}
+
+.quality-title {
+  font-family: main;
+  font-size: clamp(.7rem, .9rem, 1rem);
+  color: #333;
+  font-weight: 600;
+  margin-top: 1vh;
+  margin-bottom: 1vh;
+}
+
+.quality-filter-group {
+  margin-bottom: 1vh;
+}
+
+.quality-filter-group label {
+  font-family: main;
+  font-size: clamp(.6rem, .8rem, 1rem);
+  color: #333;
+  font-weight: 300;
+  display: block;
+  margin-bottom: .5vh;
+}
+
+.quality-radio-group {
+  display: flex;
+  gap: 1vw;
+}
+
+.quality-radio-group label {
+  font-family: main;
+  font-size: clamp(.6rem, .8rem, 1rem);
+  color: #444;
+  display: flex;
+  align-items: center;
+  gap: .5vw;
+  cursor: pointer;
+  user-select: none;
 }

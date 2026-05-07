@@ -101,7 +101,9 @@ export default function Survey() {
     const [resultsCitiesData, setResultsCitiesData] = useState({});
     const [resultsExpandedDistricts, setResultsExpandedDistricts] = useState({});
     const [resultsFilteredDistricts, setResultsFilteredDistricts] = useState({});
-
+    const [resultsRefuseFilter, setResultsRefuseFilter] = useState('neither');
+    const [resultsMatchFilter, setResultsMatchFilter] = useState('neither');
+    const [resultsRejectFilter, setResultsRejectFilter] = useState('neither');
 
 
     const openResultsModal = async () => {
@@ -1151,6 +1153,63 @@ export default function Survey() {
                                                     {selectedRoute ? 'Нет данных о городах маршрута' : 'Маршрут не выбран'}
                                                 </p>
                                             )}
+                                        </div>
+                                    </div>
+
+                                    <div className="results-quality-settings">
+                                        <p className='quality-title'>Качество заполнения</p>
+
+                                        {/* Отказ от интервью */}
+                                        <div className="quality-filter-group">
+                                            <label>Отказ от интервью</label>
+                                            <div className="quality-radio-group">
+                                                <label><input
+                                                    type="radio"
+                                                    name="refuse"
+                                                    value="yes"
+                                                    checked={resultsRefuseFilter === 'yes'}
+                                                    onChange={() => setResultsRefuseFilter('yes')} />
+                                                    Да
+                                                </label>
+                                                <label>
+                                                    <input
+                                                        type="radio"
+                                                        name="refuse"
+                                                        value="no"
+                                                        checked={resultsRefuseFilter === 'no'}
+                                                        onChange={() => setResultsRefuseFilter('no')} />
+                                                    Нет
+                                                </label>
+                                                <label>
+                                                    <input
+                                                        type="radio"
+                                                        name="refuse"
+                                                        value="neither"
+                                                        checked={resultsRefuseFilter === 'neither'}
+                                                        onChange={() => setResultsRefuseFilter('neither')} />
+                                                    Неважно
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        {/* Соответствует выборке */}
+                                        <div className="quality-filter-group">
+                                            <label>Соответствует выборке</label>
+                                            <div className="quality-radio-group">
+                                                <label><input type="radio" name="match" value="yes" checked={resultsMatchFilter === 'yes'} onChange={() => setResultsMatchFilter('yes')} /> Да</label>
+                                                <label><input type="radio" name="match" value="no" checked={resultsMatchFilter === 'no'} onChange={() => setResultsMatchFilter('no')} /> Нет</label>
+                                                <label><input type="radio" name="match" value="neither" checked={resultsMatchFilter === 'neither'} onChange={() => setResultsMatchFilter('neither')} /> Неважно</label>
+                                            </div>
+                                        </div>
+
+                                        {/* Отклонено */}
+                                        <div className="quality-filter-group">
+                                            <label>Отклонено</label>
+                                            <div className="quality-radio-group">
+                                                <label><input type="radio" name="reject" value="yes" checked={resultsRejectFilter === 'yes'} onChange={() => setResultsRejectFilter('yes')} /> Да</label>
+                                                <label><input type="radio" name="reject" value="no" checked={resultsRejectFilter === 'no'} onChange={() => setResultsRejectFilter('no')} /> Нет</label>
+                                                <label><input type="radio" name="reject" value="neither" checked={resultsRejectFilter === 'neither'} onChange={() => setResultsRejectFilter('neither')} /> Неважно</label>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
