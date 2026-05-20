@@ -105,9 +105,26 @@ export default function Survey() {
     const [resultsMatchFilter, setResultsMatchFilter] = useState('neither');
     const [resultsRejectFilter, setResultsRejectFilter] = useState('neither');
 
+    const [interviewerId, setInterviewerId] = useState('');
+    const [userId, setUserId] = useState('');
+
+    const resetResultsFilters = () => {
+        setResultsDateFrom('');
+        setResultsDateTo('');
+        setResultsRefuseFilter('neither');
+        setResultsMatchFilter('neither');
+        setResultsRejectFilter('neither');
+        setInterviewerId('');
+        setUserId('');
+        // При необходимости сбросить expandedDistricts (необязательно)
+        setResultsExpandedDistricts({});
+    };
+
 
     const openResultsModal = async () => {
         setIsResultsModalOpen(true);
+        setInterviewerId('');
+        setUserId('');
         if (!selectedRoute) {
             setResultsFilteredDistricts({});
             return;
@@ -1259,6 +1276,25 @@ export default function Survey() {
                                                 </label>
                                             </div>
                                         </div>
+                                    </div>
+                                    <div className="results-interviewers-block">
+                                        <label>Интервьюеры</label>
+                                        <select value={interviewerId} onChange={(e) => setInterviewerId(e.target.value)}>
+                                            <option value="" disabled>Выбрать</option>
+                                            {/* Сюда можно подгрузить список интервьюеров из API */}
+                                        </select>
+                                    </div>
+                                    <div className="results-users-block">
+                                        <label>Пользователи</label>
+                                        <select value={userId} onChange={(e) => setUserId(e.target.value)}>
+                                            <option value="" disabled>Выбрать</option>
+                                            {/* Сюда можно подгрузить список пользователей из API */}
+                                        </select>
+                                    </div>
+                                    <div className="modal-footer">
+                                        <button className="reset-btn" onClick={resetResultsFilters}>
+                                            Сбросить
+                                        </button>
                                     </div>
                                 </div>
 

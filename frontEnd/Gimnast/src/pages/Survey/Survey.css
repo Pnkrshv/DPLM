@@ -2053,3 +2053,55 @@ span {
   cursor: pointer;
   user-select: none;
 }
+
+.results-interviewers-block,
+.results-users-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5vh;
+  margin-top: 1vh;
+}
+
+.results-interviewers-block label,
+.results-users-block label {
+  font-family: main;
+  color: #333;
+  font-weight: 500;
+}
+
+.results-interviewers-block select,
+.results-users-block select {
+  padding: 0.5%;
+  border: 1px solid #d0d0d0;
+  border-radius: 4px;
+  font-family: main;
+  font-size: clamp(0.6rem, 0.8rem, 1rem);
+  outline: none;
+  cursor: pointer;
+}
+
+.results-interviewers-block select:focus,
+.results-users-block select:focus {
+  border-color: var(--active);
+}
+
+.modal-footer {
+  background-color: transparent;
+  margin-top: auto;
+}
+
+.reset-btn {
+  padding: 0.5% 2%;
+  border-radius: 4px;
+  border: 1px solid #d0d0d0;
+  background-color: #ffffff;
+  font-family: main;
+  font-size: clamp(0.6rem, 0.8rem, 1rem);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  margin-top: .5vh;
+}
+
+.reset-btn:hover {
+  background-color: #f5f5f5;
+}
