@@ -2018,21 +2018,21 @@ export default function Survey() {
                                         <div className="conduct-header">
                                             <div className="conduct-tabs">
                                                 <button
-                                                    className={`conduct-tab ${activeConductTab === 'readiness' ? 'active' : ''}`}
+                                                    className={`conduct-tab`}
                                                     onClick={() => setIsReadinessMapModalOpen(true)}
                                                 >
                                                     Карта готовности
                                                 </button>
                                                 <button
-                                                    className={`conduct-tab ${activeConductTab === 'tasks' ? 'active' : ''}`}
-                                                    onClick={() => { setActiveConductTab('tasks'); setIsTasksModalOpen(true); }}
+                                                    className={"conduct-tab"}
+                                                    onClick={() => {setIsTasksModalOpen(true); }}
                                                 >
                                                     Задания
                                                 </button>
                                                 <button className="conduct-tab disabled" disabled>Агрегированные данные</button>
                                                 <button
-                                                    className={`conduct-tab ${activeConductTab === 'results' ? 'active' : ''}`}
-                                                    onClick={openResultsModal} // вместо setActiveConductTab
+                                                    className={`conduct-tab`}
+                                                    onClick={openResultsModal} 
                                                 >
                                                     Результаты
                                                 </button>
@@ -2086,9 +2086,9 @@ export default function Survey() {
                                                                     style={{ cursor: 'pointer' }}
                                                                 >
                                                                     <td>
-                                                                        <span className="expand-icon" style={{ marginRight: '8px' }}>
+                                                                        <a className="expand-icon" style={{ marginRight: '8px' }}>
                                                                             {expandedDistrictsConduct[row.district] ? '▼' : '▶'}
-                                                                        </span>
+                                                                        </a>
                                                                         {row.district}
                                                                     </td>
                                                                     <td
@@ -2549,7 +2549,7 @@ export default function Survey() {
             {/* Модальное окно "Задания" */}
             {isTasksModalOpen && (
                 <>
-                    <div className="modal-bg" onClick={() => setIsTasksModalOpen(false)}></div>
+                    <div className="results-modal-bg" onClick={() => setIsTasksModalOpen(false)}></div>
                     <div className="create-window">
                         <div className="win-title">
                             <h4>Задания</h4>
@@ -2619,7 +2619,7 @@ export default function Survey() {
             {/* Модальное окно карты готовности опроса */}
             {isReadinessMapModalOpen && (
                 <>
-                    <div className="modal-bg" onClick={() => setIsReadinessMapModalOpen(false)}></div>
+                    <div className="results-modal-bg" onClick={() => setIsReadinessMapModalOpen(false)}></div>
                     <div className="map-modal">
                         <nav className="window-map-navigation">
                             <div className="map-title">Карта готовности опроса</div>

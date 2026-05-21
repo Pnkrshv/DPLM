@@ -1868,7 +1868,7 @@ span {
 /* Модальное окно карты готовности опроса */
 .map-modal {
   position: fixed;
-  z-index: 1001;
+  z-index: 1003;
   left: 50%;
   top: 50%;
   height: 85vh;
