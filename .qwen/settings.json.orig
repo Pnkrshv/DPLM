@@ -1,7 +1,16 @@
 {
   "permissions": {
     "allow": [
-      "Bash(go *)"
+      "Bash(go *)",
+      "Bash(npm run *)",
+      "Bash(taskkill *)",
+      "Bash(start *)",
+      "Bash(.\\main.exe)",
+      "Bash(timeout *)",
+      "Bash(curl *)",
+      "Bash(npm install *)",
+      "Bash(start-process *)"
     ]
-  }
+  },
+  "$version": 3
 }

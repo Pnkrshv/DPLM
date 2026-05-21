@@ -360,7 +360,105 @@ span {
   scrollbar-width: thin;
 }
 
-/* Стили для этапа адаптации анкеты */
+.create-window {
+  position: fixed;
+  z-index: 2002;
+  left: 50%;
+  top: 50%;
+  height: 80%;
+  display: flex;
+  flex-direction: column;
+  border-radius: 4px;
+  overflow: hidden;
+  transform: translate(-50%, -50%);
+  background-color: rgb(255, 255, 255);
+  width: 80vw;
+  border: solid 1px grey;
+  -webkit-box-shadow: 4px 4px 8px 0px rgba(34, 60, 80, 0.2);
+  -moz-box-shadow: 4px 4px 8px 0px rgba(34, 60, 80, 0.2);
+  box-shadow: 4px 4px 8px 0px rgba(34, 60, 80, 0.2);
+  font-size: clamp(.6rem, .8rem, 1rem);
+}
+
+.win-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #e2f0ff;
+  font-family: main;
+  color: rgb(112, 112, 112);
+}
+
+.win-title .close-btn {
+  cursor: pointer;
+}
+
+.form-row {
+  display: flex;
+  width: 100%;
+  justify-content: start;
+  align-items: center;
+  gap: 1vw;
+  margin-bottom: 1vh;
+}
+
+.number-input {
+  width: 11% !important;
+  margin-left: auto;
+}
+
+.create-form .input-create,
+.create-form input[type="number"],
+.create-form select {
+  border: solid #d0d0d0 1px;
+  border-radius: 4px;
+  font-size: clamp(.6rem, .8rem, 1rem);
+  padding: 0.5%;
+  outline: none;
+  font-family: main;
+  width: 100%;
+}
+
+.block-2-leftside {
+  width: 17vw;
+  height: 100%;
+  overflow-y: auto;
+  padding: .5%;
+  border-right: solid grey 1px;
+
+  & h5 {
+    font-size: clamp(.6rem, .8rem, 1rem);
+    font-weight: 300;
+    margin-bottom: 1vh;
+  }
+}
+
+.form-task {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: solid grey 1px;
+  padding-top: 1vh;
+
+  & button {
+    padding: 1% 2%;
+    background-color: var(--active);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: .2s ease;
+
+    &:hover {
+      background-color: var(--hoveractive);
+    }
+  }
+}
+
+.block-2-right {
+  flex: 1;
+}
+
 .adaptation-step {
   padding: 0;
 }

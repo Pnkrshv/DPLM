@@ -85,6 +85,13 @@ export default function Survey() {
     const [expandedDistrictsConduct, setExpandedDistrictsConduct] = useState({});
     const [routeCities, setRouteCities] = useState([]);
 
+    // Модальное окно "Задания"
+    const [isTasksModalOpen, setIsTasksModalOpen] = useState(false);
+    const [tasksSelectedQuestionnaire, setTasksSelectedQuestionnaire] = useState('');
+    const [tasksSelectedRegion, setTasksSelectedRegion] = useState('');
+    const [tasksDurationInterview, setTasksDurationInterview] = useState(0);
+    const [tasksTimeToFind, setTasksTimeToFind] = useState(0);
+
     // Модальное окно выполнения жёстких квот выборки (по клику на гистограмму)
     const [isQuotaDetailModalOpen, setIsQuotaDetailModalOpen] = useState(false);
 
@@ -2018,7 +2025,7 @@ export default function Survey() {
                                                 </button>
                                                 <button
                                                     className={`conduct-tab ${activeConductTab === 'tasks' ? 'active' : ''}`}
-                                                    onClick={() => setActiveConductTab('tasks')}
+                                                    onClick={() => { setActiveConductTab('tasks'); setIsTasksModalOpen(true); }}
                                                 >
                                                     Задания
                                                 </button>
@@ -2535,6 +2542,76 @@ export default function Survey() {
                                 Сохранить
                             </button>
                         </div>
+                    </div>
+                </>
+            )}
+
+            {/* Модальное окно "Задания" */}
+            {isTasksModalOpen && (
+                <>
+                    <div className="modal-bg" onClick={() => setIsTasksModalOpen(false)}></div>
+                    <div className="create-window">
+                        <div className="win-title">
+                            <h4>Задания</h4>
+                            <div className="close-btn" onClick={() => setIsTasksModalOpen(false)}>
+                                <svg width="18px" height="18px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M7 7.00006L17 17.0001M7 17.0001L17 7.00006" stroke="#292929" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                            </div>
+                        </div>
+
+                        <div className="create-form">
+                            <div className="block-2">
+                                <div className="block-2-leftside">
+                                    <h5>Общие настройки</h5>
+
+                                    <div className="form-row">
+                                        <label>Анкета</label>
+                                        <select value={tasksSelectedQuestionnaire} onChange={(e) => setTasksSelectedQuestionnaire(e.target.value)}>
+                                            <option value="">Выберите анкету</option>
+                                            {questionnaires.map(q => (
+                                                <option key={q.id} value={q.id}>{q.name || 'Без названия'}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div className="form-row">
+                                        <label>Регион</label>
+                                        <select value={tasksSelectedRegion} onChange={(e) => setTasksSelectedRegion(e.target.value)}>
+                                            <option value="">Выберите регион</option>
+                                            {Object.values(availableRegionsByFO).flat().length ? (
+                                                Object.values(availableRegionsByFO).flat().map(r => (
+                                                    <option key={r.id || r} value={r.id || r}>{r.name || r}</option>
+                                                ))
+                                            ) : (
+                                                <option value="">Нет регионов</option>
+                                            )}
+                                        </select>
+                                    </div>
+
+                                    <div className="form-row">
+                                        <label>продолжительность интервью, мин</label>
+                                        <input className='number-input' type="number" value={tasksDurationInterview} onChange={(e) => setTasksDurationInterview(Number(e.target.value))} />
+                                    </div>
+
+                                    <div className="form-row">
+                                        <label>время на поиск респондента, мин</label>
+                                        <input className='number-input' type="number" value={tasksTimeToFind} onChange={(e) => setTasksTimeToFind(Number(e.target.value))} />
+                                    </div>
+                                    <div className="form-task">
+                                        <p>Задания интервьюерам</p>
+                                        <button className="add-button">Добавить</button>
+                                    </div>
+
+
+                                </div>
+
+                                <div className="block-2-right">
+                                    {/* Правая часть пока оставлена пустой для будущих задач */}
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
                 </>
             )}
