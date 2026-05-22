@@ -956,9 +956,9 @@ export default function Maps() {
                                     <div className="modal-map-buttons">
                                         <div className="table-buttons">
                                             <div className="table-buttons">
-                                                <button onClick={handleFilterAll}>Все</button>
-                                                <button onClick={handleFilterSelected}>Выбранные</button>
-                                                <button onClick={handleFilterUnselected}>Невыбранные</button>
+                                                <button onClick={handleFilterAll} className={filterMode === 'all' ? 'active-button' : ''}>Все</button>
+                                                <button onClick={handleFilterSelected} className={filterMode === 'selected' ? 'active-button' : ''}>Выбранные</button>
+                                                <button onClick={handleFilterUnselected} className={filterMode === 'unselected' ? 'active-button' : ''}>Невыбранные</button>
                                             </div>
                                         </div>
 

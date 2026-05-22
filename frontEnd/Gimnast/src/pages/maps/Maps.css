@@ -405,6 +405,11 @@
             color: white;
             background-color: var(--hoveractive);
         }
+
+        &.active-button {
+            background-color: var(--active);
+            color: white;
+        }
     }
 }
 

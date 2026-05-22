@@ -6,6 +6,7 @@ import Navigation from './mainUI/Navigation/Navigation'
 import { Route, BrowserRouter, Routes, Navigate } from 'react-router-dom';
 import Survey from "./pages/Survey/Survey";
 import Statistic from "./pages/statistic/Statistic";
+import Manual from "./pages/manual/Manual";
 import Auth from "./pages/auth/Auth";
 
 const ProtectedRoute = ({ children }) => {
@@ -24,6 +25,7 @@ const MainLayout = () => {
           <Route path="selections" element={<Selections />} />
           <Route path="/maps" element={<Maps />} />
           <Route path="/statistic" element={<Statistic />} />
+          <Route path="/manual-input" element={<Manual />} />
         </Routes>
       </main>
     </div>

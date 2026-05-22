@@ -63,6 +63,10 @@
   margin-top: auto;
 }
 
+.manual-input {
+  white-space: nowrap;
+}
+
 .active {
   background: linear-gradient(180deg,
       rgba(0, 96, 100, 1) 0%,
