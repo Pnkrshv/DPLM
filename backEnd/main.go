@@ -2,6 +2,7 @@
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -103,6 +104,7 @@ type Answer struct {
 	Type       string    `gorm:"type:varchar(50);not null" json:"type"` // text, no_answer, refuse, other, agree_disagree, like_dislike, custom
 	Text       string    `gorm:"type:text" json:"text"`
 	OrderIndex int       `gorm:"not null;default:0" json:"order_index"`
+	AnswerCode string    `gorm:"type:varchar(10);default:''" json:"answer_code"` // трёхзначный код ответа (001, 002, 003...)
 	IsRequired bool      `gorm:"default:false" json:"is_required"`
 	CreatedAt  time.Time `json:"created_at"`
 	UpdatedAt  time.Time `json:"updated_at"`
@@ -946,19 +948,33 @@ func createQuestion(c echo.Context) error {
 	}
 
 	// Создаём ответы
+	// Сначала вычисляем максимальный код ответа в этой анкете
+	var maxAnswerCode int
+	db.Model(&Answer{}).
+		Joins("JOIN questions ON answers.question_id = questions.id").
+		Where("questions.questionnaire_id = ?", questionnaireID).
+		Select("COALESCE(MAX(CAST(answers.answer_code AS INTEGER)), 0)").
+		Scan(&maxAnswerCode)
+	
+	answerCode := maxAnswerCode + 1
 	for _, ans := range req.Answers {
+		// Форматируем код ответа как трёхзначное число (001, 002, 003...)
+		codeStr := fmt.Sprintf("%03d", answerCode)
+		
 		answer := &Answer{
 			ID:         uuid.NewString(),
 			QuestionID: q.ID,
 			Type:       ans.Type,
 			Text:       ans.Text,
 			OrderIndex: ans.OrderIndex,
+			AnswerCode: codeStr,
 			IsRequired: ans.IsRequired,
 			CreatedAt:  time.Now(),
 		}
 		if err := db.Create(answer).Error; err != nil {
 			log.Printf("Ошибка при создании ответа: %v", err)
 		}
+		answerCode++
 	}
 
 	// Загружаем созданные ответы для ответа клиенту

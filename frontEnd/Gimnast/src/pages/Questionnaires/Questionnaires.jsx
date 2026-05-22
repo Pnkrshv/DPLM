@@ -349,7 +349,9 @@ export default function Questionnaires() {
         );
       }
 
-      // Функция для добавления вопроса в документ
+      // Функция для добавления вопроса в документ с глобальным счётчиком
+      const answerCodeCounter = { value: 1 };
+      
       const addQuestionToDoc = (question, index) => {
         // Номер и текст вопроса
         docChildren.push(
@@ -383,20 +385,28 @@ export default function Questionnaires() {
 
         // Варианты ответов
         if (question.answers && question.answers.length > 0) {
-          question.answers.forEach((answer, ansIndex) => {
+          question.answers.forEach((answer) => {
             const answerText = answer.text || answer.type;
             if (answerText) {
+              // Используем код из БД, если он есть, иначе генерируем на лету
+              const answerCode = answer.answer_code || String(answerCodeCounter.value).padStart(3, '0');
+              
               docChildren.push(
                 new Paragraph({
                   children: [
                     new TextRun({
-                      text: `${String.fromCharCode(1072 + ansIndex)}) ${answerText}`,
+                      text: `${answerCode}) ${answerText}`,
                       size: 22,
                     })
                   ],
                   spacing: { after: 50 }
                 })
               );
+              
+              // Увеличиваем счётчик только если используем генерированный код
+              if (!answer.answer_code) {
+                answerCodeCounter.value++;
+              }
             }
           });
         }
