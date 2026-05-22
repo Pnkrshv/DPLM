@@ -42,16 +42,19 @@ export default function Survey() {
     // Данные для выборок
     const [samples, setSamples] = useState([]);
     const [selectedSample, setSelectedSample] = useState('');
+    const [sampleSelectionDraft, setSampleSelectionDraft] = useState('');
     const [isSampleSelectModalOpen, setIsSampleSelectModalOpen] = useState(false);
 
     // Данные для анкет
     const [questionnaires, setQuestionnaires] = useState([]);
     const [selectedQuestionnaire, setSelectedQuestionnaire] = useState('');
+    const [questionnaireSelectionDraft, setQuestionnaireSelectionDraft] = useState('');
     const [isQuestionnaireSelectModalOpen, setIsQuestionnaireSelectModalOpen] = useState(false);
 
     // Данные для маршрутов
     const [routes, setRoutes] = useState([]);
     const [selectedRoute, setSelectedRoute] = useState('');
+    const [routeSelectionDraft, setRouteSelectionDraft] = useState('');
     const [isRouteSelectModalOpen, setIsRouteSelectModalOpen] = useState(false);
 
     // Данные для адаптации анкеты (этап 2)
@@ -899,6 +902,27 @@ export default function Survey() {
         }
     };
 
+    const confirmSampleSelection = async () => {
+        if (sampleSelectionDraft) {
+            await handleSampleChange(sampleSelectionDraft);
+        }
+        setIsSampleSelectModalOpen(false);
+    };
+
+    const confirmQuestionnaireSelection = async () => {
+        if (questionnaireSelectionDraft) {
+            await handleQuestionnaireChange(questionnaireSelectionDraft);
+        }
+        setIsQuestionnaireSelectModalOpen(false);
+    };
+
+    const confirmRouteSelection = async () => {
+        if (routeSelectionDraft) {
+            await handleRouteChange(routeSelectionDraft);
+        }
+        setIsRouteSelectModalOpen(false);
+    };
+
     // Удаление опроса
     const deleteSurvey = async (surveyId) => {
         if (!confirm('Вы уверены, что хотите удалить этот опрос?')) return;
@@ -1657,7 +1681,10 @@ export default function Survey() {
                                                     <div className="block-content">
                                                         <button
                                                             className="block-action-btn"
-                                                            onClick={() => setIsSampleSelectModalOpen(true)}
+                                                            onClick={() => {
+                                                            setSampleSelectionDraft(selectedSample);
+                                                            setIsSampleSelectModalOpen(true);
+                                                        }}
                                                             type='button'
                                                         >
                                                             Добавить выборку
@@ -1679,7 +1706,10 @@ export default function Survey() {
                                                     <div className="block-content">
                                                         <button
                                                             className="block-action-btn"
-                                                            onClick={() => setIsQuestionnaireSelectModalOpen(true)}
+                                                            onClick={() => {
+                                                            setQuestionnaireSelectionDraft(selectedQuestionnaire);
+                                                            setIsQuestionnaireSelectModalOpen(true);
+                                                        }}
                                                             type='button'
                                                         >
                                                             Добавить анкету
@@ -1701,7 +1731,10 @@ export default function Survey() {
                                                     <div className="block-content">
                                                         <button
                                                             className="block-action-btn"
-                                                            onClick={() => setIsRouteSelectModalOpen(true)}
+                                                            onClick={() => {
+                                                            setRouteSelectionDraft(selectedRoute);
+                                                            setIsRouteSelectModalOpen(true);
+                                                        }}
                                                             type='button'
                                                         >
                                                             Добавить маршрут
@@ -2184,7 +2217,10 @@ export default function Survey() {
                                                     <div className="block-content">
                                                         <button
                                                             className="block-action-btn"
-                                                            onClick={() => setIsSampleSelectModalOpen(true)}
+                                                            onClick={() => {
+                                                            setSampleSelectionDraft(selectedSample);
+                                                            setIsSampleSelectModalOpen(true);
+                                                        }}
                                                             type='button'
                                                         >
                                                             Добавить выборку
@@ -2206,7 +2242,10 @@ export default function Survey() {
                                                     <div className="block-content">
                                                         <button
                                                             className="block-action-btn"
-                                                            onClick={() => setIsQuestionnaireSelectModalOpen(true)}
+                                                            onClick={() => {
+                                                            setQuestionnaireSelectionDraft(selectedQuestionnaire);
+                                                            setIsQuestionnaireSelectModalOpen(true);
+                                                        }}
                                                             type='button'
                                                         >
                                                             Добавить анкету
@@ -2228,7 +2267,10 @@ export default function Survey() {
                                                     <div className="block-content">
                                                         <button
                                                             className="block-action-btn"
-                                                            onClick={() => setIsRouteSelectModalOpen(true)}
+                                                            onClick={() => {
+                                                            setRouteSelectionDraft(selectedRoute);
+                                                            setIsRouteSelectModalOpen(true);
+                                                        }}
                                                             type='button'
                                                         >
                                                             Добавить маршрут
@@ -2281,8 +2323,8 @@ export default function Survey() {
                                             samples.map(sample => (
                                                 <tr
                                                     key={sample.id}
-                                                    className={selectedSample === sample.id ? 'selected' : ''}
-                                                    onClick={() => handleSampleChange(sample.id)}
+                                                    className={sampleSelectionDraft === sample.id ? 'selected' : ''}
+                                                    onClick={() => setSampleSelectionDraft(sample.id)}
                                                 >
                                                     <td>{sample.name || 'Без названия'}</td>
                                                     <td>{sample.sample_type || '-'}</td>
@@ -2297,8 +2339,8 @@ export default function Survey() {
                                                         <input
                                                             type="radio"
                                                             name="sample-select"
-                                                            checked={selectedSample === sample.id}
-                                                            onChange={() => handleSampleChange(sample.id)}
+                                                            checked={sampleSelectionDraft === sample.id}
+                                                            onChange={() => setSampleSelectionDraft(sample.id)}
                                                         />
                                                     </td>
                                                 </tr>
@@ -2318,7 +2360,7 @@ export default function Survey() {
                             <button className="cancel-btn" onClick={() => setIsSampleSelectModalOpen(false)}>
                                 Отмена
                             </button>
-                            <button className="save-btn" type="button" onClick={() => setIsSampleSelectModalOpen(false)}>
+                            <button className="save-btn" type="button" onClick={confirmSampleSelection}>
                                 Выбрать
                             </button>
                         </div>
@@ -2356,8 +2398,8 @@ export default function Survey() {
                                             questionnaires.map(q => (
                                                 <tr
                                                     key={q.id}
-                                                    className={selectedQuestionnaire === q.id ? 'selected' : ''}
-                                                    onClick={() => handleQuestionnaireChange(q.id)}
+                                                    className={questionnaireSelectionDraft === q.id ? 'selected' : ''}
+                                                    onClick={() => setQuestionnaireSelectionDraft(q.id)}
                                                 >
                                                     <td>{q.name || 'Без названия'}</td>
                                                     <td>{q.code || '-'}</td>
@@ -2367,8 +2409,8 @@ export default function Survey() {
                                                         <input
                                                             type="radio"
                                                             name="questionnaire-select"
-                                                            checked={selectedQuestionnaire === q.id}
-                                                            onChange={() => handleQuestionnaireChange(q.id)}
+                                                            checked={questionnaireSelectionDraft === q.id}
+                                                            onChange={() => setQuestionnaireSelectionDraft(q.id)}
                                                         />
                                                     </td>
                                                 </tr>
@@ -2388,7 +2430,7 @@ export default function Survey() {
                             <button className="cancel-btn" onClick={() => setIsQuestionnaireSelectModalOpen(false)}>
                                 Отмена
                             </button>
-                            <button className="save-btn" type="button" onClick={() => setIsQuestionnaireSelectModalOpen(false)}>
+                            <button className="save-btn" type="button" onClick={confirmQuestionnaireSelection}>
                                 Выбрать
                             </button>
                         </div>
@@ -2426,8 +2468,8 @@ export default function Survey() {
                                             routes.map(route => (
                                                 <tr
                                                     key={route.id}
-                                                    className={selectedRoute === route.id ? 'selected' : ''}
-                                                    onClick={() => handleRouteChange(route.id)}
+                                                    className={routeSelectionDraft === route.id ? 'selected' : ''}
+                                                    onClick={() => setRouteSelectionDraft(route.id)}
                                                 >
                                                     <td>{route.name || 'Без названия'}</td>
                                                     <td>{route.description || '-'}</td>
@@ -2437,8 +2479,8 @@ export default function Survey() {
                                                         <input
                                                             type="radio"
                                                             name="route-select"
-                                                            checked={selectedRoute === route.id}
-                                                            onChange={() => handleRouteChange(route.id)}
+                                                            checked={routeSelectionDraft === route.id}
+                                                            onChange={() => setRouteSelectionDraft(route.id)}
                                                         />
                                                     </td>
                                                 </tr>
@@ -2458,7 +2500,7 @@ export default function Survey() {
                             <button className="cancel-btn" onClick={() => setIsRouteSelectModalOpen(false)}>
                                 Отмена
                             </button>
-                            <button className="save-btn" type="button" onClick={() => setIsRouteSelectModalOpen(false)}>
+                            <button className="save-btn" type="button" onClick={confirmRouteSelection}>
                                 Выбрать
                             </button>
                         </div>
