@@ -351,7 +351,7 @@ export default function Questionnaires() {
 
       // Функция для добавления вопроса в документ с глобальным счётчиком
       const answerCodeCounter = { value: 1 };
-      
+
       const addQuestionToDoc = (question, index) => {
         // Номер и текст вопроса
         docChildren.push(
@@ -390,7 +390,7 @@ export default function Questionnaires() {
             if (answerText) {
               // Используем код из БД, если он есть, иначе генерируем на лету
               const answerCode = answer.answer_code || String(answerCodeCounter.value).padStart(3, '0');
-              
+
               docChildren.push(
                 new Paragraph({
                   children: [
@@ -402,7 +402,7 @@ export default function Questionnaires() {
                   spacing: { after: 50 }
                 })
               );
-              
+
               // Увеличиваем счётчик только если используем генерированный код
               if (!answer.answer_code) {
                 answerCodeCounter.value++;
@@ -1549,7 +1549,172 @@ export default function Questionnaires() {
 
             {activeBlock === 'attr' && (
               <>
-                <p>attr</p>
+                <form
+                  method="post"
+                  className="create-form"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    handleSaveQuestionnaire();
+                  }}
+                >
+                  <label>
+                    <span>*</span>Название анкеты
+                  </label>
+                  <input
+                    className="input-create"
+                    type="text"
+                    value={questionnaireName}
+                    onChange={(e) => setQuestionnaireName(e.target.value)}
+                    placeholder="Введите название анкеты"
+                  />
+
+                  <label>Код анкеты</label>
+                  <input
+                    className="input-create"
+                    type="text"
+                    value={questionnaireCode}
+                    onChange={(e) => setQuestionnaireCode(e.target.value)}
+                    placeholder="Введите код анкеты (необязательно)"
+                  />
+
+                  <label>Инструкция по проведению интервью</label>
+                  <textarea
+                    value={questionnaireDescription}
+                    onChange={(e) => setQuestionnaireDescription(e.target.value)}
+                    placeholder="Введите инструкцию"
+                  ></textarea>
+
+                  <div className="region">
+                    <label>Анкета актуальна для</label>
+                    <div className="scope-switch">
+                      <button
+                        type="button"
+                        className={`switch-btn ${scope === "regions" ? "activ" : ""
+                          }`} //if scope === regions{className = 'regions'}
+                        onClick={() => setScope("regions")}
+                      >
+                        Регионов
+                      </button>
+                      <button
+                        type="button"
+                        className={`switch-btn ${scope === "cities" ? "activ" : ""
+                          }`}
+                        onClick={() => setScope("cities")}
+                      >
+                        Городов
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="region-list">
+                    {scope === "regions" ? (
+                      <>
+                        <div className="region-element1">
+                          <input type="checkbox" name="" id="" />
+                          <p>СЕВЕРО-КАВКАЗСКИЙ</p>
+                        </div>
+                        <div className="region-element1">
+                          <input type="checkbox" name="" id="" />
+                          <p>ЦЕНТРАЛЬНЫЙ</p>
+                        </div>
+                        <div className="region-element1">
+                          <input type="checkbox" name="" id="" />
+                          <p>СИБИРСКИЙ</p>
+                        </div>
+                        <div className="region-element1">
+                          <input type="checkbox" name="" id="" />
+                          <p>СЕВЕРО-ЗАПАДНЫЙ</p>
+                        </div>
+                        <div className="region-element1">
+                          <input type="checkbox" name="" id="" />
+                          <p>УРАЛЬСКИЙ</p>
+                        </div>
+                        <div className="region-element1">
+                          <input type="checkbox" name="" id="" />
+                          <p>ЮЖНЫЙ</p>
+                        </div>
+                        <div className="region-element1">
+                          <input type="checkbox" name="" id="" />
+                          <p>ДАЛЬНЕВОСТОЧНЫЙ</p>
+                        </div>
+                        <div className="region-element1">
+                          <input type="checkbox" name="" id="" />
+                          <p>ПРИВОЛЖСКИЙ</p>
+                        </div>
+                      </>
+                    ) : (
+                      ""
+                    )}
+                    {scope === "cities" ? (
+                      <>
+                        <div className="cities-container">
+                          {loading && <p>Загрузка городов...</p>}
+                          {error && <p className="error">{error}</p>}
+                          {!loading && !error && cities && Object.keys(cities).map(district => {
+                            const citiesList = Object.values(cities[district]).flat();
+                            const isExpanded = expandedDistricts[district];
+                            const anySelected = citiesList.some(city => selectedCities[district]?.[city]);
+                            const allSelected = citiesList.length > 0 && citiesList.every(city => selectedCities[district]?.[city]);
+
+                            return (
+                              <div key={district} className="district-item">
+                                <div className="district-header">
+                                  <p className="expand-icon" onClick={() => toggleExpand(district)}>
+                                    {isExpanded ? <svg width="16px" height="16px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" strokeWidth="0"></g><g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round"></g><g id="SVGRepo_iconCarrier"> <path fill-rule="evenodd" clip-rule="evenodd" d="M4.29289 8.29289C4.68342 7.90237 5.31658 7.90237 5.70711 8.29289L12 14.5858L18.2929 8.29289C18.6834 7.90237 19.3166 7.90237 19.7071 8.29289C20.0976 8.68342 20.0976 9.31658 19.7071 9.70711L12.7071 16.7071C12.3166 17.0976 11.6834 17.0976 11.2929 16.7071L4.29289 9.70711C3.90237 9.31658 3.90237 8.68342 4.29289 8.29289Z" fill="#000000"></path> </g></svg> :
+                                      <svg fill="#000000" width="16px" height="16px" viewBox="-8.5 0 32 32" version="1.1" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" strokeWidth="0"></g><g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round"></g><g id="SVGRepo_iconCarrier"> <title>right</title> <path d="M7.75 16.063l-7.688-7.688 3.719-3.594 11.063 11.094-11.344 11.313-3.5-3.469z"></path> </g></svg>}
+                                  </p>
+                                  <input
+                                    type="checkbox"
+                                    ref={el => districtRefs.current[district] = el}
+                                    onChange={(e) => handleDistrictChange(district, e.target.checked)}
+                                    checked={allSelected}
+                                  />
+                                  <p className="district-name" onClick={() => toggleExpand(district)}>
+                                    {district}
+                                  </p>
+                                </div>
+                                {isExpanded && (
+                                  <div className="cities-list">
+                                    {citiesList.map(city => (
+                                      <div key={city} className="city-item">
+                                        <input
+                                          type="checkbox"
+                                          checked={selectedCities[district]?.[city] || false}
+                                          onChange={(e) => handleCityChange(district, city, e.target.checked)}
+                                        />
+                                        <p>{city}</p>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </>
+                    ) : (
+                      ""
+                    )}
+                  </div>
+
+                  <div className="submit-form">
+                    <button
+                      className="cancel-btn"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setIsModalOpen(false);
+                      }}
+                    >
+                      Отменить
+                    </button>
+                    <button
+                      type="submit"
+                      className="save-btn"
+                    >
+                      Сохранить
+                    </button>
+                  </div>
+                </form>
               </>
             )}
 
