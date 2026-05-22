@@ -146,9 +146,11 @@
   display: flex;
   flex-direction: column;
   flex: 1;
+  padding-top: 1%;
   overflow-y: auto;
   overflow-x: hidden;
   font-family: main;
+  font-size: clamp(.6rem, .8rem, 1rem);
 
   & span {
     color: red;
@@ -191,7 +193,6 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 1%;
-  margin-bottom: 2%;
 }
 
 .scope-switch {
@@ -207,6 +208,7 @@
   border: solid 1px grey;
   color: grey;
   cursor: pointer;
+  font-size: clamp(.6rem, .8rem, 1rem);
   transition: 0.3s all ease-in;
 }
 
@@ -279,44 +281,44 @@
 .region-list {
   display: flex;
   flex-direction: column;
-  margin-left: 12%;
-  font-size: 90%;
+  padding-left: 11.5%;
+  font-size: clamp(.6rem, .8rem, 1rem);
   font-family: main;
-  gap: 2%;
   flex-grow: 1;
-  margin-bottom: 1%;
   max-height: 400px;
   overflow-y: auto;
-  margin-bottom: 16px;
+  gap: .5vh;
   scrollbar-width: thin;
+  margin-bottom: 1vh;
 }
 
 .district-header {
   display: flex;
   flex-direction: row;
+  justify-content: start;
   align-items: center;
 
   & input {
-    margin-right: 1rem;
+    margin-right: .5vw;
   }
 }
 
 .expand-icon {
-  padding-top: 1%;
+  padding-top: .5%;
   margin-right: 0.5vw;
 }
 
 .district-item {
   display: flex;
   flex-direction: column;
-  gap: 1vh;
+  gap: .5vh;
 }
 
 .cities-list {
   display: flex;
   flex-direction: column;
   align-items: start;
-  margin-left: 2rem;
+  margin-left: 2vw;
   gap: 0.5vh;
 }
 
@@ -329,22 +331,20 @@
 
 .region-element1 {
   display: flex;
+  align-items: center;
+  justify-content: start;
   gap: 1%;
 
   & input {
     cursor: pointer;
     min-height: 100%;
   }
-
-  & p {
-    padding-top: 0.25%;
-  }
 }
 
 .cities-container {
   display: flex;
   flex-direction: column;
-  gap: 1vh;
+  gap: .5vh;
 }
 
 .settings-window {
