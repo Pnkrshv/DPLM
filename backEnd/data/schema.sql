@@ -9,6 +9,7 @@
 CREATE TABLE IF NOT EXISTS questions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     questionnaire_id UUID NOT NULL REFERENCES questionnaire_data(id) ON DELETE CASCADE,
+    code VARCHAR(10) DEFAULT '',
     type VARCHAR(50) NOT NULL CHECK (type IN ('open', 'closed', 'mixed', 'scale', 'dichotomous')),
     text TEXT NOT NULL,
     explanation TEXT,

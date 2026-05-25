@@ -1387,7 +1387,7 @@ export default function Questionnaires() {
                                   </svg>
                                 </button>
                               </div>
-                              <div className="question-item-text">{question.text}</div>
+                              <div className="question-item-text">{question.code && `${question.code} - `}{question.text}</div>
                               {question.explanation && (
                                 <div className="question-item-explanation">
                                   <em>{question.explanation}</em>
@@ -1439,7 +1439,7 @@ export default function Questionnaires() {
                                   </svg>
                                 </button>
                               </div>
-                              <div className="question-item-text">{question.text}</div>
+                              <div className="question-item-text">{question.code && `${question.code} - `}{question.text}</div>
                               {question.explanation && (
                                 <div className="question-item-explanation">
                                   <em>{question.explanation}</em>
@@ -1505,7 +1505,7 @@ export default function Questionnaires() {
                                     </svg>
                                   </button>
                                 </div>
-                                <div className="question-item-text">{question.text}</div>
+                                <div className="question-item-text">{question.code && `${question.code} - `}{question.text}</div>
                                 {question.explanation && (
                                   <div className="question-item-explanation">
                                     <em>{question.explanation}</em>

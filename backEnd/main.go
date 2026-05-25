@@ -81,7 +81,8 @@ type QuestionnaireData struct {
 type Question struct {
 	ID                 string    `gorm:"primaryKey" json:"id"`
 	QuestionnaireID    string    `gorm:"type:uuid;not null" json:"questionnaire_id"`
-	Type               string    `gorm:"type:varchar(50);not null" json:"type"` // open, closed, mixed, scale, dichotomous
+	Code               string    `gorm:"type:varchar(10);default:''" json:"code"` // трёхзначный код вопроса (001, 002, 003...)
+	Type               string    `gorm:"type:varchar(50);not null" json:"type"`   // open, closed, mixed, scale, dichotomous
 	Text               string    `gorm:"type:text;not null" json:"text"`
 	Explanation        string    `gorm:"type:text" json:"explanation"`
 	OrderIndex         int       `gorm:"not null;default:0" json:"order_index"`
@@ -955,12 +956,12 @@ func createQuestion(c echo.Context) error {
 		Where("questions.questionnaire_id = ?", questionnaireID).
 		Select("COALESCE(MAX(CAST(answers.answer_code AS INTEGER)), 0)").
 		Scan(&maxAnswerCode)
-	
+
 	answerCode := maxAnswerCode + 1
 	for _, ans := range req.Answers {
 		// Форматируем код ответа как трёхзначное число (001, 002, 003...)
 		codeStr := fmt.Sprintf("%03d", answerCode)
-		
+
 		answer := &Answer{
 			ID:         uuid.NewString(),
 			QuestionID: q.ID,
