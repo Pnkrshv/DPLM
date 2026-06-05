@@ -218,6 +218,10 @@ export default function Questionnaires() {
     setQuestions([]);
     setPassportQuestions([]);
     setAdditionalBlocks([]);
+    setHideRules({});
+    setTransitionRules({});
+    setContradictionRules({});
+    setQuestionSettings({});
     setIsModalOpen(true);
   };
 
@@ -483,6 +487,12 @@ export default function Questionnaires() {
   // Открытие анкеты для редактирования
   const openQuestionnaire = async (questionnaireId) => {
     try {
+      // Сбрасываем правила перед загрузкой новых
+      setHideRules({});
+      setTransitionRules({});
+      setContradictionRules({});
+      setQuestionSettings({});
+      
       const response = await axios.get(`/api/questionnaire/${questionnaireId}`);
       const questionnaire = response.data;
 
@@ -492,7 +502,7 @@ export default function Questionnaires() {
       setQuestionnaireDescription(questionnaire.description || '');
       setScope(questionnaire.scope || 'regions');
 
-      // Загружаем вопросы
+      // Загружаем вопросы (и все правила)
       await fetchQuestions(questionnaireId);
 
       // Открываем окно настроек
@@ -545,7 +555,27 @@ export default function Questionnaires() {
 
   const handleQuestionTypeSelect = (type) => {
     setCurrentQuestionType(type);
-    setQuestionData({ text: '', explanation: '', answers: [] });
+    
+    // Автоматически добавляем ответы в зависимости от типа вопроса
+    let initialAnswers = [];
+    
+    if (type === 'open') {
+      // Открытый вопрос - только одно поле для ввода
+      initialAnswers = [
+        { id: Date.now(), type: 'text', text: '' }
+      ];
+    } else if (type === 'closed') {
+      // Закрытый вопрос - без "Другое"
+      initialAnswers = [];
+    } else if (type === 'mixed') {
+      // Смешанный вопрос - начинаем с пустого списка
+      initialAnswers = [];
+    } else {
+      // Для других типов вопросов (шкальный, дихотомический) - пустой список
+      initialAnswers = [];
+    }
+    
+    setQuestionData({ text: '', explanation: '', answers: initialAnswers });
     setQuestionProperties({
       maxAnswers: '',
       shuffleAnswers: false,
@@ -565,8 +595,21 @@ export default function Questionnaires() {
   };
 
   const handleAnswerTypeSelect = (answerType) => {
+    // Проверяем, доступен ли этот тип ответа для текущего типа вопроса
+    const availableAnswerTypes = getAvailableAnswerTypes(currentQuestionType);
+    
+    if (!availableAnswerTypes.some(t => t.id === answerType)) {
+      alert('Этот тип ответа недоступен для выбранного типа вопроса');
+      return;
+    }
+
     let newAnswers = [];
-    if (answerType === 'agree_disagree') {
+    if (answerType === 'yes_no') {
+      newAnswers = [
+        { id: Date.now() + 1, type: answerType, text: 'Да' },
+        { id: Date.now() + 2, type: answerType, text: 'Нет' }
+      ];
+    } else if (answerType === 'agree_disagree') {
       newAnswers = [
         { id: Date.now() + 1, type: answerType, text: 'Согласен' },
         { id: Date.now() + 2, type: answerType, text: 'Не согласен' }
@@ -576,6 +619,11 @@ export default function Questionnaires() {
         { id: Date.now() + 1, type: answerType, text: 'Нравится' },
         { id: Date.now() + 2, type: answerType, text: 'Не нравится' }
       ];
+    } else if (answerType === 'other') {
+      // При выборе "Другое" добавляем только поле для ввода ответа
+      newAnswers = [
+        { id: Date.now(), type: 'text', text: '' }
+      ];
     } else {
       const newAnswer = {
         id: Date.now(),
@@ -584,6 +632,7 @@ export default function Questionnaires() {
       };
       newAnswers = [newAnswer];
     }
+    
     setQuestionData(prev => ({
       ...prev,
       answers: [...prev.answers, ...newAnswers]
@@ -595,6 +644,7 @@ export default function Questionnaires() {
     const labels = {
       'text': '',
       'other': '',
+      'yes_no': 'Да;Нет',
       'no_answer': 'Затрудняюсь ответить',
       'refuse': 'Отказываюсь отвечать',
       'agree_disagree': 'Согласен;Не согласен',
@@ -629,6 +679,40 @@ export default function Questionnaires() {
     return labels[scope] || scope;
   };
 
+  const getAvailableAnswerTypes = (questionType) => {
+    // Определяем доступные типы ответов для каждого типа вопроса
+    const allAnswerTypes = [
+      { id: 'text', label: 'Текст' },
+      { id: 'no_answer', label: 'Затрудняюсь ответить' },
+      { id: 'refuse', label: 'Отказываюсь отвечать' },
+      { id: 'other', label: 'Другое' },
+      { id: 'agree_disagree', label: 'Согласен;Не согласен' },
+      { id: 'like_dislike', label: 'Нравится;Не нравится' }
+    ];
+
+    switch (questionType) {
+      case 'open':
+        // Открытый - только текст
+        return [{ id: 'text', label: 'Текст' }];
+      case 'closed':
+        // Закрытый - да/нет, согласен/не согласен, нравится/не нравится, затрудняюсь, отказываюсь, другое
+        return [
+          { id: 'yes_no', label: 'Да;Нет' },
+          { id: 'agree_disagree', label: 'Согласен;Не согласен' },
+          { id: 'like_dislike', label: 'Нравится;Не нравится' },
+          { id: 'no_answer', label: 'Затрудняюсь ответить' },
+          { id: 'refuse', label: 'Отказываюсь отвечать' },
+          { id: 'other', label: 'Другое' }
+        ];
+      case 'mixed':
+        // Смешанный - все типы
+        return allAnswerTypes;
+      default:
+        // Для остальных типов - все доступно
+        return allAnswerTypes;
+    }
+  };
+
   const handleAnswerTextChange = (answerId, newText) => {
     setQuestionData(prev => ({
       ...prev,
@@ -639,6 +723,12 @@ export default function Questionnaires() {
   };
 
   const handleRemoveAnswer = (answerId) => {
+    // Для открытого вопроса не позволяем удалить единственное поле
+    if (currentQuestionType === 'open' && questionData.answers.length === 1) {
+      alert('Для открытого вопроса требуется минимум одно поле для ввода ответа');
+      return;
+    }
+    
     setQuestionData(prev => ({
       ...prev,
       answers: prev.answers.filter(answer => answer.id !== answerId)
@@ -648,6 +738,18 @@ export default function Questionnaires() {
   const handleSaveQuestion = async () => {
     if (!questionData.text.trim()) {
       alert('Введите текст вопроса');
+      return;
+    }
+
+    // Проверяем, что для открытого вопроса есть хотя бы одно поле
+    if (currentQuestionType === 'open' && questionData.answers.length === 0) {
+      alert('Открытый вопрос должен иметь поле для ввода ответа');
+      return;
+    }
+
+    // Проверяем, что для закрытого и смешанного вопросов есть ответы
+    if ((currentQuestionType === 'closed' || currentQuestionType === 'mixed') && questionData.answers.length === 0) {
+      alert('Добавьте варианты ответов');
       return;
     }
 
@@ -1656,6 +1758,12 @@ export default function Questionnaires() {
                                     {hideRules[question.id] && hideRules[question.id].conditions && hideRules[question.id].conditions.filter(c => c.questionId).length > 0 && (
                                       <span className="hide-rule-indicator" title="Есть правило скрытия"></span>
                                     )}
+                                    {transitionRules[question.id] && transitionRules[question.id].conditions && transitionRules[question.id].conditions.length > 0 && (
+                                      <span className="transition-rule-indicator" title="Есть правило перехода"></span>
+                                    )}
+                                    {contradictionRules[question.id] && (
+                                      <span className="contradiction-rule-indicator" title="Есть правила противоречий"></span>
+                                    )}
                                   </td>
                                 </tr>
                               );
@@ -1765,6 +1873,12 @@ export default function Questionnaires() {
                                     </button>
                                     {hideRules[question.id] && hideRules[question.id].conditions && hideRules[question.id].conditions.filter(c => c.questionId).length > 0 && (
                                       <span className="hide-rule-indicator" title="Есть правило скрытия"></span>
+                                    )}
+                                    {transitionRules[question.id] && transitionRules[question.id].conditions && transitionRules[question.id].conditions.length > 0 && (
+                                      <span className="transition-rule-indicator" title="Есть правило перехода"></span>
+                                    )}
+                                    {contradictionRules[question.id] && (
+                                      <span className="contradiction-rule-indicator" title="Есть правила противоречий"></span>
                                     )}
                                   </td>
                                 </tr>
@@ -1876,6 +1990,12 @@ export default function Questionnaires() {
                                       </button>
                                       {hideRules[question.id] && hideRules[question.id].conditions && hideRules[question.id].conditions.filter(c => c.questionId).length > 0 && (
                                         <span className="hide-rule-indicator" title="Есть правило скрытия"></span>
+                                      )}
+                                      {transitionRules[question.id] && transitionRules[question.id].conditions && transitionRules[question.id].conditions.length > 0 && (
+                                        <span className="transition-rule-indicator" title="Есть правило перехода"></span>
+                                      )}
+                                      {contradictionRules[question.id] && (
+                                        <span className="contradiction-rule-indicator" title="Есть правила противоречий"></span>
                                       )}
                                     </td>
                                   </tr>
@@ -2744,12 +2864,19 @@ export default function Questionnaires() {
                 </div>
 
                 <div className="answers-header">
-                  <button
-                    className="add-answer-btn"
-                    onClick={handleAddAnswerClick}
-                  >
-                    + Ответ
-                  </button>
+                  {currentQuestionType !== 'open' && (
+                    <button
+                      className="add-answer-btn"
+                      onClick={handleAddAnswerClick}
+                    >
+                      + Ответ
+                    </button>
+                  )}
+                  {currentQuestionType === 'open' && (
+                    <p style={{ color: '#999', fontSize: '12px' }}>
+                      Открытый вопрос - поле для ввода ответа добавлено автоматически
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -2852,7 +2979,7 @@ export default function Questionnaires() {
           >
             <h5>Выберите тип ответа</h5>
             <ul className="question-menu-list">
-              {answerTypes.map((type) => (
+              {getAvailableAnswerTypes(currentQuestionType).map((type) => (
                 <li
                   key={type.id}
                   className="question-menu-item"

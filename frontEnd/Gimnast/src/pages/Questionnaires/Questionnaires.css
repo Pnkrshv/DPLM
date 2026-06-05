@@ -1276,12 +1276,38 @@
   vertical-align: middle;
 }
 
+.transition-rule-indicator {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background-color: #ff9800;
+  border-radius: 50%;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
+.contradiction-rule-indicator {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background-color: #ff9800;
+  border-radius: 50%;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
 .actions-cell {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 4px;
+}
+
+.rule-indicators {
+  display: flex;
+  gap: 2px;
+  align-items: center;
 }
 
 /* Стили для секций блоков в настройках */
