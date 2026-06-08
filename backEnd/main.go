@@ -948,8 +948,6 @@ func createQuestion(c echo.Context) error {
 		})
 	}
 
-	// Создаём ответы
-	// Сначала вычисляем максимальный код ответа в этой анкете
 	var maxAnswerCode int
 	db.Model(&Answer{}).
 		Joins("JOIN questions ON answers.question_id = questions.id").
@@ -959,8 +957,19 @@ func createQuestion(c echo.Context) error {
 
 	answerCode := maxAnswerCode + 1
 	for _, ans := range req.Answers {
-		// Форматируем код ответа как трёхзначное число (001, 002, 003...)
 		codeStr := fmt.Sprintf("%03d", answerCode)
+		// Проверка на существование кода (на случай гонки)
+		var existing Answer
+		if err := db.Where("answer_code = ?", codeStr).First(&existing).Error; err == nil {
+			// Код уже существует – рекурсивно ищем следующий
+			for {
+				answerCode++
+				codeStr = fmt.Sprintf("%03d", answerCode)
+				if err := db.Where("answer_code = ?", codeStr).First(&existing).Error; err != nil {
+					break
+				}
+			}
+		}
 
 		answer := &Answer{
 			ID:         uuid.NewString(),
@@ -1046,31 +1055,32 @@ func deleteQuestion(c echo.Context) error {
 	questionnaireID := c.Param("questionnaire_id")
 	questionID := c.Param("question_id")
 
-	// Проверяем принадлежность вопроса анкете
 	var question Question
 	if err := db.Where("id = ? AND questionnaire_id = ?", questionID, questionnaireID).First(&question).Error; err != nil {
-		return c.JSON(http.StatusNotFound, echo.Map{
-			"error": "Вопрос не найден",
-		})
+		return c.JSON(http.StatusNotFound, echo.Map{"error": "Вопрос не найден"})
 	}
 
-	// Сначала удаляем все ответы, связанные с вопросом
+	// Запоминаем блок и порядковый индекс перед удалением
+	blockType := question.BlockType
+	deletedOrder := question.OrderIndex
+
+	// Удаляем ответы, затем вопрос
 	if err := db.Where("question_id = ?", questionID).Delete(&Answer{}).Error; err != nil {
-		return c.JSON(http.StatusInternalServerError, echo.Map{
-			"error": "Не удалось удалить ответы вопроса",
-		})
+		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Не удалось удалить ответы"})
 	}
-
-	// Затем удаляем сам вопрос
 	if err := db.Delete(&Question{}, "id = ?", questionID).Error; err != nil {
-		return c.JSON(http.StatusInternalServerError, echo.Map{
-			"error": "Не удалось удалить вопрос",
-		})
+		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Не удалось удалить вопрос"})
 	}
 
-	return c.JSON(http.StatusOK, echo.Map{
-		"message": "Вопрос успешно удален",
-	})
+	// Обновляем order_index для вопросов того же блока с большим индексом
+	if err := db.Model(&Question{}).
+		Where("questionnaire_id = ? AND block_type = ? AND order_index > ?", questionnaireID, blockType, deletedOrder).
+		Update("order_index", gorm.Expr("order_index - 1")).Error; err != nil {
+		// Логируем ошибку, но не возвращаем пользователю (удаление уже выполнено)
+		log.Printf("Ошибка обновления order_index: %v", err)
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{"message": "Вопрос успешно удален"})
 }
 
 // Обновление правил скрытия для вопроса
