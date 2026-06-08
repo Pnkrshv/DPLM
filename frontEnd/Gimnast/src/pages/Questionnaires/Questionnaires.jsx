@@ -355,7 +355,7 @@ export default function Questionnaires() {
 
       // Функция для добавления вопроса в документ с глобальным счётчиком
       const answerCodeCounter = { value: 1 };
-      
+
       const addQuestionToDoc = (question, index) => {
         // Номер и текст вопроса
         docChildren.push(
@@ -394,7 +394,7 @@ export default function Questionnaires() {
             if (answerText) {
               // Используем код из БД, если он есть, иначе генерируем на лету
               const answerCode = answer.answer_code || String(answerCodeCounter.value).padStart(3, '0');
-              
+
               docChildren.push(
                 new Paragraph({
                   children: [
@@ -406,7 +406,7 @@ export default function Questionnaires() {
                   spacing: { after: 50 }
                 })
               );
-              
+
               // Увеличиваем счётчик только если используем генерированный код
               if (!answer.answer_code) {
                 answerCodeCounter.value++;
@@ -425,9 +425,21 @@ export default function Questionnaires() {
       };
 
       // Сначала добавляем вопросы паспортички
-      const passportQuestions = (questionnaire.questions || []).filter(q => q.block_type === 'passport');
-      const mainQuestions = (questionnaire.questions || []).filter(q => q.block_type === 'main');
-      const additionalQuestions = (questionnaire.questions || []).filter(q => q.block_type && q.block_type.startsWith('additional_'));
+      const sortedAll = [...(questionnaire.questions || [])].sort((a, b) => {
+        const getPriority = (blockType) => {
+          if (blockType === 'passport') return 1;
+          if (blockType === 'main') return 2;
+          return 3;
+        };
+        const aPri = getPriority(a.block_type);
+        const bPri = getPriority(b.block_type);
+        if (aPri !== bPri) return aPri - bPri;
+        return (a.order_index || 0) - (b.order_index || 0);
+      });
+
+      const passportQuestions = sortedAll.filter(q => q.block_type === 'passport');
+      const mainQuestions = sortedAll.filter(q => q.block_type === 'main');
+      const additionalQuestions = sortedAll.filter(q => q.block_type && q.block_type.startsWith('additional_'));
 
       // Группируем дополнительные блоки для экспорта
       const additionalBlocksMap = {};
@@ -492,7 +504,7 @@ export default function Questionnaires() {
       setTransitionRules({});
       setContradictionRules({});
       setQuestionSettings({});
-      
+
       const response = await axios.get(`/api/questionnaire/${questionnaireId}`);
       const questionnaire = response.data;
 
@@ -555,10 +567,10 @@ export default function Questionnaires() {
 
   const handleQuestionTypeSelect = (type) => {
     setCurrentQuestionType(type);
-    
+
     // Автоматически добавляем ответы в зависимости от типа вопроса
     let initialAnswers = [];
-    
+
     if (type === 'open') {
       // Открытый вопрос - только одно поле для ввода
       initialAnswers = [
@@ -574,7 +586,7 @@ export default function Questionnaires() {
       // Для других типов вопросов (шкальный, дихотомический) - пустой список
       initialAnswers = [];
     }
-    
+
     setQuestionData({ text: '', explanation: '', answers: initialAnswers });
     setQuestionProperties({
       maxAnswers: '',
@@ -597,7 +609,7 @@ export default function Questionnaires() {
   const handleAnswerTypeSelect = (answerType) => {
     // Проверяем, доступен ли этот тип ответа для текущего типа вопроса
     const availableAnswerTypes = getAvailableAnswerTypes(currentQuestionType);
-    
+
     if (!availableAnswerTypes.some(t => t.id === answerType)) {
       alert('Этот тип ответа недоступен для выбранного типа вопроса');
       return;
@@ -632,7 +644,7 @@ export default function Questionnaires() {
       };
       newAnswers = [newAnswer];
     }
-    
+
     setQuestionData(prev => ({
       ...prev,
       answers: [...prev.answers, ...newAnswers]
@@ -728,7 +740,7 @@ export default function Questionnaires() {
       alert('Для открытого вопроса требуется минимум одно поле для ввода ответа');
       return;
     }
-    
+
     setQuestionData(prev => ({
       ...prev,
       answers: prev.answers.filter(answer => answer.id !== answerId)

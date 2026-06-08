@@ -46,14 +46,25 @@ export default function Manual() {
       const response = await axios.get(`/api/questionnaire/${selectedQuestionnaire}/full`);
       const questionnaire = response.data;
       const allQuestions = questionnaire.questions || [];
-      setQuestions(allQuestions);
+      const sortedQuestions = [...allQuestions].sort((a, b) => {
+        const getPriority = (blockType) => {
+          if (blockType === 'passport') return 1;
+          if (blockType === 'main') return 2;
+          return 3;
+        };
+        const aPriority = getPriority(a.block_type);
+        const bPriority = getPriority(b.block_type);
+        if (aPriority !== bPriority) return aPriority - bPriority;
+        return (a.order_index || 0) - (b.order_index || 0);
+      });
+      setQuestions(sortedQuestions);
       setCurrentQuestionIndex(0);
       setSelectedAnswers({});
       setResponses({});
       setIsInputStarted(true);
-      // Загрузка правил (оставляем как было)
+
       const rules = { hide: {}, transition: {}, contradiction: {} };
-      allQuestions.forEach(q => {
+      sortedQuestions.forEach(q => {
         if (q.hide_rules) {
           try { rules.hide[q.id] = JSON.parse(q.hide_rules); } catch (e) { }
         }
@@ -131,13 +142,10 @@ export default function Manual() {
   const handleApplyAnswerCode = (code) => {
     const currentQ = questions[currentQuestionIndex];
     if (!currentQ) return;
-    if (currentQ.question_type === 'open') return;
+    if (currentQ.type === 'open') return;
     const answer = currentQ.answers.find(a => a.answer_code === code);
     if (!answer) {
       alert('Ответ с таким кодом не найден');
-      return;
-    }
-    if (currentQuestion.type === 'open') {
       return;
     }
     const newSelected = [answer.text];
