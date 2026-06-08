@@ -3,27 +3,19 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
 export default function Manual() {
-  // Состояния для выбора анкеты
   const [questionnaires, setQuestionnaires] = useState([]);
   const [selectedQuestionnaire, setSelectedQuestionnaire] = useState('');
-
-  // Состояния для интервью
   const [isInputStarted, setIsInputStarted] = useState(false);
   const [answerCode, setAnswerCode] = useState('');
   const [applyOnEnter, setApplyOnEnter] = useState(true);
-
-  // Состояния для вопросов и ответов
   const [questions, setQuestions] = useState([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState({});
   const [responses, setResponses] = useState({});
-
-  // Состояния для правил
   const [hideRules, setHideRules] = useState({});
   const [transitionRules, setTransitionRules] = useState({});
   const [contradictionRules, setContradictionRules] = useState({});
 
-  // Загрузка анкет
   useEffect(() => {
     fetchQuestionnaires();
   }, []);
@@ -101,6 +93,27 @@ export default function Manual() {
     });
   };
 
+  const hasContradiction = (questionId) => {
+    const rule = contradictionRules[questionId];
+    if (!rule) return false;
+    
+    const currentAnswers = selectedAnswers[questionId];
+    if (!currentAnswers || currentAnswers.length === 0) return false;
+    
+    const conditionMet = rule.answers.some(ans => currentAnswers.includes(ans));
+    if (rule.type === 'selected' && !conditionMet) return false;
+    if (rule.type === 'not_selected' && conditionMet) return false;
+    
+    const contradictId = rule.contradictQuestionId;
+    if (!contradictId) return false;
+    
+    const contradictAnswersSelected = selectedAnswers[contradictId];
+    if (!contradictAnswersSelected || contradictAnswersSelected.length === 0) return false;
+    
+    const contradictMet = rule.contradictAnswers.some(ans => contradictAnswersSelected.includes(ans));
+    return contradictMet;
+  };
+
   const getNextQuestionIndex = () => {
     const currentQ = questions[currentQuestionIndex];
     const rule = transitionRules[currentQ.id];
@@ -130,9 +143,8 @@ export default function Manual() {
   const handleAnswerCodeInput = (e) => {
     const code = e.target.value;
     setAnswerCode(code);
-
     if (e.key === 'Enter') {
-      e.preventDefault(); // предотвращаем отправку формы
+      e.preventDefault();
       if (applyOnEnter) {
         handleApplyAnswerCode(code);
       }
@@ -186,6 +198,12 @@ export default function Manual() {
       alert('Пожалуйста, введите ответ');
       return;
     }
+    
+    if (hasContradiction(currentQ.id)) {
+      alert('Невозможно перейти к следующему вопросу: обнаружено противоречие в ответах');
+      return;
+    }
+    
     const nextIndex = getNextQuestionIndex();
     if (nextIndex >= questions.length) {
       handleFinish();
@@ -225,7 +243,6 @@ export default function Manual() {
     }
   };
 
-  // ========== РАННИЕ ВОЗВРАТЫ ==========
   if (!isInputStarted) {
     return (
       <div className="manual-container">
@@ -264,10 +281,7 @@ export default function Manual() {
     );
   }
 
-  // ========== ОСНОВНОЙ РЕНДЕР ==========
-  // Теперь безопасно объявляем переменные, потому что мы за пределами ранних возвратов
   const currentQuestion = questions[currentQuestionIndex];
-  const visibleQuestions = questions.filter(q => !isQuestionHidden(q.id));
 
   return (
     <div className="manual-container manual-input-container">
@@ -300,19 +314,25 @@ export default function Manual() {
       </div>
 
       <div className="manual-questions-numbers">
-        {visibleQuestions.map((q, idx) => (
-          <button
-            key={q.id}
-            className={`manual-question-number ${q.id === currentQuestion.id ? 'active' : ''}`}
-            onClick={() => {
-              const index = questions.findIndex(qu => qu.id === q.id);
-              setCurrentQuestionIndex(index);
-              setAnswerCode('');
-            }}
-          >
-            {idx + 1}
-          </button>
-        ))}
+        {questions.map((q, idx) => {
+          const hidden = isQuestionHidden(q.id);
+          const contradiction = !hidden && hasContradiction(q.id);
+          return (
+            <button
+              key={q.id}
+              className={`manual-question-number ${q.id === currentQuestion.id ? 'active' : ''} ${hidden ? 'hidden' : ''} ${contradiction ? 'contradiction' : ''}`}
+              onClick={() => {
+                if (hidden || contradiction) return;
+                const index = questions.findIndex(qu => qu.id === q.id);
+                setCurrentQuestionIndex(index);
+                setAnswerCode('');
+              }}
+              disabled={hidden || contradiction}
+            >
+              {idx + 1}
+            </button>
+          );
+        })}
       </div>
 
       <div className="manual-question-section">

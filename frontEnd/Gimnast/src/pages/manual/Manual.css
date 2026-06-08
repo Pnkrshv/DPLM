@@ -439,3 +439,22 @@
     border-color: var(--active);
     box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2);
 }
+
+.manual-question-number.hidden {
+    background-color: #e0e0e0;
+    border-color: #b0b0b0;
+    color: #888;
+    cursor: not-allowed;
+}
+
+.manual-question-number.contradiction {
+    background-color: #ffebee;
+    border-color: #f44336;
+    color: #d32f2f;
+    cursor: not-allowed;
+}
+
+.manual-question-number.contradiction:hover {
+    background-color: #ffcdd2;
+    border-color: #d32f2f;
+}
