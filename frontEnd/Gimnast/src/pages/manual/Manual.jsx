@@ -16,6 +16,29 @@ export default function Manual() {
   const [transitionRules, setTransitionRules] = useState({});
   const [contradictionRules, setContradictionRules] = useState({});
 
+  const [notification, setNotification] = useState({ show: false, message: '', type: '' });
+  let notificationTimeout = null;
+
+  const showNotification = (message, type = 'error') => {
+    if (notificationTimeout) clearTimeout(notificationTimeout);
+    setNotification({ show: true, message, type });
+    notificationTimeout = setTimeout(() => {
+      setNotification({ show: false, message: '', type: '' });
+    }, 10000);
+  };
+
+  useEffect(() => {
+    // Проверяем все вопросы на наличие активного противоречия
+    const hasActiveContradiction = questions.some(q => {
+      if (isQuestionHidden(q.id)) return false;
+      return hasContradiction(q.id);
+    });
+
+    if (hasActiveContradiction) {
+      showNotification('Внимание! Обнаружено противоречие, проверьте правильность введенных данных', 'error');
+    }
+  }, [selectedAnswers, questions]);
+
   useEffect(() => {
     fetchQuestionnaires();
   }, []);
@@ -205,7 +228,12 @@ export default function Manual() {
       const nextIndex = getNextVisibleIndex(currentQuestionIndex + 1);
       if (nextIndex >= questions.length) {
         handleFinish();
-      } else {
+      }
+      if (hasContradiction(currentQ.id)) {
+        showNotification('Невозможно перейти к следующему вопросу: обнаружено противоречие в ответах', 'error');
+        return;
+      }
+      else {
         setCurrentQuestionIndex(nextIndex);
         setAnswerCode('');
       }
@@ -406,6 +434,11 @@ export default function Manual() {
       <div className="manual-footer">
         <button onClick={handleNext} className="manual-next-btn">Следующий</button>
       </div>
+      {notification.show && (
+        <div className={`manual-notification manual-notification-${notification.type}`}>
+          {notification.message}
+        </div>
+      )}
     </div>
   );
 }
