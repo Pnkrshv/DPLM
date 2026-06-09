@@ -96,20 +96,20 @@ export default function Manual() {
   const hasContradiction = (questionId) => {
     const rule = contradictionRules[questionId];
     if (!rule) return false;
-    
+
     const currentAnswers = selectedAnswers[questionId];
     if (!currentAnswers || currentAnswers.length === 0) return false;
-    
+
     const conditionMet = rule.answers.some(ans => currentAnswers.includes(ans));
     if (rule.type === 'selected' && !conditionMet) return false;
     if (rule.type === 'not_selected' && conditionMet) return false;
-    
+
     const contradictId = rule.contradictQuestionId;
     if (!contradictId) return false;
-    
+
     const contradictAnswersSelected = selectedAnswers[contradictId];
     if (!contradictAnswersSelected || contradictAnswersSelected.length === 0) return false;
-    
+
     const contradictMet = rule.contradictAnswers.some(ans => contradictAnswersSelected.includes(ans));
     return contradictMet;
   };
@@ -117,6 +117,8 @@ export default function Manual() {
   const getNextQuestionIndex = () => {
     const currentQ = questions[currentQuestionIndex];
     const rule = transitionRules[currentQ.id];
+    let nextIndex = currentQuestionIndex + 1; // по умолчанию
+
     if (rule && rule.conditions) {
       const conditionsMet = rule.conditions.every(condition => {
         const selected = selectedAnswers[currentQ.id];
@@ -131,13 +133,15 @@ export default function Manual() {
       if (conditionsMet) {
         if (rule.action === 'question') {
           const targetIndex = questions.findIndex(q => q.id === rule.targetQuestionId);
-          if (targetIndex !== -1) return targetIndex;
+          if (targetIndex !== -1) nextIndex = targetIndex;
         } else if (rule.action === 'end') {
           return questions.length;
         }
       }
     }
-    return currentQuestionIndex + 1;
+
+    // Пропускаем скрытые вопросы
+    return getNextVisibleIndex(nextIndex);
   };
 
   const handleAnswerCodeInput = (e) => {
@@ -194,16 +198,31 @@ export default function Manual() {
 
   const handleNext = () => {
     const currentQ = questions[currentQuestionIndex];
+
+    // Если текущий вопрос вдруг стал скрытым (не должно происходить, но на всякий случай)
+    if (isQuestionHidden(currentQ.id)) {
+      // Переход к следующему видимому вопросу
+      const nextIndex = getNextVisibleIndex(currentQuestionIndex + 1);
+      if (nextIndex >= questions.length) {
+        handleFinish();
+      } else {
+        setCurrentQuestionIndex(nextIndex);
+        setAnswerCode('');
+      }
+      return;
+    }
+
+    // Остальная логика без изменений...
     if (!selectedAnswers[currentQ.id] || selectedAnswers[currentQ.id][0] === '') {
       alert('Пожалуйста, введите ответ');
       return;
     }
-    
+
     if (hasContradiction(currentQ.id)) {
       alert('Невозможно перейти к следующему вопросу: обнаружено противоречие в ответах');
       return;
     }
-    
+
     const nextIndex = getNextQuestionIndex();
     if (nextIndex >= questions.length) {
       handleFinish();
@@ -241,6 +260,16 @@ export default function Manual() {
       console.error('Ошибка завершения интервью:', err);
       alert('Ошибка при завершении интервью');
     }
+  };
+
+  // Возвращает индекс следующего видимого (не скрытого) вопроса, начиная с startIndex
+  const getNextVisibleIndex = (startIndex) => {
+    for (let i = startIndex; i < questions.length; i++) {
+      if (!isQuestionHidden(questions[i].id)) {
+        return i;
+      }
+    }
+    return questions.length; // все оставшиеся вопросы скрыты → завершение
   };
 
   if (!isInputStarted) {
