@@ -508,3 +508,19 @@
         font-size: 0.85rem;
     }
 }
+
+.manual-question-number.answered {
+    background-color: #4caf50;
+    border-color: #2e7d32;
+    color: white;
+}
+
+.manual-question-number.answered:hover {
+    background-color: #45a049;
+    border-color: #2e7d32;
+}
+
+.manual-question-number.answered.active {
+    background-color: #2e7d32;
+    border-color: #1b5e20;
+}

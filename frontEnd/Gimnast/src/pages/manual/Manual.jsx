@@ -15,6 +15,7 @@ export default function Manual() {
   const [hideRules, setHideRules] = useState({});
   const [transitionRules, setTransitionRules] = useState({});
   const [contradictionRules, setContradictionRules] = useState({});
+  const [completedQuestions, setCompletedQuestions] = useState(new Set());
 
   const [notification, setNotification] = useState({ show: false, message: '', type: '' });
   let notificationTimeout = null;
@@ -77,6 +78,7 @@ export default function Manual() {
       setSelectedAnswers({});
       setResponses({});
       setIsInputStarted(true);
+      setCompletedQuestions(new Set());
 
       const rules = { hide: {}, transition: {}, contradiction: {} };
       sortedQuestions.forEach(q => {
@@ -137,6 +139,18 @@ export default function Manual() {
     return contradictMet;
   };
 
+  const markQuestionCompleted = (questionId) => {
+    setCompletedQuestions(prev => new Set(prev).add(questionId));
+  };
+
+  const unmarkQuestionCompleted = (questionId) => {
+    setCompletedQuestions(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(questionId);
+      return newSet;
+    });
+  };
+
   const getNextQuestionIndex = () => {
     const currentQ = questions[currentQuestionIndex];
     const rule = transitionRules[currentQ.id];
@@ -189,6 +203,7 @@ export default function Manual() {
     }
     const newSelected = [answer.text];
     setSelectedAnswers(prev => ({ ...prev, [currentQ.id]: newSelected }));
+    unmarkQuestionCompleted(currentQ.id);
     setResponses(prev => ({ ...prev, [currentQ.id]: newSelected }));
     setAnswerCode('');
   };
@@ -216,40 +231,41 @@ export default function Manual() {
     const value = e.target.value;
     const currentQ = questions[currentQuestionIndex];
     setSelectedAnswers(prev => ({ ...prev, [currentQ.id]: [value] }));
+    unmarkQuestionCompleted(currentQ.id);
+    unmarkQuestionCompleted(currentQ.id);
     setResponses(prev => ({ ...prev, [currentQ.id]: [value] }));
   };
 
   const handleNext = () => {
     const currentQ = questions[currentQuestionIndex];
 
-    // Если текущий вопрос вдруг стал скрытым (не должно происходить, но на всякий случай)
+    // Если текущий вопрос скрыт – переходим к следующему видимому
     if (isQuestionHidden(currentQ.id)) {
-      // Переход к следующему видимому вопросу
       const nextIndex = getNextVisibleIndex(currentQuestionIndex + 1);
       if (nextIndex >= questions.length) {
         handleFinish();
-      }
-      if (hasContradiction(currentQ.id)) {
-        showNotification('Невозможно перейти к следующему вопросу: обнаружено противоречие в ответах', 'error');
-        return;
-      }
-      else {
+      } else {
         setCurrentQuestionIndex(nextIndex);
         setAnswerCode('');
       }
       return;
     }
 
-    // Остальная логика без изменений...
+    // Проверка наличия ответа
     if (!selectedAnswers[currentQ.id] || selectedAnswers[currentQ.id][0] === '') {
       alert('Пожалуйста, введите ответ');
       return;
     }
 
+    // Проверка противоречия
     if (hasContradiction(currentQ.id)) {
       alert('Невозможно перейти к следующему вопросу: обнаружено противоречие в ответах');
+      showNotification('Невозможно перейти к следующему вопросу: обнаружено противоречие в ответах', 'error');
       return;
     }
+
+    // Помечаем текущий вопрос как завершённый
+    markQuestionCompleted(currentQ.id);
 
     const nextIndex = getNextQuestionIndex();
     if (nextIndex >= questions.length) {
@@ -371,16 +387,17 @@ export default function Manual() {
       </div>
 
       <div className="manual-questions-numbers">
-        {questions.map((q, idx) => {
-          const hidden = isQuestionHidden(q.id);
-          const contradiction = !hidden && hasContradiction(q.id);
+        {questions.map((question, idx) => {
+          const hidden = isQuestionHidden(question.id);
+          const contradiction = !hidden && hasContradiction(question.id);
+          const answered = !hidden && !contradiction && completedQuestions.has(question.id);
           return (
             <button
-              key={q.id}
-              className={`manual-question-number ${q.id === currentQuestion.id ? 'active' : ''} ${hidden ? 'hidden' : ''} ${contradiction ? 'contradiction' : ''}`}
+              key={question.id}
+              className={`manual-question-number ${question.id === currentQuestion.id ? 'active' : ''} ${hidden ? 'hidden' : ''} ${contradiction ? 'contradiction' : ''} ${answered ? 'answered' : ''}`}
               onClick={() => {
                 if (hidden || contradiction) return;
-                const index = questions.findIndex(qu => qu.id === q.id);
+                const index = questions.findIndex(q => q.id === question.id);
                 setCurrentQuestionIndex(index);
                 setAnswerCode('');
               }}
@@ -391,7 +408,6 @@ export default function Manual() {
           );
         })}
       </div>
-
       <div className="manual-question-section">
         <h3 className="manual-question-text">
           {currentQuestionIndex + 1}. {currentQuestion.text}
