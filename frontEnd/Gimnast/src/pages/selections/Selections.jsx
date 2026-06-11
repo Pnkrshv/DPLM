@@ -742,27 +742,6 @@ export default function Selections() {
 
                       <div className="data-table">
                         <h2>Жёсткие квоты</h2>
-                        {currentSample && (
-                          <div className="quota-info">
-                            {(() => {
-                              try {
-                                const hardQuotas = JSON.parse(currentSample.hard_quotas);
-                                return (
-                                  <>
-                                    {hardQuotas.rows && (
-                                      <p className="quota-rows"><strong>Строки:</strong> {hardQuotas.rows}</p>
-                                    )}
-                                    {hardQuotas.cols && (
-                                      <p className="quota-cols"><strong>Столбцы:</strong> {hardQuotas.cols}</p>
-                                    )}
-                                  </>
-                                );
-                              } catch (e) {
-                                return <p>Ошибка загрузки данных квот</p>;
-                              }
-                            })()}
-                          </div>
-                        )}
                         <table className="data-table">
                           <thead>
                             <tr>
@@ -828,11 +807,9 @@ export default function Selections() {
                         setActiveTab("parameters");
                       }}
                     >
-                      Изменить параметры
+                      <p>Сохарнить</p>
                     </button>
                   </div>
-
-
 
                 </>
               )}

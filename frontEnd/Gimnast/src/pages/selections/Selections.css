@@ -758,7 +758,8 @@
 
 .data-count-btn {
   font-family: main;
-  padding: 2% 4%;
+  width: 5vw;
+  height: 3vh;
   background-color: transparent;
   border: solid grey 1px;
   border-radius: 4px;
@@ -772,9 +773,11 @@
 
 .data-save-btn {
   font-family: main;
-  padding: 2.4% 4%;
+  padding: 2% 4%;
   background-color: var(--active);
   border: none;
+  width: 5vw;
+  height: 3vh;
   border-radius: 4px;
   cursor: pointer;
   color: white;
