@@ -135,6 +135,15 @@ export default function Survey() {
     const [resultsQuestionnaires, setResultsQuestionnaires] = useState([]);
     const [resultsSelectedQuestionnaire, setResultsSelectedQuestionnaire] = useState('');
 
+    // Хранилище прогресса квот для федеральных округов
+    const [quotaProgressMap, setQuotaProgressMap] = useState({});
+    // Хранилище прогресса квот для городов
+    const [cityProgressMap, setCityProgressMap] = useState({});
+    // Хранилище среднего времени интервью для городов
+    const [cityTimeMap, setCityTimeMap] = useState({});
+
+    const [districtTimeMap, setDistrictTimeMap] = useState({});
+
     const fetchAllCities = async () => {
         if (Object.keys(allCitiesData).length > 0) return;
         setAllCitiesLoading(true);
@@ -1058,6 +1067,10 @@ export default function Survey() {
         setStep1Changed(false);
         setStep3Changed(false);
         setStep4Changed(false);
+        setQuotaProgressMap({});
+        setCityProgressMap({});
+        setCityTimeMap({});
+        setDistrictTimeMap({});
     };
 
     useEffect(() => {
@@ -1182,6 +1195,11 @@ export default function Survey() {
         if (isWindowOpen && currentStep === 4) {
             setSelectedConductQuestionnaire(selectedQuestionnaire || '');
             if (selectedRoute) {
+                // Сбрасываем сохранённые прогрессы при смене маршрута
+                setQuotaProgressMap({});
+                setCityProgressMap({});
+                setCityTimeMap({});
+                setDistrictTimeMap({});
                 loadRouteDataForConduct();
             } else {
                 setConductTableData([]);
@@ -1226,21 +1244,59 @@ export default function Survey() {
             const grouped = {};
             cities.forEach(city => {
                 const district = city.district;
-                if (!grouped[district]) {
-                    grouped[district] = [];
-                }
+                if (!grouped[district]) grouped[district] = [];
                 grouped[district].push(city);
             });
 
-            // Формируем данные таблицы
-            const tableData = Object.keys(grouped).map(district => ({
-                district,
-                cities: grouped[district],
-                quotaProgress: generateRandomQuotaProgress(), // теперь объект { low, high }
-                notMatch: '0',
-                rejected: '0',
-                avgTime: generateRandomTime(),
-            }));
+            // Формируем данные таблицы, используя сохранённые значения или генерируя новые
+            const tableData = Object.keys(grouped).map(district => {
+                // Прогресс ФО
+                let districtProgress = quotaProgressMap[district];
+                if (!districtProgress) {
+                    districtProgress = generateRandomQuotaProgress();
+                    setQuotaProgressMap(prev => ({ ...prev, [district]: districtProgress }));
+                }
+
+                // Формируем массив городов с сохранёнными/сгенерированными данными
+                const citiesWithData = grouped[district].map(city => {
+                    const cityKey = `${district}|${city.city}`;
+                    let cityProgress = cityProgressMap[cityKey];
+                    let cityTime = cityTimeMap[cityKey];
+                    if (!cityProgress) {
+                        cityProgress = generateRandomQuotaProgress();
+                        setCityProgressMap(prev => ({ ...prev, [cityKey]: cityProgress }));
+                    }
+                    if (!cityTime) {
+                        cityTime = generateRandomTime();
+                        setCityTimeMap(prev => ({ ...prev, [cityKey]: cityTime }));
+                    }
+                    return { ...city, quotaProgress: cityProgress, avgTime: cityTime };
+                });
+
+                let avgTime = districtTimeMap[district];
+                if (!avgTime) {
+                    // Вычисляем среднее арифметическое времени городов
+                    const sumSeconds = citiesWithData.reduce((sum, city) => {
+                        const [min, sec] = city.avgTime.split(':').map(Number);
+                        return sum + min * 60 + sec;
+                    }, 0);
+                    const avgSeconds = Math.round(sumSeconds / citiesWithData.length);
+                    const minutes = Math.floor(avgSeconds / 60);
+                    const seconds = avgSeconds % 60;
+                    avgTime = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                    setDistrictTimeMap(prev => ({ ...prev, [district]: avgTime }));
+                }
+
+                return {
+                    district,
+                    cities: citiesWithData,
+                    quotaProgress: districtProgress,
+                    notMatch: '0',
+                    rejected: '0',
+                    avgTime: avgTime,
+                };
+            });
+
             setConductTableData(tableData);
         } catch (err) {
             console.error('Ошибка загрузки маршрута для проведения опроса:', err);
@@ -1682,9 +1738,9 @@ export default function Survey() {
                                                         <button
                                                             className="block-action-btn"
                                                             onClick={() => {
-                                                            setSampleSelectionDraft(selectedSample);
-                                                            setIsSampleSelectModalOpen(true);
-                                                        }}
+                                                                setSampleSelectionDraft(selectedSample);
+                                                                setIsSampleSelectModalOpen(true);
+                                                            }}
                                                             type='button'
                                                         >
                                                             Добавить выборку
@@ -1707,9 +1763,9 @@ export default function Survey() {
                                                         <button
                                                             className="block-action-btn"
                                                             onClick={() => {
-                                                            setQuestionnaireSelectionDraft(selectedQuestionnaire);
-                                                            setIsQuestionnaireSelectModalOpen(true);
-                                                        }}
+                                                                setQuestionnaireSelectionDraft(selectedQuestionnaire);
+                                                                setIsQuestionnaireSelectModalOpen(true);
+                                                            }}
                                                             type='button'
                                                         >
                                                             Добавить анкету
@@ -1732,9 +1788,9 @@ export default function Survey() {
                                                         <button
                                                             className="block-action-btn"
                                                             onClick={() => {
-                                                            setRouteSelectionDraft(selectedRoute);
-                                                            setIsRouteSelectModalOpen(true);
-                                                        }}
+                                                                setRouteSelectionDraft(selectedRoute);
+                                                                setIsRouteSelectModalOpen(true);
+                                                            }}
                                                             type='button'
                                                         >
                                                             Добавить маршрут
@@ -2058,14 +2114,14 @@ export default function Survey() {
                                                 </button>
                                                 <button
                                                     className={"conduct-tab"}
-                                                    onClick={() => {setIsTasksModalOpen(true); }}
+                                                    onClick={() => { setIsTasksModalOpen(true); }}
                                                 >
                                                     Задания
                                                 </button>
                                                 <button className="conduct-tab disabled" disabled>Агрегированные данные</button>
                                                 <button
                                                     className={`conduct-tab`}
-                                                    onClick={openResultsModal} 
+                                                    onClick={openResultsModal}
                                                 >
                                                     Результаты
                                                 </button>
@@ -2151,8 +2207,7 @@ export default function Survey() {
                                                                     <td></td>
                                                                 </tr>
                                                                 {expandedDistrictsConduct[row.district] && row.cities.map((city, idx) => {
-                                                                    const cityProgress = generateRandomQuotaProgress();
-                                                                    const cityTime = generateRandomTime();
+                                                                    // Используем уже подготовленные city.quotaProgress и city.avgTime
                                                                     return (
                                                                         <tr key={`${row.district}-${city.city}-${idx}`} className="city-row">
                                                                             <td style={{ paddingLeft: '40px' }}>{city.city}</td>
@@ -2163,23 +2218,23 @@ export default function Survey() {
                                                                                 <div className="quota-progress-bar">
                                                                                     <div
                                                                                         className="quota-progress-low"
-                                                                                        style={{ width: `${cityProgress.low}%` }}
-                                                                                        title={`${cityProgress.low}% / ${cityProgress.high}%`}
+                                                                                        style={{ width: `${city.quotaProgress.low}%` }}
+                                                                                        title={`${city.quotaProgress.low}% / ${city.quotaProgress.high}%`}
                                                                                     >
-                                                                                        <span className="quota-progress-label">{cityProgress.low}%</span>
+                                                                                        <span className="quota-progress-label">{city.quotaProgress.low}%</span>
                                                                                     </div>
                                                                                     <div
                                                                                         className="quota-progress-high"
-                                                                                        style={{ width: `${cityProgress.high}%` }}
-                                                                                        title={`${cityProgress.low}% / ${cityProgress.high}%`}
+                                                                                        style={{ width: `${city.quotaProgress.high}%` }}
+                                                                                        title={`${city.quotaProgress.low}% / ${city.quotaProgress.high}%`}
                                                                                     >
-                                                                                        <span className="quota-progress-label">{cityProgress.high}%</span>
+                                                                                        <span className="quota-progress-label">{city.quotaProgress.high}%</span>
                                                                                     </div>
                                                                                 </div>
                                                                             </td>
                                                                             <td>0</td>
                                                                             <td>0</td>
-                                                                            <td>{cityTime}</td>
+                                                                            <td>{city.avgTime}</td>
                                                                             <td></td>
                                                                         </tr>
                                                                     );
@@ -2218,9 +2273,9 @@ export default function Survey() {
                                                         <button
                                                             className="block-action-btn"
                                                             onClick={() => {
-                                                            setSampleSelectionDraft(selectedSample);
-                                                            setIsSampleSelectModalOpen(true);
-                                                        }}
+                                                                setSampleSelectionDraft(selectedSample);
+                                                                setIsSampleSelectModalOpen(true);
+                                                            }}
                                                             type='button'
                                                         >
                                                             Добавить выборку
@@ -2243,9 +2298,9 @@ export default function Survey() {
                                                         <button
                                                             className="block-action-btn"
                                                             onClick={() => {
-                                                            setQuestionnaireSelectionDraft(selectedQuestionnaire);
-                                                            setIsQuestionnaireSelectModalOpen(true);
-                                                        }}
+                                                                setQuestionnaireSelectionDraft(selectedQuestionnaire);
+                                                                setIsQuestionnaireSelectModalOpen(true);
+                                                            }}
                                                             type='button'
                                                         >
                                                             Добавить анкету
@@ -2268,9 +2323,9 @@ export default function Survey() {
                                                         <button
                                                             className="block-action-btn"
                                                             onClick={() => {
-                                                            setRouteSelectionDraft(selectedRoute);
-                                                            setIsRouteSelectModalOpen(true);
-                                                        }}
+                                                                setRouteSelectionDraft(selectedRoute);
+                                                                setIsRouteSelectModalOpen(true);
+                                                            }}
                                                             type='button'
                                                         >
                                                             Добавить маршрут
