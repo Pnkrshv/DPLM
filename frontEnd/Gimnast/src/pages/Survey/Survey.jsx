@@ -1307,63 +1307,63 @@ export default function Survey() {
     const quotaHardcodedData = [
         // Строка 0: "город более 1 млн человек"
         [
-            { interviewed: 1, plan: 40 },     // женский старше 60
-            { interviewed: 2, plan: 35 },     // женский 50-59
-            { interviewed: 3, plan: 50 },     // женский 30-49
-            { interviewed: 4, plan: 30 },     // женский 18-29
-            { interviewed: 5, plan: 38 },     // мужской старше 60
-            { interviewed: 6, plan: 32 },     // мужской 50-59
-            { interviewed: 7, plan: 45 },     // мужской 30-49
-            { interviewed: 8, plan: 28 },     // мужской 18-29
-            { interviewed: 9, plan: 278 },   // всего
+            { interviewed: 38, plan: 44 },     // женский старше 60
+            { interviewed: 27, plan: 26 },     // женский 50-59
+            { interviewed: 41, plan: 51 },     // женский 30-49
+            { interviewed: 22, plan: 32 },     // женский 18-29
+            { interviewed: 11, plan: 20 },     // мужской старше 60
+            { interviewed: 15, plan: 19 },     // мужской 50-59
+            { interviewed: 39, plan: 46 },     // мужской 30-49
+            { interviewed: 25, plan: 32 },     // мужской 18-29
+            { interviewed: 260, plan: 270 },   // всего
         ],
         // Строка 1: "город от 500 тыс до 1 млн человек"
         [
-            { interviewed: 20, plan: 25 },
-            { interviewed: 18, plan: 22 },
-            { interviewed: 25, plan: 30 },
-            { interviewed: 12, plan: 18 },
-            { interviewed: 15, plan: 20 },
-            { interviewed: 14, plan: 19 },
-            { interviewed: 22, plan: 28 },
-            { interviewed: 10, plan: 15 },
-            { interviewed: 136, plan: 177 },
+            { interviewed: 15, plan: 16 },
+            { interviewed: 7, plan: 9 },
+            { interviewed: 14, plan: 19 }, 
+            { interviewed: 12, plan: 12 },
+            { interviewed: 6, plan: 7 },
+            { interviewed: 7, plan: 7 },
+            { interviewed: 14, plan: 17 },
+            { interviewed: 9, plan: 11 },
+            { interviewed: 84, plan: 98 },
         ],
         // Строка 2: "город от 100 тыс до 500 тыс человек"
         [
-            { interviewed: 12, plan: 18 },
-            { interviewed: 10, plan: 15 },
-            { interviewed: 15, plan: 20 },
-            { interviewed: 8, plan: 12 },
-            { interviewed: 10, plan: 14 },
-            { interviewed: 9, plan: 13 },
-            { interviewed: 14, plan: 18 },
-            { interviewed: 6, plan: 9 },
-            { interviewed: 84, plan: 119 },
+            { interviewed: 18, plan: 19 },
+            { interviewed: 12, plan: 12 },
+            { interviewed: 21, plan: 22 },
+            { interviewed: 11, plan: 14 },
+            { interviewed: 7, plan: 8 },
+            { interviewed: 6, plan: 8 },
+            { interviewed: 20, plan: 21 },
+            { interviewed: 14, plan: 14 },
+            { interviewed: 109, plan: 118 },
         ],
         // Строка 3: "город от 50 тыс до 100 тыс человек"
         [
-            { interviewed: 8, plan: 12 },
+            { interviewed: 9, plan: 25 },
+            { interviewed: 8, plan: 9 },
+            { interviewed: 9, plan: 19 },
             { interviewed: 6, plan: 10 },
-            { interviewed: 9, plan: 14 },
-            { interviewed: 5, plan: 8 },
-            { interviewed: 6, plan: 9 },
-            { interviewed: 5, plan: 8 },
-            { interviewed: 8, plan: 12 },
-            { interviewed: 4, plan: 6 },
-            { interviewed: 51, plan: 79 },
+            { interviewed: 6, plan: 11 },
+            { interviewed: 7, plan: 9 },
+            { interviewed: 8, plan: 20 },
+            { interviewed: 9, plan: 11 },
+            { interviewed: 91, plan: 114 },
         ],
         // Строка 4: "Всего" (сумма по столбцам предыдущих строк)
         [
-            { interviewed: 70, plan: 95 },      // сумма по женскому старше 60
-            { interviewed: 59, plan: 82 },      // женский 50-59
-            { interviewed: 89, plan: 114 },     // женский 30-49
-            { interviewed: 45, plan: 68 },      // женский 18-29
-            { interviewed: 59, plan: 81 },      // мужской старше 60
-            { interviewed: 50, plan: 72 },      // мужской 50-59
-            { interviewed: 79, plan: 103 },     // мужской 30-49
-            { interviewed: 38, plan: 58 },      // мужской 18-29
-            { interviewed: 489, plan: 653 },    // всего сумма по всем строкам
+            { interviewed: 80, plan: 104 },      // сумма по женскому старше 60
+            { interviewed: 54, plan: 56 },      // женский 50-59
+            { interviewed: 85, plan: 111 },     // женский 30-49
+            { interviewed: 51, plan: 68 },      // женский 18-29
+            { interviewed: 30, plan: 46 },      // мужской старше 60
+            { interviewed: 35, plan: 46 },      // мужской 50-59
+            { interviewed: 81, plan: 104 },     // мужской 30-49
+            { interviewed: 57, plan: 68 },      // мужской 18-29
+            { interviewed: 473, plan: 600 },    // всего сумма по всем строкам
         ],
     ];
 
