@@ -99,3 +99,18 @@
     /* скрываем текст под иконкой на мобильных */
   }
 }
+
+.navBarRoute.disabled {
+  pointer-events: none;
+  cursor: default;
+  opacity: 0.5;
+  background: #006064;
+  /* совпадает с обычным фоном */
+}
+
+.navBarRoute.disabled:hover {
+  background: #006064;
+  /* убираем эффект наведения */
+  border-bottom: solid transparent 1px;
+  border-top: solid transparent 1px;
+}
