@@ -864,6 +864,37 @@ func updateQuestionnaire(c echo.Context) error {
 // Удаление анкеты:
 func deleteQuestionnaire(c echo.Context) error {
 	id := c.Param("id")
+	var surveyCount int64
+	db.Model(&SurveyData{}).Where("questionnaire_id = ?", id).Count(&surveyCount)
+	if surveyCount > 0 {
+		return c.JSON(http.StatusConflict, echo.Map{
+			"error": "Анкета используется в опросах и не может быть удалена",
+		})
+	}
+	// Находим все вопросы анкеты
+	var questions []Question
+	if err := db.Where("questionnaire_id = ?", id).Find(&questions).Error; err != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{
+			"error": "Ошибка при получении вопросов",
+		})
+	}
+
+	// Удаляем ответы и вопросы
+	for _, q := range questions {
+		// Удаляем ответы вопроса
+		if err := db.Where("question_id = ?", q.ID).Delete(&Answer{}).Error; err != nil {
+			return c.JSON(http.StatusInternalServerError, echo.Map{
+				"error": "Не удалось удалить ответы",
+			})
+		}
+		// Удаляем вопрос
+		if err := db.Delete(&q).Error; err != nil {
+			return c.JSON(http.StatusInternalServerError, echo.Map{
+				"error": "Не удалось удалить вопрос",
+			})
+		}
+	}
+
 	if err := db.Delete(&QuestionnaireData{}, "id = ?", id).Error; err != nil {
 		return c.JSON(http.StatusInternalServerError, echo.Map{
 			"error": "Не удалось удалить анкету",
