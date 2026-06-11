@@ -1303,6 +1303,70 @@ export default function Survey() {
         }
     };
 
+    // Данные для таблицы квот (5 строк, 9 колонок, в каждой — объект { interviewed, plan })
+    const quotaHardcodedData = [
+        // Строка 0: "город более 1 млн человек"
+        [
+            { interviewed: 1, plan: 40 },     // женский старше 60
+            { interviewed: 2, plan: 35 },     // женский 50-59
+            { interviewed: 3, plan: 50 },     // женский 30-49
+            { interviewed: 4, plan: 30 },     // женский 18-29
+            { interviewed: 5, plan: 38 },     // мужской старше 60
+            { interviewed: 6, plan: 32 },     // мужской 50-59
+            { interviewed: 7, plan: 45 },     // мужской 30-49
+            { interviewed: 8, plan: 28 },     // мужской 18-29
+            { interviewed: 9, plan: 278 },   // всего
+        ],
+        // Строка 1: "город от 500 тыс до 1 млн человек"
+        [
+            { interviewed: 20, plan: 25 },
+            { interviewed: 18, plan: 22 },
+            { interviewed: 25, plan: 30 },
+            { interviewed: 12, plan: 18 },
+            { interviewed: 15, plan: 20 },
+            { interviewed: 14, plan: 19 },
+            { interviewed: 22, plan: 28 },
+            { interviewed: 10, plan: 15 },
+            { interviewed: 136, plan: 177 },
+        ],
+        // Строка 2: "город от 100 тыс до 500 тыс человек"
+        [
+            { interviewed: 12, plan: 18 },
+            { interviewed: 10, plan: 15 },
+            { interviewed: 15, plan: 20 },
+            { interviewed: 8, plan: 12 },
+            { interviewed: 10, plan: 14 },
+            { interviewed: 9, plan: 13 },
+            { interviewed: 14, plan: 18 },
+            { interviewed: 6, plan: 9 },
+            { interviewed: 84, plan: 119 },
+        ],
+        // Строка 3: "город от 50 тыс до 100 тыс человек"
+        [
+            { interviewed: 8, plan: 12 },
+            { interviewed: 6, plan: 10 },
+            { interviewed: 9, plan: 14 },
+            { interviewed: 5, plan: 8 },
+            { interviewed: 6, plan: 9 },
+            { interviewed: 5, plan: 8 },
+            { interviewed: 8, plan: 12 },
+            { interviewed: 4, plan: 6 },
+            { interviewed: 51, plan: 79 },
+        ],
+        // Строка 4: "Всего" (сумма по столбцам предыдущих строк)
+        [
+            { interviewed: 70, plan: 95 },      // сумма по женскому старше 60
+            { interviewed: 59, plan: 82 },      // женский 50-59
+            { interviewed: 89, plan: 114 },     // женский 30-49
+            { interviewed: 45, plan: 68 },      // женский 18-29
+            { interviewed: 59, plan: 81 },      // мужской старше 60
+            { interviewed: 50, plan: 72 },      // мужской 50-59
+            { interviewed: 79, plan: 103 },     // мужской 30-49
+            { interviewed: 38, plan: 58 },      // мужской 18-29
+            { interviewed: 489, plan: 653 },    // всего сумма по всем строкам
+        ],
+    ];
+
 
     return (
         <>
@@ -2958,31 +3022,40 @@ export default function Survey() {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {[
-                                            'город более 1 млн человек',
-                                            'город от 500 тыс до 1 млн человек',
-                                            'город от 100 тыс до 500 тыс человек',
-                                            'город от 50 тыс до 100 тыс человек',
-                                            'Всего',
-                                        ].map((rowLabel, rowIdx) => (
-                                            <tr key={rowIdx}>
-                                                <td className="quota-detail-row-label">{rowLabel}</td>
-                                                <td className="quota-detail-cell opr">
-                                                    <span className="quota-cell-interviewed">Опрошено</span>
-                                                    <span className="quota-cell-plan">План</span>
-                                                </td>
-                                                {[1, 2, 3, 4, 5, 6, 7, 8].map((colIdx) => (
-                                                    <td key={colIdx} className="quota-detail-cell col">
-                                                        <span className="quota-cell-interviewed">-</span>
-                                                        <span className="quota-cell-plan">-</span>
+                                        {quotaHardcodedData.map((row, rowIdx) => {
+                                            const rowLabels = [
+                                                'город более 1 млн человек',
+                                                'город от 500 тыс до 1 млн человек',
+                                                'город от 100 тыс до 500 тыс человек',
+                                                'город от 50 тыс до 100 тыс человек',
+                                                'Всего',
+                                            ];
+                                            return (
+                                                <tr key={rowIdx}>
+                                                    <td className="quota-detail-row-label">{rowLabels[rowIdx]}</td>
+
+                                                    {/* Колонка "Опрошено / План" */}
+                                                    <td className="quota-detail-cell opr">
+                                                        <div className="quota-cell-interviewed">Опрошено</div>
+                                                        <div className="quota-cell-plan">План</div>
                                                     </td>
-                                                ))}
-                                                <td className="quota-detail-cell col">
-                                                    <span className="quota-cell-interviewed">-</span>
-                                                    <span className="quota-cell-plan">-</span>
-                                                </td>
-                                            </tr>
-                                        ))}
+
+                                                    {/* 8 возрастно-половых колонок */}
+                                                    {[0, 1, 2, 3, 4, 5, 6, 7].map(colIdx => (
+                                                        <td key={colIdx} className="quota-detail-cell col">
+                                                            <div className="quota-cell-interviewed">{row[colIdx]?.interviewed ?? '-'}</div>
+                                                            <div className="quota-cell-plan">{row[colIdx]?.plan ?? '-'}</div>
+                                                        </td>
+                                                    ))}
+
+                                                    {/* Последняя колонка "всего" */}
+                                                    <td className="quota-detail-cell col">
+                                                        <div className="quota-cell-interviewed">{row[8]?.interviewed ?? '-'}</div>
+                                                        <div className="quota-cell-plan">{row[8]?.plan ?? '-'}</div>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
                                     </tbody>
                                 </table>
                             </div>
