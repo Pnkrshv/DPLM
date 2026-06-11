@@ -1857,10 +1857,6 @@ span {
   background-color: #ffffff;
 }
 
-.quota-detail-table tbody tr:hover td {
-  background-color: #ffffff;
-}
-
 .quota-detail-table tbody tr:last-child:hover td {
   background-color: #ffffff;
 }
@@ -2385,4 +2381,15 @@ span {
   text-align: center;
   color: #999;
   font-family: main;
+}
+
+/* Выделение ячеек выполнения квот */
+.quota-detail-cell.quota-match {
+  background-color: #d4edda;
+  /* светло-зелёный */
+}
+
+.quota-detail-cell.quota-mismatch {
+  background-color: #f8d7da;
+  /* светло-красный */
 }

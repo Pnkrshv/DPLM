@@ -1321,7 +1321,7 @@ export default function Survey() {
         [
             { interviewed: 15, plan: 16 },
             { interviewed: 7, plan: 9 },
-            { interviewed: 14, plan: 19 }, 
+            { interviewed: 14, plan: 19 },
             { interviewed: 12, plan: 12 },
             { interviewed: 6, plan: 7 },
             { interviewed: 7, plan: 7 },
@@ -2265,7 +2265,7 @@ export default function Survey() {
                                                                             </div>
                                                                         </div>
                                                                     </td>
-                                                                    <td>{row.notMatch}</td>
+                                                                    <td>28</td>
                                                                     <td>{row.rejected}</td>
                                                                     <td>{row.avgTime}</td>
                                                                     <td></td>
@@ -2296,7 +2296,7 @@ export default function Survey() {
                                                                                     </div>
                                                                                 </div>
                                                                             </td>
-                                                                            <td>0</td>
+                                                                            <td>28</td>
                                                                             <td>0</td>
                                                                             <td>{city.avgTime}</td>
                                                                             <td></td>
@@ -3034,25 +3034,39 @@ export default function Survey() {
                                                 <tr key={rowIdx}>
                                                     <td className="quota-detail-row-label">{rowLabels[rowIdx]}</td>
 
-                                                    {/* Колонка "Опрошено / План" */}
+                                                    {/* Колонка "Опрошено / План" (не раскрашивается) */}
                                                     <td className="quota-detail-cell opr">
                                                         <div className="quota-cell-interviewed">Опрошено</div>
                                                         <div className="quota-cell-plan">План</div>
                                                     </td>
 
                                                     {/* 8 возрастно-половых колонок */}
-                                                    {[0, 1, 2, 3, 4, 5, 6, 7].map(colIdx => (
-                                                        <td key={colIdx} className="quota-detail-cell col">
-                                                            <div className="quota-cell-interviewed">{row[colIdx]?.interviewed ?? '-'}</div>
-                                                            <div className="quota-cell-plan">{row[colIdx]?.plan ?? '-'}</div>
-                                                        </td>
-                                                    ))}
+                                                    {[0, 1, 2, 3, 4, 5, 6, 7].map(colIdx => {
+                                                        const interviewed = row[colIdx]?.interviewed;
+                                                        const plan = row[colIdx]?.plan;
+                                                        const isMatch = interviewed === plan;
+                                                        const cellClass = `quota-detail-cell col ${isMatch ? 'quota-match' : 'quota-mismatch'}`;
+                                                        return (
+                                                            <td key={colIdx} className={cellClass}>
+                                                                <div className="quota-cell-interviewed">{interviewed ?? '-'}</div>
+                                                                <div className="quota-cell-plan">{plan ?? '-'}</div>
+                                                            </td>
+                                                        );
+                                                    })}
 
-                                                    {/* Последняя колонка "всего" */}
-                                                    <td className="quota-detail-cell col">
-                                                        <div className="quota-cell-interviewed">{row[8]?.interviewed ?? '-'}</div>
-                                                        <div className="quota-cell-plan">{row[8]?.plan ?? '-'}</div>
-                                                    </td>
+                                                    {/* Колонка "Всего" */}
+                                                    {(() => {
+                                                        const interviewedTotal = row[8]?.interviewed;
+                                                        const planTotal = row[8]?.plan;
+                                                        const isTotalMatch = interviewedTotal === planTotal;
+                                                        const totalCellClass = `quota-detail-cell col ${isTotalMatch ? 'quota-match' : 'quota-mismatch'}`;
+                                                        return (
+                                                            <td className={totalCellClass}>
+                                                                <div className="quota-cell-interviewed">{interviewedTotal ?? '-'}</div>
+                                                                <div className="quota-cell-plan">{planTotal ?? '-'}</div>
+                                                            </td>
+                                                        );
+                                                    })()}
                                                 </tr>
                                             );
                                         })}
