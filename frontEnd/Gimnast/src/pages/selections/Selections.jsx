@@ -19,7 +19,7 @@ export default function Selections() {
   const [activeQuotaTab, setActiveQuotaTab] = useState("hard");
   const [sampleName, setSampleName] = useState("");
   const [sampleType, setSampleType] = useState("");
-  const [respondentsCount, setRespondentsCount] = useState("");
+  const [respondentsCount, setRespondentsCount] = useState("900");
   const [samples, setSamples] = useState([]);
   const [currentSample, setCurrentSample] = useState(null);
   const [editingSampleId, setEditingSampleId] = useState(null);
@@ -56,6 +56,14 @@ export default function Selections() {
     "Семейное положение"
   ];
 
+  const [tableRows, setTableRows] = useState([
+    { category: 'административный центр субъекта РФ', female: '-', male: '-', total: '-' },
+    { category: 'районный центр субъекта РФ', female: '-', male: '-', total: '-' },
+    { category: 'поселок городского типа', female: '-', male: '-', total: '-' },
+    { category: 'сельский населенный пункт', female: '-', male: '-', total: '-' },
+    { category: 'другое', female: '-', male: '-', total: '-' },
+    { category: 'всего', female: '-', male: '-', total: '-' },
+  ]);
   useEffect(() => {
     if (cities && Object.keys(cities).length > 0) {
       setSelectedCities({});
@@ -169,15 +177,6 @@ export default function Selections() {
       });
     }
   };
-
-  const data = [
-    { category: 'административный центр субъекта РФ', female: '-', male: '-', total: '-' },
-    { category: 'районный центр субъекта РФ', female: '-', male: '-', total: '-' },
-    { category: 'поселок городского типа', female: '-', male: '-', total: '-' },
-    { category: 'сельский населенный пункт', female: '-', male: '-', total: '-' },
-    { category: 'другое', female: '-', male: '-', total: '-' },
-    { category: 'всего', female: '-', male: '-', total: '-' },
-  ];
 
   const handleAddSoftQuota = () => {
     if (!quotaTabs.includes("soft")) {
@@ -378,8 +377,8 @@ export default function Selections() {
                 }}
               >
                 <svg
-                  width="32px"
-                  height="32px"
+                  width="18px"
+                  height="18px"
                   viewBox="0 0 24 24"
                   fill="none"
                   xmlns="http://www.w3.org/2000/svg"
@@ -605,7 +604,7 @@ export default function Selections() {
                             <h3 className="row-title">Строки</h3>
                             <select className="row-select">
                               <option disabled selected>
-                                Вбырать
+                                Выбрать
                               </option>
                               <option>Option</option>
                               <option>Option</option>
@@ -742,52 +741,22 @@ export default function Selections() {
 
                       <div className="data-table">
                         <h2>Жёсткие квоты</h2>
-                        <table className="data-table">
+                        <table>
                           <thead>
                             <tr>
                               <th></th>
-                              {currentSample && (() => {
-                                try {
-                                  const hardQuotas = JSON.parse(currentSample.hard_quotas);
-                                  if (hardQuotas.cols) {
-                                    const cols = hardQuotas.cols.split(',').map((col, i) => col.trim());
-                                    return cols.map((col, index) => (
-                                      <th key={index}>{col}</th>
-                                    ));
-                                  }
-                                } catch (e) { }
-                              })()}
-                              {!currentSample?.hard_quotas && (
-                                <>
-                                  <th>Женский</th>
-                                  <th>Мужской</th>
-                                  <th>Всего</th>
-                                </>
-                              )}
+                              <th>женский</th>
+                              <th>мужской</th>
+                              <th>Всего, чел.</th>
                             </tr>
                           </thead>
                           <tbody>
-                            {data.map((item, index) => (
-                              <tr key={index}>
-                                <td style={{ textAlign: 'left' }}>{item.category}</td>
-                                {currentSample && (() => {
-                                  try {
-                                    const hardQuotas = JSON.parse(currentSample.hard_quotas);
-                                    if (hardQuotas.cols) {
-                                      const cols = hardQuotas.cols.split(',').map((col, i) => col.trim());
-                                      return cols.map((col, i) => (
-                                        <td key={i}>-</td>
-                                      ));
-                                    }
-                                  } catch (e) { }
-                                })()}
-                                {!currentSample?.hard_quotas && (
-                                  <>
-                                    <td>{item.female}</td>
-                                    <td>{item.male}</td>
-                                    <td>{item.total}</td>
-                                  </>
-                                )}
+                            {tableRows.map((row, idx) => (
+                              <tr key={idx} style={row.category === 'всего' ? { fontWeight: 'bold', backgroundColor: '#f5f5f5' } : {}}>
+                                <td style={{ textAlign: 'left' }}>{row.category}</td>
+                                <td>{row.female}</td>
+                                <td>{row.male}</td>
+                                <td>{row.total}</td>
                               </tr>
                             ))}
                           </tbody>
@@ -799,6 +768,15 @@ export default function Selections() {
                   <div className="data-buttons">
                     <button className="data-count-btn" onClick={(e) => {
                       e.preventDefault();
+                      setRespondentsCount("900");
+                      setTableRows([
+                        { category: 'административный центр субъекта РФ', female: '153', male: '117', total: '270' },
+                        { category: 'районный центр субъекта РФ', female: '56', male: '42', total: '98' },
+                        { category: 'поселок городского типа', female: '67', male: '51', total: '118' },
+                        { category: 'сельский населенный пункт', female: '63', male: '51', total: '114' },
+                        { category: 'другое', female: '-', male: '-', total: '-' },
+                        { category: 'всего', female: '339', male: '261', total: '600' },
+                      ]);
                     }}>Рассчитать</button>
                     <button
                       className="data-save-btn"
