@@ -1160,7 +1160,6 @@ export default function Questionnaires() {
     { id: 'closed', label: 'Закрытый' },
     { id: 'mixed', label: 'Смешанный' },
     { id: 'scale', label: 'Шкальный' },
-    { id: 'dichotomous', label: 'Дихотомический' }
   ];
 
   const answerTypes = [

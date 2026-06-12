@@ -469,10 +469,10 @@ export default function Survey() {
         // Если экспорт есть — этап считается пройденным (зелёный).
         // Если экспорта нет — этап помечается пропущенным.
         if (currentStep === 3) {
-            if (exports.length > 0) {
+            const hasExportForThisSurvey = exports.some(exp => exp.survey_id === surveyId);
+            if (hasExportForThisSurvey) {
                 markStepAsCompleted(3);
             } else {
-                // Убираем этап из пройденных, чтобы он отображался как пропущенный
                 setCompletedSteps(prev => prev.filter(s => s !== 3));
             }
             goToNextStep();
@@ -493,6 +493,8 @@ export default function Survey() {
                     name: surveyName,
                     code: surveyCode,
                     responsible: responsible,
+                    start_date: startDate ? new Date(startDate).toISOString() : null,
+                    end_date: endDate ? new Date(endDate).toISOString() : null,
                     adaptation: adaptation,
                     adaptation_date: adaptationDate ? new Date(adaptationDate).toISOString() : null,
                 };
@@ -1103,7 +1105,9 @@ export default function Survey() {
     const fetchExports = async () => {
         setExportsLoading(true);
         try {
-            const response = await axios.get(`/api/exports`); // ← изменён URL
+            const response = await axios.get(`/api/exports`, {
+                headers: { 'Cache-Control': 'no-cache' }
+            });
             setExports(Array.isArray(response.data) ? response.data : []);
         } catch (err) {
             console.error('Ошибка при загрузке экспортов:', err);
@@ -1178,18 +1182,13 @@ export default function Survey() {
     // Синхронизация этапа 3 с наличием экспортов: если экспорт есть — этап выполнен, нет — пропущен
     useEffect(() => {
         if (!isWindowOpen || !currentSurveyId) return;
-        if (exports.length > 0) {
+        const hasExportForThisSurvey = exports.some(exp => exp.survey_id === currentSurveyId);
+        if (hasExportForThisSurvey) {
             setCompletedSteps(prev => prev.includes(3) ? prev : [...prev, 3]);
         } else {
             setCompletedSteps(prev => prev.filter(s => s !== 3));
         }
     }, [exports, isWindowOpen, currentSurveyId]);
-
-    const fetchConductData = async () => {
-        // В будущем здесь будет запрос к API
-        console.log('Обновление данных проведения опроса...');
-        // setConductData(...);
-    };
 
     useEffect(() => {
         if (isWindowOpen && currentStep === 4) {
@@ -3089,11 +3088,17 @@ export default function Survey() {
                     onClick={() => {
                         closeAndReset();
                         setIsWindowOpen(true);
+                        fetchSamples();
+                        fetchQuestionnaires();
+                        fetchRoutes();
+                        setCompletedSteps(prev => prev.filter(s => s !== 3));
                     }}
                 >
                     Создать опрос
                 </button>
-                <button className="update-btn" onClick={fetchSurveys}>
+                <button className="update-btn" onClick={() => {
+
+                }}>
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="21.986">
                         <path d="M19.841 3.24A10.988 10.988 0 0 0 8.54.573l1.266 3.8a7.033 7.033 0 0 1 8.809 9.158L17 11.891v7.092h7l-2.407-2.439A11.049 11.049 0 0 0 19.841 3.24zM1 10.942a11.05 11.05 0 0 0 11.013 11.044 11.114 11.114 0 0 0 3.521-.575l-1.266-3.8a7.035 7.035 0 0 1-8.788-9.22L7 9.891V6.034c.021-.02.038-.044.06-.065L7 5.909V2.982H0l2.482 2.449A10.951 10.951 0 0 0 1 10.942z" />
                     </svg>
