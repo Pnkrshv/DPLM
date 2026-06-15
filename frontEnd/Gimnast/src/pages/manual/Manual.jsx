@@ -20,6 +20,37 @@ export default function Manual() {
   const [notification, setNotification] = useState({ show: false, message: '', type: '' });
   let notificationTimeout = null;
 
+  const isConditionMet = (question, selectedValues, condition) => {
+    // Для открытых вопросов – проверяем, введён ли текст
+    if (question.type === 'open') {
+      const hasText = selectedValues && selectedValues.length > 0 && selectedValues[0].trim() !== '';
+      if (condition.type === 'selected') {
+        return hasText;          // есть текст → условие выполнено
+      } else if (condition.type === 'not_selected') {
+        return !hasText;         // нет текста → условие выполнено
+      }
+      return false;
+    }
+
+    // Для закрытых вопросов – сравниваем ответы с заданными значениями
+    if (!selectedValues || selectedValues.length === 0) return false;
+
+    const values = selectedValues; // массив текстов ответов
+
+    if (condition.type === 'selected') {
+      // Хотя бы один выбранный ответ совпадает с одним из condition.answers
+      return condition.answers.some(answerValue =>
+        values.some(v => v === answerValue)
+      );
+    } else if (condition.type === 'not_selected') {
+      // Ни один выбранный ответ не совпадает ни с одним из condition.answers
+      return !condition.answers.some(answerValue =>
+        values.some(v => v === answerValue)
+      );
+    }
+    return false;
+  };
+
   const showNotification = (message, type = 'error') => {
     if (notificationTimeout) clearTimeout(notificationTimeout);
     setNotification({ show: true, message, type });
@@ -109,12 +140,8 @@ export default function Manual() {
       if (!conditionQuestion) return false;
       const selectedForQuestion = selectedAnswers[condition.questionId];
       if (!selectedForQuestion) return false;
-      if (condition.type === 'selected') {
-        return condition.answers.some(ans => selectedForQuestion.includes(ans));
-      } else if (condition.type === 'not_selected') {
-        return !condition.answers.some(ans => selectedForQuestion.includes(ans));
-      }
-      return false;
+      // Используем новую функцию
+      return isConditionMet(conditionQuestion, selectedForQuestion, condition);
     });
   };
 
@@ -125,17 +152,26 @@ export default function Manual() {
     const currentAnswers = selectedAnswers[questionId];
     if (!currentAnswers || currentAnswers.length === 0) return false;
 
-    const conditionMet = rule.answers.some(ans => currentAnswers.includes(ans));
-    if (rule.type === 'selected' && !conditionMet) return false;
-    if (rule.type === 'not_selected' && conditionMet) return false;
+    const currentQuestion = questions.find(q => q.id === questionId);
+    if (!currentQuestion) return false;
+
+    // Проверяем условие на текущем вопросе
+    const conditionMet = isConditionMet(currentQuestion, currentAnswers, { type: rule.type, answers: rule.answers });
+    if (!conditionMet) return false;
 
     const contradictId = rule.contradictQuestionId;
     if (!contradictId) return false;
 
     const contradictAnswersSelected = selectedAnswers[contradictId];
     if (!contradictAnswersSelected || contradictAnswersSelected.length === 0) return false;
+    const contradictQuestion = questions.find(q => q.id === contradictId);
+    if (!contradictQuestion) return false;
 
-    const contradictMet = rule.contradictAnswers.some(ans => contradictAnswersSelected.includes(ans));
+    // Проверяем, выбран ли один из противоречащих ответов
+    const contradictMet = isConditionMet(contradictQuestion, contradictAnswersSelected, {
+      type: 'selected',
+      answers: rule.contradictAnswers
+    });
     return contradictMet;
   };
 
@@ -160,12 +196,7 @@ export default function Manual() {
       const conditionsMet = rule.conditions.every(condition => {
         const selected = selectedAnswers[currentQ.id];
         if (!selected) return false;
-        if (condition.type === 'selected') {
-          return condition.answers.some(ans => selected.includes(ans));
-        } else if (condition.type === 'not_selected') {
-          return !condition.answers.some(ans => selected.includes(ans));
-        }
-        return false;
+        return isConditionMet(currentQ, selected, condition);
       });
       if (conditionsMet) {
         if (rule.action === 'question') {
