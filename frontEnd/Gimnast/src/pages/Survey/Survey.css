@@ -2393,3 +2393,8 @@ span {
   background-color: #f8d7da;
   /* светло-красный */
 }
+
+.done_survey {
+  text-align: center;
+  color: green;
+}
