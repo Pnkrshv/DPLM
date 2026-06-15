@@ -2176,15 +2176,17 @@ export default function Survey() {
                                                     Карта готовности
                                                 </button>
                                                 <button
-                                                    className={"conduct-tab"}
+                                                    className={"conduct-tab disabled"}
                                                     onClick={() => { setIsTasksModalOpen(true); }}
+                                                    disabled
                                                 >
                                                     Задания
                                                 </button>
                                                 <button className="conduct-tab disabled" disabled>Агрегированные данные</button>
                                                 <button
-                                                    className={`conduct-tab`}
+                                                    className={`conduct-tab disabled`}
                                                     onClick={openResultsModal}
+                                                    disabled
                                                 >
                                                     Результаты
                                                 </button>
