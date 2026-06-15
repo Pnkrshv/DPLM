@@ -496,6 +496,38 @@ export default function Questionnaires() {
     }
   };
 
+  const handleUpdateQuestionnaire = async () => {
+    if (!currentQuestionnaire || !currentQuestionnaire.id) {
+      alert('Анкета не найдена');
+      return;
+    }
+
+    if (!questionnaireName.trim()) {
+      alert('Введите название анкеты');
+      return;
+    }
+
+    try {
+      const updateData = {
+        name: questionnaireName,
+        code: questionnaireCode,
+        description: questionnaireDescription,
+        scope: scope,
+        cities: scope === 'cities' ? selectedCities : null
+      };
+
+      await axios.put(`/api/questionnaire/${currentQuestionnaire.id}`, updateData);
+
+      // Обновляем локальный объект currentQuestionnaire
+      setCurrentQuestionnaire(prev => ({ ...prev, ...updateData }));
+
+      alert('Атрибуты анкеты успешно обновлены');
+    } catch (err) {
+      console.error('Ошибка при обновлении анкеты:', err);
+      alert('Ошибка при сохранении: ' + (err.response?.data?.error || err.message));
+    }
+  };
+
   // Открытие анкеты для редактирования
   const openQuestionnaire = async (questionnaireId) => {
     try {
@@ -514,10 +546,16 @@ export default function Questionnaires() {
       setQuestionnaireDescription(questionnaire.description || '');
       setScope(questionnaire.scope || 'regions');
 
-      // Загружаем вопросы (и все правила)
+      // Восстанавливаем выбранные города, если они есть
+      if (questionnaire.scope === 'cities' && questionnaire.cities) {
+        setSelectedCities(questionnaire.cities);
+      } else {
+        setSelectedCities({});
+      }
+
+      // Загружаем вопросы
       await fetchQuestions(questionnaireId);
 
-      // Открываем окно настроек
       setIsSettingsOpen(true);
       setActiveBlock('questions');
     } catch (err) {
@@ -1694,9 +1732,128 @@ export default function Questionnaires() {
             )}
 
             {activeBlock === 'attr' && (
-              <>
-                <p>attr</p>
-              </>
+              <div className="attr-form-container">
+                <form className="create-form" onSubmit={(e) => { e.preventDefault(); handleUpdateQuestionnaire(); }}>
+                  <label><span>*</span>Название анкеты</label>
+                  <input
+                    className="input-create"
+                    type="text"
+                    value={questionnaireName}
+                    onChange={(e) => setQuestionnaireName(e.target.value)}
+                    placeholder="Введите название анкеты"
+                  />
+
+                  <label>Код анкеты</label>
+                  <input
+                    className="input-create"
+                    type="text"
+                    value={questionnaireCode}
+                    onChange={(e) => setQuestionnaireCode(e.target.value)}
+                    placeholder="Введите код анкеты (необязательно)"
+                  />
+
+                  <label>Инструкция по проведению интервью</label>
+                  <textarea
+                    value={questionnaireDescription}
+                    onChange={(e) => setQuestionnaireDescription(e.target.value)}
+                    placeholder="Введите инструкцию"
+                  ></textarea>
+
+                  <div className="region">
+                    <label>Анкета актуальна для</label>
+                    <div className="scope-switch">
+                      <button
+                        type="button"
+                        className={`switch-btn ${scope === "regions" ? "activ" : ""}`}
+                        onClick={() => {
+                          setScope("regions");
+                          setSelectedCities({});
+                        }}
+                      >
+                        Регионов
+                      </button>
+                      <button
+                        type="button"
+                        className={`switch-btn ${scope === "cities" ? "activ" : ""}`}
+                        onClick={() => {
+                          setScope("cities");
+                          if (Object.keys(cities).length === 0 && !loading) fetchCities();
+                        }}
+                      >
+                        Городов
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="region-list">
+                    {scope === "regions" ? (
+                      // Можно оставить статический список регионов или сделать динамический, как при создании
+                      // Для простоты используем тот же статический список, что и в модалке создания
+                      <>
+                        <div className="region-element1"><input type="checkbox" /> <p>СЕВЕРО-КАВКАЗСКИЙ</p></div>
+                        <div className="region-element1"><input type="checkbox" /> <p>ЦЕНТРАЛЬНЫЙ</p></div>
+                        <div className="region-element1"><input type="checkbox" /> <p>СИБИРСКИЙ</p></div>
+                        <div className="region-element1"><input type="checkbox" /> <p>СЕВЕРО-ЗАПАДНЫЙ</p></div>
+                        <div className="region-element1"><input type="checkbox" /> <p>УРАЛЬСКИЙ</p></div>
+                        <div className="region-element1"><input type="checkbox" /> <p>ЮЖНЫЙ</p></div>
+                        <div className="region-element1"><input type="checkbox" /> <p>ДАЛЬНЕВОСТОЧНЫЙ</p></div>
+                        <div className="region-element1"><input type="checkbox" /> <p>ПРИВОЛЖСКИЙ</p></div>
+                      </>
+                    ) : (
+                      <div className="cities-container">
+                        {loading && <p>Загрузка городов...</p>}
+                        {error && <p className="error">{error}</p>}
+                        {!loading && !error && cities && Object.keys(cities).map(district => {
+                          const citiesList = Object.values(cities[district]).flat();
+                          const isExpanded = expandedDistricts[district];
+                          const allSelected = citiesList.length > 0 && citiesList.every(city => selectedCities[district]?.[city]);
+
+                          return (
+                            <div key={district} className="district-item">
+                              <div className="district-header">
+                                <p className="expand-icon" onClick={() => toggleExpand(district)}>
+                                  {isExpanded ? <svg width="16px" height="16px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" strokeWidth="0"></g><g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round"></g><g id="SVGRepo_iconCarrier"> <path fill-rule="evenodd" clip-rule="evenodd" d="M4.29289 8.29289C4.68342 7.90237 5.31658 7.90237 5.70711 8.29289L12 14.5858L18.2929 8.29289C18.6834 7.90237 19.3166 7.90237 19.7071 8.29289C20.0976 8.68342 20.0976 9.31658 19.7071 9.70711L12.7071 16.7071C12.3166 17.0976 11.6834 17.0976 11.2929 16.7071L4.29289 9.70711C3.90237 9.31658 3.90237 8.68342 4.29289 8.29289Z" fill="#000000"></path> </g></svg> :
+                                    <svg fill="#000000" width="16px" height="16px" viewBox="-8.5 0 32 32" version="1.1" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" strokeWidth="0"></g><g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round"></g><g id="SVGRepo_iconCarrier"> <title>right</title> <path d="M7.75 16.063l-7.688-7.688 3.719-3.594 11.063 11.094-11.344 11.313-3.5-3.469z"></path> </g></svg>}
+                                </p>
+                                <input
+                                  type="checkbox"
+                                  ref={el => districtRefs.current[district] = el}
+                                  onChange={(e) => handleDistrictChange(district, e.target.checked)}
+                                  checked={allSelected}
+                                />
+                                <p className="district-name" onClick={() => toggleExpand(district)}>{district}</p>
+                              </div>
+                              {isExpanded && (
+                                <div className="cities-list">
+                                  {citiesList.map(city => (
+                                    <div key={city} className="city-item">
+                                      <input
+                                        type="checkbox"
+                                        checked={selectedCities[district]?.[city] || false}
+                                        onChange={(e) => handleCityChange(district, city, e.target.checked)}
+                                      />
+                                      <p>{city}</p>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="submit-form">
+                    <button type="button" className="cancel-btn" onClick={() => setIsSettingsOpen(false)}>
+                      Закрыть
+                    </button>
+                    <button type="submit" className="save-btn">
+                      Сохранить изменения
+                    </button>
+                  </div>
+                </form>
+              </div>
             )}
 
             {activeBlock === 'settings' && (

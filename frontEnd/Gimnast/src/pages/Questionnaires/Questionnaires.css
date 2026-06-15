@@ -2278,6 +2278,23 @@ button.contradiction-type-btn {
   border: none;
   outline: none;
 }
+
 .delete-rule-btn:hover {
   background-color: #d32f2f;
+}
+
+/* Атрибуты — форма во весь экран с прокруткой */
+.attr-form-container {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  /* важно для работы flex-контейнера */
+}
+
+.attr-form-container .create-form {
+  overflow-y: visible;
+  flex: none;
+  height: 100%;
+  padding-bottom: 20px;
+  /* небольшой отступ снизу */
 }
