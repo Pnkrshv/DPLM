@@ -473,12 +473,12 @@ export default function Manual() {
               key={question.id}
               className={`manual-question-number ${question.id === currentQuestion.id ? 'active' : ''} ${hidden ? 'hidden' : ''} ${contradiction ? 'contradiction' : ''} ${answered ? 'answered' : ''}`}
               onClick={() => {
-                if (hidden || contradiction) return;
+                if (hidden) return;
                 const index = questions.findIndex(q => q.id === question.id);
                 setCurrentQuestionIndex(index);
                 setAnswerCode('');
               }}
-              disabled={hidden || contradiction}
+              disabled={hidden}
             >
               {idx + 1}
             </button>
