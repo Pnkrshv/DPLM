@@ -591,7 +591,7 @@ export default function Selections() {
                     {activeQuotaTab === "hard" && (
                       <>
                         <div className="right-select">
-                          <select>
+                          <select disabled>
                             <option disabled selected>
                               Выбрать
                             </option>
@@ -602,7 +602,7 @@ export default function Selections() {
                         <div className="row-col">
                           <div className="row">
                             <h3 className="row-title">Строки</h3>
-                            <select className="row-select">
+                            <select className="row-select" disabled>
                               <option disabled selected>
                                 Выбрать
                               </option>
@@ -616,7 +616,7 @@ export default function Selections() {
 
                           <div className="column">
                             <h3 className="col-title">Столбцы</h3>
-                            <select className="col-select">
+                            <select className="col-select" disabled>
                               <option selected disabled>
                                 Выбрать
                               </option>
@@ -638,6 +638,7 @@ export default function Selections() {
                             <select
                               value={softQuotaRows}
                               onChange={(e) => setSoftQuotaRows(e.target.value)}
+                              disabled
                             >
                               <option disabled value="">
                                 Выбрать характеристику для строк
@@ -654,6 +655,7 @@ export default function Selections() {
                             <select
                               value={softQuotaCols}
                               onChange={(e) => setSoftQuotaCols(e.target.value)}
+                              disabled
                             >
                               <option disabled value="">
                                 Выбрать характеристику для столбцов
