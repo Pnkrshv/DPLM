@@ -2271,3 +2271,13 @@ button.contradiction-type-btn {
     }
   }
 }
+
+.delete-rule-btn {
+  background-color: #f44336;
+  color: white;
+  border: none;
+  outline: none;
+}
+.delete-rule-btn:hover {
+  background-color: #d32f2f;
+}

@@ -20,30 +20,54 @@ export default function Manual() {
   const [notification, setNotification] = useState({ show: false, message: '', type: '' });
   let notificationTimeout = null;
 
-  const isConditionMet = (question, selectedValues, condition) => {
-    // Для открытых вопросов – проверяем, введён ли текст
-    if (question.type === 'open') {
-      const hasText = selectedValues && selectedValues.length > 0 && selectedValues[0].trim() !== '';
-      if (condition.type === 'selected') {
-        return hasText;          // есть текст → условие выполнено
-      } else if (condition.type === 'not_selected') {
-        return !hasText;         // нет текста → условие выполнено
-      }
+  // Функция проверки условия для открытого вопроса
+  const isConditionMetForOpen = (selectedValues, condition) => {
+    const inputText = selectedValues && selectedValues.length > 0 ? selectedValues[0].trim() : '';
+    const hasText = inputText !== '';
+
+    // Если в условии указаны конкретные ответы (не пустые строки)
+    const hasSpecificAnswers = condition.answers && condition.answers.some(a => a && a.trim() !== '');
+
+    if (!hasSpecificAnswers) {
+      // Старая логика: проверяем только наличие текста
+      if (condition.type === 'selected') return hasText;
+      if (condition.type === 'not_selected') return !hasText;
       return false;
     }
 
-    // Для закрытых вопросов – сравниваем ответы с заданными значениями
-    if (!selectedValues || selectedValues.length === 0) return false;
-
-    const values = selectedValues; // массив текстов ответов
+    // Логика с проверкой совпадения с заданными ответами
+    const matchesAnyAnswer = condition.answers.some(answer =>
+      answer && answer.trim() !== '' && inputText === answer.trim()
+    );
 
     if (condition.type === 'selected') {
-      // Хотя бы один выбранный ответ совпадает с одним из condition.answers
+      return matchesAnyAnswer;
+    } else if (condition.type === 'not_selected') {
+      // Не выбран – значит, либо текст пуст, либо не совпадает ни с одним из ответов
+      return !hasText || !matchesAnyAnswer;
+    }
+    return false;
+  };
+
+  // Обновлённая основная функция isConditionMet
+  const isConditionMet = (question, selectedValues, condition) => {
+    // Для открытых вопросов используем специальную логику
+    if (question.type === 'open') {
+      const hasText = selectedValues && selectedValues.length > 0 && selectedValues[0].trim() !== '';
+      if (condition.type === 'selected') return hasText;
+      if (condition.type === 'not_selected') return !hasText;
+      return false;
+    }
+
+    // Для закрытых вопросов оставляем прежнюю логику
+    if (!selectedValues || selectedValues.length === 0) return false;
+    const values = selectedValues;
+
+    if (condition.type === 'selected') {
       return condition.answers.some(answerValue =>
         values.some(v => v === answerValue)
       );
     } else if (condition.type === 'not_selected') {
-      // Ни один выбранный ответ не совпадает ни с одним из condition.answers
       return !condition.answers.some(answerValue =>
         values.some(v => v === answerValue)
       );
@@ -190,7 +214,7 @@ export default function Manual() {
   const getNextQuestionIndex = () => {
     const currentQ = questions[currentQuestionIndex];
     const rule = transitionRules[currentQ.id];
-    let nextIndex = currentQuestionIndex + 1; // по умолчанию
+    let nextIndex = currentQuestionIndex + 1;
 
     if (rule && rule.conditions) {
       const conditionsMet = rule.conditions.every(condition => {
@@ -202,13 +226,20 @@ export default function Manual() {
         if (rule.action === 'question') {
           const targetIndex = questions.findIndex(q => q.id === rule.targetQuestionId);
           if (targetIndex !== -1) nextIndex = targetIndex;
-        } else if (rule.action === 'end') {
+        }
+        else if (rule.action === 'block') {
+          const targetBlockId = rule.targetBlockId;
+          if (targetBlockId) {
+            // Ищем первый вопрос, у которого block_type совпадает с целевым блоком
+            const targetIndex = questions.findIndex(q => q.block_type === targetBlockId);
+            if (targetIndex !== -1) nextIndex = targetIndex;
+          }
+        }
+        else if (rule.action === 'end') {
           return questions.length;
         }
       }
     }
-
-    // Пропускаем скрытые вопросы
     return getNextVisibleIndex(nextIndex);
   };
 

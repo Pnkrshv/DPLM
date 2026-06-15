@@ -1031,6 +1031,35 @@ export default function Questionnaires() {
     // Не сбрасываем transitionRuleData полностью, просто закрываем окно
   };
 
+  const deleteTransitionRule = async () => {
+    if (!transitionRuleData.questionId) return;
+
+    if (!confirm('Вы уверены, что хотите удалить правило перехода для этого вопроса?')) {
+      return;
+    }
+
+    try {
+      // Отправляем null, чтобы очистить правило на сервере
+      await axios.put(
+        `/api/question/${transitionRuleData.questionId}/transition-rules`,
+        { transition_rules: null }
+      );
+
+      // Удаляем правило из локального состояния
+      setTransitionRules(prev => {
+        const newRules = { ...prev };
+        delete newRules[transitionRuleData.questionId];
+        return newRules;
+      });
+
+      alert('Правило перехода удалено');
+      closeTransitionRuleModal();
+    } catch (err) {
+      console.error('Ошибка при удалении правила перехода:', err);
+      alert('Ошибка при удалении правила перехода: ' + (err.response?.data?.error || err.message));
+    }
+  };
+
   // Функции для противоречий
   const openContradictionModal = (questionId) => {
     const savedRules = contradictionRules[questionId];
@@ -2443,6 +2472,11 @@ export default function Questionnaires() {
               <button className="cancel-btn" onClick={closeTransitionRuleModal}>
                 Отменить
               </button>
+              {transitionRules[transitionRuleData.questionId] && (
+                <button className="delete-rule-btn" onClick={deleteTransitionRule}>
+                  Удалить правило
+                </button>
+              )}
               <button className="save-btn" onClick={async () => {
                 // Сохраняем правила перехода для этого вопроса
                 if (transitionRuleData.questionId) {
