@@ -49,6 +49,15 @@ export default function Manual() {
     return false;
   };
 
+  // Проверяет, есть ли хотя бы одно активное противоречие среди всех видимых вопросов
+  const hasAnyActiveContradiction = () => {
+    for (const question of questions) {
+      if (isQuestionHidden(question.id)) continue;
+      if (hasContradiction(question.id)) return true;
+    }
+    return false;
+  };
+
   // Обновлённая основная функция isConditionMet
   const isConditionMet = (question, selectedValues, condition) => {
     // Для открытых вопросов используем специальную логику
@@ -80,7 +89,7 @@ export default function Manual() {
     setNotification({ show: true, message, type });
     notificationTimeout = setTimeout(() => {
       setNotification({ show: false, message: '', type: '' });
-    }, 10000);
+    }, 15000);
   };
 
   useEffect(() => {
@@ -349,6 +358,12 @@ export default function Manual() {
   };
 
   const handleFinish = async () => {
+    // Проверяем наличие противоречий
+    if (hasAnyActiveContradiction()) {
+      showNotification('В интервью обнаружено противоречие! Пожалуйста, исправьте ответы.', 'error');
+      return;
+    }
+
     try {
       const responseData = {
         questionnaire_id: selectedQuestionnaire,
