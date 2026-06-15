@@ -607,9 +607,7 @@ export default function Questionnaires() {
   };
 
   const handleAnswerTypeSelect = (answerType) => {
-    // Проверяем, доступен ли этот тип ответа для текущего типа вопроса
     const availableAnswerTypes = getAvailableAnswerTypes(currentQuestionType);
-
     if (!availableAnswerTypes.some(t => t.id === answerType)) {
       alert('Этот тип ответа недоступен для выбранного типа вопроса');
       return;
@@ -632,9 +630,14 @@ export default function Questionnaires() {
         { id: Date.now() + 2, type: answerType, text: 'Не нравится' }
       ];
     } else if (answerType === 'other') {
-      // При выборе "Другое" добавляем только поле для ввода ответа
       newAnswers = [
         { id: Date.now(), type: 'text', text: '' }
+      ];
+    } else if (answerType === 'scale') {
+      newAnswers = [
+        { id: Date.now() + 1, type: answerType, text: 'Положительно' },
+        { id: Date.now() + 2, type: answerType, text: 'Нейтрально' },
+        { id: Date.now() + 3, type: answerType, text: 'Отрицательно' }
       ];
     } else {
       const newAnswer = {
@@ -660,7 +663,8 @@ export default function Questionnaires() {
       'no_answer': 'Затрудняюсь ответить',
       'refuse': 'Отказываюсь отвечать',
       'agree_disagree': 'Согласен;Не согласен',
-      'like_dislike': 'Нравится;Не нравится'
+      'like_dislike': 'Нравится;Не нравится',
+      'scale': 'Положительно;Нейтрально;Отрицательно'
     };
     return labels[type] || type;
   };
@@ -693,18 +697,18 @@ export default function Questionnaires() {
 
   const getAvailableAnswerTypes = (questionType) => {
     // Определяем доступные типы ответов для каждого типа вопроса
-    const allAnswerTypes = [
+    const answerTypes = [
       { id: 'text', label: 'Текст' },
       { id: 'no_answer', label: 'Затрудняюсь ответить' },
       { id: 'refuse', label: 'Отказываюсь отвечать' },
       { id: 'other', label: 'Другое' },
       { id: 'agree_disagree', label: 'Согласен;Не согласен' },
-      { id: 'like_dislike', label: 'Нравится;Не нравится' }
+      { id: 'like_dislike', label: 'Нравится;Не нравится' },
+      { id: 'scale', label: 'Шкала' }        // <-- добавить
     ];
 
     switch (questionType) {
       case 'open':
-        // Открытый - только текст
         return [{ id: 'text', label: 'Текст' }];
       case 'closed':
         // Закрытый - да/нет, согласен/не согласен, нравится/не нравится, затрудняюсь, отказываюсь, другое
@@ -717,10 +721,10 @@ export default function Questionnaires() {
           { id: 'other', label: 'Другое' }
         ];
       case 'mixed':
-        // Смешанный - все типы
         return allAnswerTypes;
+      case 'scale':                              // <-- добавить
+        return [{ id: 'scale', label: 'Шкала' }];
       default:
-        // Для остальных типов - все доступно
         return allAnswerTypes;
     }
   };

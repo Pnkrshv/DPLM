@@ -64,6 +64,7 @@ export default function Selections() {
     { category: 'другое', female: '-', male: '-', total: '-' },
     { category: 'всего', female: '-', male: '-', total: '-' },
   ]);
+  
   useEffect(() => {
     if (cities && Object.keys(cities).length > 0) {
       setSelectedCities({});
